@@ -171,10 +171,10 @@
         <button menu-id="play" id="play-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Play</button>
         <button menu-id="loadout" id="loadout-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Loadout</button>
         <button menu-id="settings" id="settings-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Settings</button>
-        <!--<button menu-id="accounts" id="acccount-button-m" class="btn-blue menu-options-btn">Accounts</button>-->
+        <button menu-id="account" id="account-button-m" class="btn-blue menu-options-btn">Account</button>
         <button menu-id="about" id="about-button-m" class="btn-blue menu-options-btn" play-sound="button_click">About</button>
       </div>
-      <kl-md-submenu id="menu-play-submenu" class="md-menu-game" style="opacity: 0;">
+      <kl-md-submenu id="menu-play-submenu" class ="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
               <button id="btn-play-normal" class="btn-green" play-sound="button_click">Normal</button>
@@ -208,8 +208,6 @@
               <p></p>
               <input class="input-green" placeholder="Name" id="insert-name"></input>
             </kl-md-menu-options>
-            <kl-md-menu-options>
-            </kl-md-menu-options>
             <kl-md-extra id="loadout-sm-extra">
               <div id="loadout-sm-extra-content">
 
@@ -222,31 +220,6 @@
         </kl-md-submenu-content>
       </kl-md-submenu>
       <kl-md-submenu id="menu-account-submenu" class="md-menu-game" style="opacity: 0;">
-        <kl-md-submenu-content>
-            <kl-md-menu-options>
-              <button class="btn-green" id="btn-account-login">Login</button>
-              <button class="btn-green" id="btn-account-register">Register</button>
-              <p></p>
-            </kl-md-menu-options>
-            <kl-md-menu-options>
-            </kl-md-menu-options>
-            <kl-md-extra id="loadout-sm-extra">
-              <div class="background-menu-md background-menu-ss background-menu" id="account-sm-login">
-                <span>Login</span>
-                <input class="text-input" id="input-login-name" placeholder="Username">
-                <input class="text-input" id="input-login-password" type="password" placeholder="Password">
-                <button class="btn-green" id="btn-login">Login</button>
-              </div>
-              <div class="background-menu-md background-menu-ss background-menu" id="account-sm-register">
-                <span>Registry</span>
-                <input class="text-input" id="input-register-name" placeholder="Username">
-                <input class="text-input" id="input-register-password" type="password" placeholder="Password">
-                <input class="text-input" id="input-register-confirm-password" type="password" placeholder="Confirm Password">
-                <button class="btn-green" id="btn-register">Registry</button>
-              </div>
-            </kl-md-extra>
-            <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
-        </kl-md-submenu-content>
       </kl-md-submenu>
       <kl-md-submenu id="menu-settings-submenu" class="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>

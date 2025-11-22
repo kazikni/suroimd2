@@ -2,14 +2,34 @@
     import { type GameConsole } from "../engine/console.ts";
     import { ResourcesManager } from "../engine/resources.ts";
     import { HideElement, ShowElement } from "../engine/utils.ts";
-    import { accounts, api, API_BASE } from "../others/config.ts";
+    import { api, API_BASE } from "../others/config.ts";
     import { ApiSettingsS } from "common/scripts/config/config.ts";
     import { ShowTab } from "../engine/mod.ts";
     import { SoundManager } from "../engine/sounds.ts";
+    import { AccountManager } from "./accountManager.ts";
 
     export class MenuManager{
         save:GameConsole
         api_settings:ApiSettingsS
+        account:AccountManager=new AccountManager()
+        tabButtons:Record<string,Record<string,string[]>> = {
+            play: {
+                campaign: ["campaign", "play"]
+            },
+            settings: {
+                graphics: ["graphics", "settings"],
+                game: ["game", "settings"],
+                sounds: ["sounds", "settings"],
+                keys: ["keys", "settings"],
+            },
+            about: {
+                social: ["social", "about"],
+                news: ["news", "about"],
+                rules: ["rules", "about"],
+                credits: ["credits", "about"],
+            }
+        };
+
         content={
             menuD:document.querySelector("#menu") as HTMLDivElement,
             gameD:document.querySelector("#game") as HTMLDivElement,
@@ -52,6 +72,7 @@
                     document.body.querySelector("#play-button-m") as HTMLButtonElement,
                     document.body.querySelector("#loadout-button-m") as HTMLButtonElement,
                     document.body.querySelector("#settings-button-m") as HTMLButtonElement,
+                    document.body.querySelector("#account-button-m") as HTMLButtonElement,
                     document.body.querySelector("#about-button-m") as HTMLButtonElement,
                 ],
                 buttons:{
@@ -69,7 +90,7 @@
                     news:document.body.querySelector("#btn-about-news") as HTMLButtonElement,
                     rules:document.body.querySelector("#btn-about-rules") as HTMLButtonElement,
                     credits:document.body.querySelector("#btn-about-credits") as HTMLButtonElement,
-                }
+                } as Record<string,HTMLButtonElement>
             }
         }
         resources:ResourcesManager
@@ -77,7 +98,7 @@
         sounds:SoundManager
         constructor(save:GameConsole,resources:ResourcesManager,sounds:SoundManager){
             this.save=save
-            const params = new URLSearchParams(self.location.search);
+            const params = new URLSearchParams(self.location.search)
             const submenu = params.get("menu")
             this.sounds=sounds
             this.resources=resources
@@ -101,15 +122,8 @@
                 "credits":document.body.querySelector("#about-sm-credits") as HTMLElement,
             }
 
-            if(accounts){
-                this.accounts_system_init()
-            }else{
-                this.content.submenus.select.account.remove()
-            }
-
             this.load_menu(submenu)
             this.submenu_param=!!params
-            this.update_api()
 
             this.api_settings={
                 modes:[
@@ -121,6 +135,9 @@
                 ],
                 debug:{
                     debug_menu:true,
+                },
+                database:{
+                    enabled:false,
                 },
                 regions:{
                     "local":{
@@ -139,19 +156,22 @@
             ShowElement(this.content.menuD)
             HideElement(this.content.loading_screen)
             this.content.loading_screen.style.opacity="0"
-
+            this.reload_close_btn()
             for(const btn of this.content.submenus.open_buttons){
                 btn.addEventListener("click",this.open_button_func.bind(this))
             }
-            document.querySelectorAll(".submenu-close-btn").forEach((v,_k)=>{
-                v.addEventListener("click",this.load_menu.bind(this,null))
-            })
             const music=this.sounds.get_manipulative_si("music")??this.sounds.add_manipulative_si("music")
             const menu_music=this.resources.get_audio("menu_music")
             this.sounds.signals.on("load",()=>{
                 music?.set(menu_music)
             })
             this.load_resources(["main"])
+            this.update_api()
+        }
+        reload_close_btn(){
+            document.querySelectorAll(".submenu-close-btn").forEach((v,_k)=>{
+                (v as HTMLButtonElement).onclick=this.load_menu.bind(this,null)
+            })
         }
         menu_tabs:Record<string,Record<string,HTMLElement>>={}
         open_button_func(ev:MouseEvent){
@@ -182,7 +202,6 @@
                         break
                     case "account":
                         ShowElement(this.content.submenus.account,true)
-                        ShowTab("login",this.menu_tabs["account"])
                         break
                     case "about":
                         ShowElement(this.content.submenus.about,true)
@@ -230,10 +249,20 @@
                 this.content.select_region.insertAdjacentHTML("beforeend",`<option value=${region}>${region}</option>`)
             }
             this.content.select_region.value=this.save.get_variable("cv_game_region")
+            if(this.api_settings.database.enabled){
+                this.account.enable(this)
+            }else{
+                this.content.submenus.select.account.remove()
+            }
         }
-        accounts_system_init(){
-            this.no_logged()
-            this.update_account()
+        setupTabButtons() {
+            for (const submenu in this.tabButtons) {
+                for (const btnName in this.tabButtons[submenu]) {
+                    const [tab, group] = this.tabButtons[submenu][btnName];
+                    const btn = this.content.submenus.buttons[btnName];
+                    btn.addEventListener("click", () => ShowTab(tab, this.menu_tabs[group]));
+                }
+            }
         }
         start(){
             this.content.insert_name.value=this.save.get_variable("cv_loadout_name")
@@ -244,19 +273,7 @@
                 this.save.set_variable("cv_game_region",this.content.select_region.value)
             })
 
-            this.content.submenus.buttons.campaign.addEventListener("click",(_)=>ShowTab("campaign",this.menu_tabs["play"]))
-
-            this.content.submenus.buttons.graphics.addEventListener("click",(_)=>ShowTab("graphics",this.menu_tabs["settings"]))
-            this.content.submenus.buttons.game.addEventListener("click",(_)=>ShowTab("game",this.menu_tabs["settings"]))
-            this.content.submenus.buttons.sounds.addEventListener("click",(_)=>ShowTab("sounds",this.menu_tabs["settings"]))
-
-            this.content.submenus.buttons.login.addEventListener("click",(_)=>ShowTab("login",this.menu_tabs["account"]))
-            this.content.submenus.buttons.register.addEventListener("click",(_)=>ShowTab("register",this.menu_tabs["account"]))
-
-            this.content.submenus.buttons.social.addEventListener("click",(_)=>ShowTab("social",this.menu_tabs["about"]))
-            this.content.submenus.buttons.news.addEventListener("click",(_)=>ShowTab("news",this.menu_tabs["about"]))
-            this.content.submenus.buttons.rules.addEventListener("click",(_)=>ShowTab("rules",this.menu_tabs["about"]))
-            this.content.submenus.buttons.credits.addEventListener("click",(_)=>ShowTab("credits",this.menu_tabs["about"]))
+            this.setupTabButtons()
 
             //Graphics
             this.content.settings.graphics_textures.value=this.save.get_variable("cv_graphics_resolution")
@@ -308,24 +325,8 @@
             /*
             HideElement(this.content.settings_tabs)
             HideElement(this.content.section_tabs)*/
-
-            if(api)this.accounts_system_init()
         }
-        no_logged(){
-            /*this.content.ac_status.innerHTML=""
-            const btn=document.createElement("button") as HTMLButtonElement
-            btn.classList.add("btn-green")
-            btn.innerText="Account"
-            btn.addEventListener("click",()=>{
-                ShowElement(this.content.section_tabs)
-            })
-            this.content.ac_status.appendChild(btn)*/
-        }
-        logged(name:string){
-            /*this.content.ac_status.innerHTML=`
-                <a href="/user/?user=${name}"><button class="btn-blue">My Status</button></a>`*/
-        }
-        your_skins:string[]=["default_skin"/*,"nick_winner","justin_winner","alice_winner","kaklik"*/]
+        your_skins:string[]=["default_skin"]
         show_your_skins(){
             this.content.submenus.extras.loadout_c.innerHTML=""
             let sel=this.save.get_variable("cv_loadout_skin")
@@ -361,19 +362,6 @@
             this.content.submenus.extras.loadout_v.innerHTML=`
                 <img src="${this.resources.get_sprite(sel+"_body").src}" class="simage"></div>
             `
-        }
-        update_account(){
-            /*fetch(`${api_server.toString("http")}/get-your-status`,{
-                credentials: "include",
-            }).then((a)=>a.json()).then((aa)=>{
-                if(!aa.user){
-                    this.no_logged()
-                    console.log("not-logged")
-                    return
-                }
-                HideElement(this.content.section_tabs)
-                this.logged(aa.user.name)
-            })*/
         }
         async game_start(assets:string[]){
             ShowElement(this.content.gameD)
