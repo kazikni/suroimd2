@@ -33,8 +33,8 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
     const renderer=new WebglRenderer(canvas)
 
     const resources=new ResourcesManager(renderer.gl,sounds)
-    await resources.load_audio("menu_music",{src:"/sounds/musics/menu_music.mp3",volume:1})
-    await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1})
+    await resources.load_audio("menu_music",{src:"/sounds/musics/menu_music.mp3",volume:1},"essentials")
+    await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1},"essentials")
 
     sounds.init_html_sound_bindings("ui",resources)
 
@@ -122,7 +122,7 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
             this.game.running=true
         }
         closeGame(){
-            menu_manager.update_account()
+            if(menu_manager.account.enabled)menu_manager.account.update_account()
             this.game.scene.objects.clear()
             this.game.guiManager.clear()
             this.game.menuManager.game_end()

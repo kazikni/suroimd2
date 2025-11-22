@@ -1,7 +1,7 @@
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { Definitions,Definition, DeepPartial } from "../../engine/mod.ts";
 import { mergeDeep } from "../../engine/utils.ts";
-import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig } from "../../others/item.ts";
+import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponFrames } from "../../others/item.ts";
 import { type BulletDef, BulletReflection, InventoryItemType } from "../utils.ts";
 export enum FireMode{
     Auto,
@@ -87,6 +87,7 @@ export type GunDef={
     }
     arms?:FistRig
     image?:WeaponRig
+    frames?:WeaponFrames
     caseParticle?:{
         position:Vec2
         at_begin?:boolean
@@ -199,6 +200,10 @@ Guns.insert(
         },
         speed_mod:0.98,
         arms:WeaponsArmRig[3],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0xaaaaaa
+        },
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         image:WeaponsRig[0],
@@ -247,6 +252,10 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         image:WeaponsRig[0],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0xaaaaaa
+        },
         dual:{
             dual_offset:0.2,
             fireDelay:0.15,
@@ -364,7 +373,16 @@ Guns.insert(
         },
         muzzleFlash:MuzzleFlash.normal,
         speed_mod:0.95,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            rotation:0
+        },
     },
     {
         idString:"famas",
@@ -401,7 +419,16 @@ Guns.insert(
             speed:0.5
         },
         speed_mod:0.95,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            rotation:0
+        },
     },
     {
         idString:"mp5",
@@ -474,8 +501,12 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         arms:WeaponsArmRig[2],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x3f3a2f
+        },
         image:{
-            position:v2.new(0.3,0.0),
+            position:v2.new(0.6,0.0),
             rotation:0
         },
     },
@@ -508,7 +539,17 @@ Guns.insert(
             speed:0.77
         },
         speed_mod:1,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[2],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            scale:1.2,
+            rotation:0
+        },
     },
     {
         idString:"kar98k",
@@ -768,7 +809,16 @@ Guns.insert(
             speed:0.75
         },
         speed_mod:1,
-        gasParticles:GasParticles.shotgun
+        gasParticles:GasParticles.shotgun,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.45,0.0),
+            rotation:0
+        },
     },
     {
         idString:"rpg7",

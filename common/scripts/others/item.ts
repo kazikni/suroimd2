@@ -1,3 +1,4 @@
+import { FrameDef } from "../engine/definitions.ts";
 import { v2, Vec2 } from "../engine/geometry.ts";
 
 export enum ItemQuality{
@@ -21,11 +22,16 @@ export interface FistRig{
         zIndex?:number
     }
 }
-
+export interface WeaponFrames{
+    item?:string
+    item_tint?:number
+    world?:string
+    world_tint?:number
+}
 export interface WeaponRig{
     position:Vec2
     rotation:number
-    left_handed_suport?:boolean
+    scale?:number
     zIndex?:number
     hotspot?:Vec2
 }
@@ -73,7 +79,7 @@ export const WeaponsArmRig={
     3:{
         right:{
             position:v2.new(0.55,0),
-            rotation:-0.5,
+            rotation:-0.45,
         }
     },
 }

@@ -3,7 +3,7 @@ import { GameConstants, PlayerAnimation, PlayerAnimationType, zIndexes } from "c
 import { GameItem, GameObjectDef, GameObjectsDefs, WeaponDef,Weapons } from "common/scripts/definitions/alldefs.ts";
 import { GameObject } from "../others/gameObject.ts";
 import { AnimatedContainer2D, type Camera2D, Light2D, type Renderer, Sprite2D, type Tween } from "../engine/mod.ts";
-import { Debug, GraphicsDConfig } from "../others/config.ts";
+import { GraphicsDConfig } from "../others/config.ts";
 import { Decal } from "./decal.ts";
 import { InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { DualAdditional, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
@@ -76,8 +76,6 @@ export class Player extends GameObject{
 
     current_weapon?:WeaponDef
     dead:boolean=true
-
-    left_handed=false
     
     shield:boolean=false
 
@@ -208,10 +206,6 @@ export class Player extends GameObject{
                 this.sprites.left_arm.visible=true
                 this.sprites.left_arm.position=def.arms.left.position
                 this.sprites.left_arm.rotation=def.arms.left.rotation
-                if(this.left_handed){
-                    this.sprites.left_arm.position.y*=-1
-                    this.sprites.left_arm.rotation*=-1
-                }
                 this.sprites.left_arm.zIndex=def.arms.left.zIndex??1
             }else{
                 this.sprites.left_arm.visible=false
@@ -220,10 +214,6 @@ export class Player extends GameObject{
                 this.sprites.right_arm.visible=true
                 this.sprites.right_arm.position=def.arms.right.position
                 this.sprites.right_arm.rotation=def.arms.right.rotation
-                if(this.left_handed){
-                    this.sprites.right_arm.position.y*=-1
-                    this.sprites.right_arm.rotation*=-1
-                }
                 this.sprites.right_arm.zIndex=def.arms.right.zIndex??1
             }else{
                 this.sprites.right_arm.visible=false
@@ -234,19 +224,16 @@ export class Player extends GameObject{
         }
         if(def?.image){
             this.sprites.weapon.visible=true
-            this.sprites.weapon.scale=v2.new(1,1)
+            this.sprites.weapon.scale=v2.new(1*(def.image.scale??1),1)
             this.sprites.weapon.position=v2.duplicate(def.image.position)
             this.sprites.weapon.rotation=def.image.rotation
-            if(this.left_handed&&def.image.left_handed_suport){
-                this.sprites.weapon.position.y*=-1
-                this.sprites.weapon.rotation*=-1
-            }
             this.sprites.weapon.zIndex=def.image.zIndex??2
             this.sprites.weapon.hotspot=def.image.hotspot??v2.new(.5,.5)
             if((def as GunDef).dual_from&&(def as unknown as GameItem).item_type===InventoryItemType.gun){
                 const df=Guns.getFromString((def as GunDef).dual_from!)
+                const world_frame=def.frames?.world??`${df.idString}_world`
                 this.sprites.weapon2.visible=true
-                this.sprites.weapon2.scale=v2.new(1,1)
+                this.sprites.weapon2.scale=v2.new(1*(def.image.scale??1),1)
                 this.sprites.weapon2.position=v2.duplicate(def.image.position)
                 this.sprites.weapon2.rotation=def.image.rotation
                 this.sprites.weapon2.zIndex=def.image.zIndex??2
@@ -261,10 +248,21 @@ export class Player extends GameObject{
                 this.sprites.right_arm.rotation=0
 
                 this.sprites.weapon2.position.y-=(def as GunDef&DualAdditional).dual_offset!
-                this.sprites.weapon.frame=this.game.resources.get_sprite(`${df.idString}_world`)
-                this.sprites.weapon2.frame=this.game.resources.get_sprite(`${df.idString}_world`)
+                this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
+                this.sprites.weapon2.frame=this.game.resources.get_sprite(world_frame)
+                
+                if(def.frames?.world_tint){
+                    const col=ColorM.number(def.frames?.world_tint)
+                    this.sprites.weapon.tint=col
+                    this.sprites.weapon2.tint=col
+                }else{
+                    this.sprites.weapon.tint=ColorM.number(0xffffff)
+                }
             }else{
-                this.sprites.weapon.frame=this.game.resources.get_sprite((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
+            const world_frame=def.frames?.world??((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
+                this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
+                if(def.frames?.world_tint)this.sprites.weapon.tint=ColorM.number(def.frames?.world_tint)
+                else this.sprites.weapon.tint=ColorM.number(0xffffff)
             }
         }else{
             this.sprites.weapon.visible=false

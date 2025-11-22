@@ -168,6 +168,7 @@ void main(void) {
 }`;
 // deno-lint-ignore no-explicit-any
 export type GLMaterial2D<MaterialArgs=any>={
+    group:string
     factory:GLMaterial2DFactory<MaterialArgs>
     draw:(mat:GLMaterial2D<MaterialArgs>,matrix:Matrix,model:Model2D,position:Vec2,scale:Vec2)=>void
 }&MaterialArgs
@@ -235,6 +236,7 @@ create(gl:WebglRenderer,fac:GLMaterial2DFactory<GL2D_SimpleMatArgs>){
     return (arg:GL2D_SimpleMatArgs)=>{
         return {
             ...arg,
+            group:"",
             factory:fac,
             draw:draw
         }
@@ -297,6 +299,7 @@ create(gl:WebglRenderer,fac:GLMaterial3DFactory<GL3D_SimpleMatArgs>){
         return {
             ...arg,
             factory:fac,
+            group:"",
             draw:draw
         }
     }
@@ -362,6 +365,7 @@ create(gl:WebglRenderer,fac:GLMaterial2DFactory<GL2D_GridMatArgs>){
         return {
             ...arg,
             factory:fac,
+            group:"",
             draw:draw
         }
     }

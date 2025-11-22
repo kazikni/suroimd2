@@ -30,6 +30,7 @@ export class Frame{
     source:HTMLImageElement
     texture!:WebGLTexture
     src:string
+    group:string
     frame_rect?:{
         x1:number
         y1:number
@@ -46,6 +47,7 @@ export class Frame{
         this.src=src
         this.gl=gl
         this.texture_coordinates=new Float32Array(tc)
+        this.group=""
     }
     free(){
         if(!this.living_texture)return
@@ -62,11 +64,13 @@ export interface KeyFrame{
 }
 export type Animation={
     resourceType:SourceType.Animation
+    group:string
     keys:Record<string,KeyFrame[]>
 }
 export interface Sound extends SoundDef{
     volume:number
     buffer:AudioBuffer
+    group:string
     resourceType:SourceType.Sound
 }
 export enum SourceType{
@@ -121,17 +125,18 @@ export class ResourcesManager{
             this.default_sprite.texture=loadTexture(this.gl,this.default_sprite.source)!
         })
     }
-    async load_source(id:string,src:string,volume:number=1):Promise<Source|undefined>{
+    async load_source(id:string,src:string,volume:number=1,group:string=""):Promise<Source|undefined>{
         if(src.endsWith(".svg")||src.endsWith(".png")){
-            return await this.load_sprite(id,src)
+            return await this.load_sprite(id,src,group)
         }else if(src.endsWith(".mp3")){
-            return await this.load_audio(id,{src:src,volume:volume})
+            return await this.load_audio(id,{src:src,volume:volume},group)
         }
         return undefined
     }
     clear(blacklist:string[]=[]){
         for(const r of Object.keys(this.sources)){
-            if(blacklist.includes(r))continue
+            if(blacklist.includes(r)||blacklist.includes(this.sources[r].group))continue
+            console.log("Unloading: ",r)
             this.unload(r)
         }
     }
@@ -195,7 +200,7 @@ export class ResourcesManager{
         }
         return this.sources[id] as Frame
     }
-    async load_spritesheet(idPrefix: string, json: SpritesheetJSON, imagePathOverride?: string) {
+    async load_spritesheet(idPrefix: string, json: SpritesheetJSON, imagePathOverride?: string, group:string="") {
         const image = await this.load_image(imagePathOverride ?? json.meta.image);
         const tex = loadTexture(this.gl, image);
 
@@ -219,7 +224,7 @@ export class ResourcesManager{
                 ]
             );
             sprite.texture = tex;
-
+            sprite.group=group
 
             sprite.frame_size=v2.new(frame.w/json.meta.scale,frame.h/json.meta.scale)
             this.sources[`${idPrefix}${id}`] = sprite;
@@ -234,7 +239,7 @@ export class ResourcesManager{
             img.src = src;
         });
     }
-    load_sprite(id:string,src:string):Promise<Frame>{
+    load_sprite(id:string,src:string,group:string=""):Promise<Frame>{
         return new Promise<Frame>((resolve, _reject) => {
             if(this.sources[id])resolve(this.sources[id] as Frame)
             this.sources[id]=new Frame(new Image(),this.gl,src,[
@@ -245,6 +250,7 @@ export class ResourcesManager{
                 1.0, 1.0,
                 1.0, 0.0
             ]);
+            (this.sources[id] as Frame).group=group;
             (this.sources[id] as Frame).source.addEventListener("load",()=>{
                 const sp=this.sources[id] as Frame
                 sp.texture=loadTexture(this.gl,sp.source)!
@@ -263,7 +269,7 @@ export class ResourcesManager{
     get_audio(id:string):Sound{
         return this.sources[id] as Sound
     }
-    load_audio(id:string,def:SoundDef):Promise<Sound|undefined>{
+    load_audio(id:string,def:SoundDef,group:string=""):Promise<Sound|undefined>{
         return new Promise<Sound|undefined>((resolve, reject) => {
             if (this.sources[id] != undefined) {
                 resolve(this.sources[id] as Sound)
@@ -282,7 +288,7 @@ export class ResourcesManager{
                     return;
                 }
                 this.audioCtx.decodeAudioData(arrayBuffer, (audioBuffer) => {
-                    (this.sources[id] as Sound)={buffer:audioBuffer,src:def.src,volume:def.volume??1,resourceType:SourceType.Sound}
+                    (this.sources[id] as Sound)={buffer:audioBuffer,src:def.src,volume:def.volume??1,resourceType:SourceType.Sound,group:group}
                     resolve(this.sources[id] as Sound)
                     
                 }, () => {
@@ -299,11 +305,11 @@ export class ResourcesManager{
     get_animation(id:string):Animation{
         return this.sources[id] as Animation
     }
-    async load_animation(id:string,path:string):Promise<Animation>{
+    async load_animation(id:string,path:string,group:string=""):Promise<Animation>{
         const json=await(await fetch(path)).json()
         let anim!:Animation
         for(const k of Object.keys(json["keys"])){
-            anim={resourceType:SourceType.Animation,keys:{}}
+            anim={resourceType:SourceType.Animation,keys:{},group:group}
             anim.keys[k]=[]
             for(const f of json.keys){
                 anim.keys[k].push({ease:ease[f.ease as (keyof typeof ease)],delay:f.delay,value:f.value,dest:f.dest})
@@ -324,10 +330,10 @@ export class ResourcesManager{
             delete this.sources[id]
         }
     }
-    async load_group(path:string){
+    async load_group(path:string,name:string=""){
         const files=await(await fetch(path)).json()
         for(const f of Object.keys(files.files)){
-            await this.load_source(f,files.files[f])
+            await this.load_source(f,files.files[f],undefined,name)
         }
     }
 }
