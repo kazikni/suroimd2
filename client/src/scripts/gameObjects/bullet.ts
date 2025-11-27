@@ -64,6 +64,7 @@ export class Bullet extends GameObject{
             }
         }else{
             if(this.sprite_trail.scale.x<this.maxLength)this.tticks+=dt
+            this.old_position=v2.duplicate(this.position)
             this.manager.cells.updateObject(this)
             v2m.add(this.hb.position,this.hb.position,this.dts)
 
@@ -84,7 +85,7 @@ export class Bullet extends GameObject{
                         break
                     case "obstacle":
                         if((obj as Obstacle).def.no_bullet_collision||(obj as Obstacle).dead)break
-                        if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                        if(obj.hb&&(this.hb.collidingWith(obj.hb)||obj.hb.colliding_with_line(this.old_position,this.position))){
                             (obj as Obstacle).on_hitted(this.position)
                             this.dying=true
                         }
@@ -123,8 +124,6 @@ export class Bullet extends GameObject{
                     this.par_time=0.01
                 }
             }
-
-            this.old_position=v2.duplicate(this.position)
             this.container.position=this.position
         }
 
@@ -155,6 +154,7 @@ export class Bullet extends GameObject{
     }
     override decode(stream: NetStream, full: boolean): void {
         this.position=stream.readPosition()
+        this.old_position=v2.duplicate(this.position)
         this.tticks=stream.readFloat(0,60,2)
         if(full){
             this.initialPosition=stream.readPosition()

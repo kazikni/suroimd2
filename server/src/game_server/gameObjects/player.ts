@@ -311,7 +311,7 @@ export class Player extends ServerGameObject{
             200
             * (current_floor.acceleration??1)
         ))
-        let speed=1*(this.recoil?this.recoil.speed:1)
+        let speed=4.7*(this.recoil?this.recoil.speed:1)
                   * (this.actions.current_action&&this.actions.current_action.type===ActionsType.Consuming?this.using_healing_speed:1)
                   * (this.inventory.currentWeaponDef?.speed_mod??1)
                   * this.modifiers.speed
@@ -389,7 +389,7 @@ export class Player extends ServerGameObject{
             if(this.seat.rotation!==undefined)this.rotation=this.seat.rotation
             if(this.seat.pillot)this.seat.vehicle.move(this.input.movement,this.input.reload,dt,this.alternative_vehicle_control)
         }else{
-            const move=v2.scale(this.input.movement,5*speed)
+            const move=v2.scale(this.input.movement,speed)
             v2m.lerp(this.velocity,move,acceleration)
             v2m.add(this.position,this.position,v2.scale(this.velocity,dt))
             this.rotation=this.input.rotation

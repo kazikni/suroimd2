@@ -75,7 +75,7 @@ export abstract class Game2D<DefaultGameObject extends BaseGameObject2D=BaseGame
 
     constructor(tps: number,objects:Array<new()=>DefaultGameObject>){
         this.tps=tps
-        this.clock=new Clock(tps,1,this.update.bind(this))
+        this.clock=new Clock(tps,1,(dt)=>{this.update(dt),this.draw(dt)})
         for(const o of objects){
             const oi=new o()
             this.objects.set(o,oi.stringType,oi.numberType)
@@ -84,30 +84,36 @@ export abstract class Game2D<DefaultGameObject extends BaseGameObject2D=BaseGame
     }
     dt:number=0
     last_time:number=0
-    update(dt:number) {
-        this.inter_global=1/(1+dt/this.inter_const)
-        this.signals.emit("update")
-        this.dt=dt
-        this.on_update(dt)
-        this.scene.objects.update(dt)
-        for(let i=0;i<this.timeouts.length;i++){
-            this.timeouts[i].delay-=dt
-            if(this.timeouts[i].delay<=0){
-                this.timeouts[i].c()
-                this.timeouts.splice(i,1) 
-                i--
+    draw(_dt:number):Promise<void>{
+        return new Promise((_resolve, _reject) => {})
+    }
+    update(dt:number):Promise<void>{
+        return new Promise<void>((resolve) => {
+            this.inter_global=1/(1+dt/this.inter_const)
+            this.signals.emit("update")
+            this.dt=dt
+            this.on_update(dt)
+            this.scene.objects.update(dt)
+            for(let i=0;i<this.timeouts.length;i++){
+                this.timeouts[i].delay-=dt
+                if(this.timeouts[i].delay<=0){
+                    this.timeouts[i].c()
+                    this.timeouts.splice(i,1) 
+                    i--
+                }
             }
-        }
-        if(!this.running){
-            this.clock.stop()
-            this.on_stop()
-        }
-        if(this.new_list){
-            this.scene.objects.update_to_net()
-        }
-        if(this.destroy_queue){
-            this.scene.objects.apply_destroy_queue()
-        }
+            if(!this.running){
+                this.clock.stop()
+                this.on_stop()
+            }
+            if(this.new_list){
+                this.scene.objects.update_to_net()
+            }
+            if(this.destroy_queue){
+                this.scene.objects.apply_destroy_queue()
+            }
+            resolve()
+        })
     }
     addTimeout(callback:()=>void,delay:number):number{
         this.timeouts.push({c:callback,delay:delay})

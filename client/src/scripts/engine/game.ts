@@ -56,17 +56,16 @@ export class ClientGame2D<GObject extends ClientGameObject2D=ClientGameObject2D>
         this.tweens.delete(tween);
     }
     hbm:Material2D
-    draw(renderer:Renderer,dt:number){
-        renderer.clear()
-        this.camera.update(dt,this.resources)
-        this.camera.draw(renderer)
+    override async draw(dt:number){
+        this.renderer.clear()
+        await this.camera.draw(dt,this.resources,this.renderer)
         this.on_render(dt)
-        for(const c in this.scene.objects.objects){
-            for(const o of this.scene.objects.objects[c].orden){
-                const obj=this.scene.objects.objects[c].objects[o]
-                if(!obj)continue
-                obj.render(this.camera,renderer,dt)
-                if(this.hitbox_view){
+        if(this.hitbox_view){
+            for(const c in this.scene.objects.objects){
+                for(const o of this.scene.objects.objects[c].orden){
+                    const obj=this.scene.objects.objects[c].objects[o]
+                    if(!obj)continue
+                    obj.render(this.camera,this.renderer,dt)
                     if(obj.hb.type===HitboxType2D.group){
                         for(const hb of obj.hb.hitboxes){
                             const model=model2d.hitbox(hb)
@@ -87,7 +86,6 @@ export class ClientGame2D<GObject extends ClientGameObject2D=ClientGameObject2D>
         for(const t of this.tweens){
             t.update(dt)
         }
-        this.draw(this.renderer,dt)
         this.particles.update(dt)
         this.sounds.update(dt)
         this.input_manager.tick()

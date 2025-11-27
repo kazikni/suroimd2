@@ -141,6 +141,7 @@ export class Bullet extends ServerGameObject{
         this.defs=args.defs
         this.hb=new CircleHitbox2D(args.position,this.defs.radius*this.modifiers.size)
         this.initialPosition=v2.duplicate(this.hb.position)
+        this.old_position=v2.duplicate(this.position)
         this.maxDistance=this.defs.range/2.5
 
         const ad=args.ammo?Ammos.getFromString(args.ammo):undefined
