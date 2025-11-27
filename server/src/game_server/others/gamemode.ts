@@ -6,6 +6,7 @@ import { type BackpackDef } from "common/scripts/definitions/items/backpacks.ts"
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { GameItem } from "common/scripts/definitions/alldefs.ts";
 import { mergeDeep } from "common/scripts/engine/utils.ts";
+import { KDate } from "common/scripts/engine/definitions.ts";
 
 export interface InventoryGiftItem{
     item:GameItem,
@@ -62,6 +63,7 @@ export interface Gamemode{
         no_battle_plane?:boolean
         map:string
         lobby:string
+        date:KDate
     }
 }
 export const DefaultGamemode:Gamemode={
@@ -106,7 +108,15 @@ export const DefaultGamemode:Gamemode={
     game:{
         no_battle_plane:false,
         map:"normal",
-        lobby:"lobby"
+        lobby:"lobby",
+        date:{
+            second:0,
+            minute:43,
+            hour:4,
+            month:3,
+            day:10,
+            year:2000
+        }
     }
 }
 
@@ -116,7 +126,15 @@ export const Gamemodes:Record<string,Gamemode>={
         game:{
             map:"snow",
             lobby:"lobby",
-            no_battle_plane:DefaultGamemode.game.no_battle_plane
+            no_battle_plane:DefaultGamemode.game.no_battle_plane,
+            date:{
+                second:0,
+                minute:2,
+                hour:3,
+                month:3,
+                day:11,
+                year:2001
+            }
         }
     } satisfies Partial<Gamemode>) as Gamemode
 }

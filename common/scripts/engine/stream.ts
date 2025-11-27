@@ -1,3 +1,4 @@
+import { KDate } from "./definitions.ts";
 import { Vec2 } from "./geometry.ts";
 import { CircleHitbox2D, Hitbox2D, HitboxGroup2D, HitboxType2D, NullHitbox2D, PolygonHitbox2D, RectHitbox2D } from "./hitbox.ts";
 import { ID } from "./utils.ts";
@@ -793,5 +794,29 @@ export class NetStream {
             case HitboxType2D.null:
                 return NullHitbox2D.decode(this)
         }
+    }
+    writeKDate(kdate: KDate): this {
+        this.writeUint8(kdate.second)
+        this.writeUint8(kdate.minute)
+        this.writeUint8(kdate.hour)
+
+        this.writeUint8(kdate.day)
+        this.writeUint8(kdate.month)
+        
+        this.writeUint16(kdate.year)
+        return this;
+    }
+
+    readKDate(): KDate {
+        return {
+            second: this.readUint8(),
+            minute: this.readUint8(),
+            hour:   this.readUint8(),
+
+            day:    this.readUint8(),
+            month:  this.readUint8(),
+
+            year:   this.readUint16()
+        };
     }
 }

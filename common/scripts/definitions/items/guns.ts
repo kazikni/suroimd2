@@ -470,7 +470,7 @@ Guns.insert(
     },
     {
         idString:"vector",
-        fireDelay:0.05,
+        fireDelay:0.03,
         switchDelay:0.7,
         spread:2,
         lenght:0.6,
@@ -481,7 +481,7 @@ Guns.insert(
         quality:ItemQuality.Mythic,
         bullet:{
             def:{
-                damage:7,
+                damage:6,
                 radius:0.014,
                 range:60,
                 criticalMult:1.5,
@@ -512,7 +512,7 @@ Guns.insert(
     },
     {
         idString:"uzi",
-        fireDelay:0.06,
+        fireDelay:0.03,
         switchDelay:0.7,
         spread:9,
         lenght:0.68,

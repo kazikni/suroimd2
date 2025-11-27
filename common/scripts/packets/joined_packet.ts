@@ -1,9 +1,11 @@
+import { KDate } from "../engine/definitions.ts";
 import { type NetStream, Packet } from "../engine/mod.ts"
 export class JoinedPacket extends Packet{
     ID=5
     Name="joined"
     players:{id:number,name:string,badge?:number}[]=[]
     kill_leader?:{id:number,kills:number}
+    date!:KDate
     constructor(){
         super()
     }
@@ -18,6 +20,7 @@ export class JoinedPacket extends Packet{
         stream.writeStringSized(28,e.name)
         stream.writeID(e.id)
       },1)
+      stream.writeKDate(this.date)
     }
     decode(stream: NetStream): void {
       const [killleader]=stream.readBooleanGroup()
@@ -35,5 +38,6 @@ export class JoinedPacket extends Packet{
           badge:b===0?undefined:b-1
         }
       },1)
+      this.date=stream.readKDate()
     }
 }

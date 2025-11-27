@@ -1,4 +1,4 @@
-import { Clock, cloneDeep, SignalManager } from "./utils.ts"
+import { Clock, SignalManager } from "./utils.ts"
 import { BaseObject2D, type CellsManager2D, GameObjectManager2D } from "./gameObject.ts"
 import { v2, type Vec2 } from "./geometry.ts";
 import { DefinitionsSimple } from "./definitions.ts";

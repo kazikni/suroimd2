@@ -259,6 +259,12 @@ export class KeyListener{
                 index=this.keys.indexOf(i)
             }
         }
+        if(!this.focus){
+            for(const i in this.keys){
+                this.listener.emit(KeyEvents.KeyUp,this.keys[i])
+            }
+            this.keys.length=0
+        }
         this.keysup.length=0
         this.mouse_b_up.length=0
     }

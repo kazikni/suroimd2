@@ -96,15 +96,6 @@ export class Game extends ClientGame2D<GameObject>{
 
   offline:boolean=false
 
-  date:KDate={
-    second:0,
-    minute:0,
-    day:10,
-    hour:4,
-    month:3,
-    year:2000
-  }
-
   living_count:number[]=[2]
 
   cam3:Camera3D
@@ -313,16 +304,6 @@ export class Game extends ClientGame2D<GameObject>{
   override on_update(dt:number): void {
     super.on_update(dt)
     this.dead_zone.tick(dt)
-    this.date.second+=dt
-    if(this.date.second>=1){
-      this.date.second=0
-      this.date.minute++
-      if(this.date.minute>=60){
-        this.date.minute=0
-        this.date.hour+=1
-      }
-      this.tab.update_header(this.date)
-    }
     if(this.client&&this.client.opened&&this.can_act){
       this.client.emit(this.action)
       this.action.actions.length=0
@@ -336,7 +317,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.renderer.fullCanvas()
     this.camera.zoom=(this.scope_zoom*Numeric.clamp(1-(0.5*this.flying_position),0.5,1))
 
-    this.ambient.update()
+    this.ambient.update(dt)
 
     //FPS Show
     this.frame_calc++
@@ -365,6 +346,9 @@ export class Game extends ClientGame2D<GameObject>{
       this.living_count=up.living_count
     }
     if(up.deadzone!==undefined)this.dead_zone.update_from_data(up.deadzone)
+    if(up.ambient){
+      this.ambient.date=up.ambient.date
+    }
   }
   wait_load(callback:()=>void){
     if(!this.menuManager.loaded){
@@ -406,6 +390,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.client.on("joined",(jp:JoinedPacket)=>{
       this.guiManager.start()
       this.guiManager.process_joined_packet(jp)
+      this.ambient.date=jp.date
     })
     this.client.on("map",async(mp:MapPacket)=>{
       await this.terrain.process_map(mp.map)
@@ -437,6 +422,7 @@ export class Game extends ClientGame2D<GameObject>{
   init_gui(gui:GuiManager){
     this.guiManager=gui
     this.guiManager.init(this)
+    this.tab.toggle_tab_visibility()
   }
 }
 export async function getGame(server:string){

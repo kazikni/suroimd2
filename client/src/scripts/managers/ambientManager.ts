@@ -9,6 +9,7 @@ import { ManipulativeSoundInstance } from "../engine/sounds.ts";
 import { Tween } from "../engine/utils.ts";
 import { Lights2D } from "../engine/container_2d.ts";
 import { ColorM } from "../engine/renderer.ts";
+import { KDate } from "common/scripts/engine/definitions.ts";
 
 export class AmbientManager{
     game:Game
@@ -24,6 +25,15 @@ export class AmbientManager{
     fog_saturate:number=1
     fog_constrast:number=1
     fog_enabled:boolean=false
+
+    date:KDate={
+        second:0,
+        minute:0,
+        day:10,
+        hour:4,
+        month:3,
+        year:2000
+    }
 
     constructor(game:Game){
         this.game=game
@@ -177,7 +187,38 @@ export class AmbientManager{
             this.game.guiManager.information_killbox_messages.push(`Grand Finale`)
         },3)*/
     }
-    update(){
+    updateLightFromDate() {
+        const { hour, minute } = this.date
+        const time = hour + minute / 60
+
+        let t = 0
+
+        if (time >= 6 && time < 19) {
+            t = (time - 6) / (19 - 6)
+        } else {
+            if (time >= 19) {
+                t = 1 - ((time - 19) / (24 - 19))
+            } else {
+                t = 1 - (time / 6)
+            }
+        }
+        const ambient = (1 - t) * 0.6
+        this.game.light_map.ambient = ambient
+    }
+
+    update(dt:number){
+        this.date.second+=dt
+        if(this.date.second>=1){
+            this.date.second=0
+            this.date.minute++
+            if(this.date.minute>=60){
+                this.date.minute=0
+                this.date.hour+=1
+            }
+            this.game.tab.update_header(this.date)
+            this.updateLightFromDate()
+        }
+
         if(!this.music.running){
             if(Math.random()<=0.0002){
                 this.music.set(this.game.resources.get_audio(random.choose(this.musics)))

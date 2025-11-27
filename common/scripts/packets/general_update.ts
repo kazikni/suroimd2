@@ -1,3 +1,4 @@
+import { KDate } from "../engine/definitions.ts";
 import { Vec2 } from "../engine/geometry.ts";
 import { Packet } from "../engine/packets.ts";
 import { NetStream } from "../engine/stream.ts";
@@ -30,11 +31,18 @@ export interface GeneralUpdate{
     planes:PlaneData[]
     living_count:number[]
     deadzone?:DeadZoneUpdate
+    ambient?:{
+        date:KDate
+        time_walked:number
+        rain:number
+        thunder_storm:number
+    }
 }
 function encode_general_update(stream:NetStream,up:GeneralUpdate){
     stream.writeBooleanGroup(
         up.dirty.living_count,
         up.deadzone!==undefined,
+        up.ambient!==undefined
     )
     if(up.deadzone){
         stream.writeUint8(up.deadzone.state)
@@ -55,11 +63,15 @@ function encode_general_update(stream:NetStream,up:GeneralUpdate){
         stream.writeBooleanGroup(e.complete)
         stream.writeUint8(e.type)
     },1)
+    if(up.ambient!==undefined){
+        stream.writeKDate(up.ambient.date)
+    }
 }
 function decode_general_update(stream:NetStream,up:GeneralUpdate){
     const [
         living_count,
-        deadzone
+        deadzone,
+        ambient
     ]=stream.readBooleanGroup()
     if(deadzone){
         up.deadzone={
@@ -87,6 +99,15 @@ function decode_general_update(stream:NetStream,up:GeneralUpdate){
             type:stream.readUint8()
         }
     },1)
+    up.ambient=undefined
+    if(ambient){
+        up.ambient={
+            date:stream.readKDate(),
+            rain:0,
+            thunder_storm:0,
+            time_walked:0,
+        }
+    }
 }
 
 export class GeneralUpdatePacket extends Packet{
