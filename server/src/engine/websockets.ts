@@ -35,7 +35,7 @@ export class ClientsManager extends OfflineClientsManager {
 
             if (checkLogin) {
                 const cookie = req.headers.get("cookie") ?? "";
-                const match = cookie.match(/user=([^;]+)/);
+                const match = cookie.match(/username=([^;]+)/);
                 if (match) {
                     username = decodeURIComponent(match[1]);
                 } else {

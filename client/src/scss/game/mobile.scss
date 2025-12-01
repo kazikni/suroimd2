@@ -19,3 +19,14 @@
 #right-joystick{
     left: 60%;
 }
+#mobile-action-buttons{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    right: 30%;
+    top: 30%;
+    gap: 5px;
+    button{
+        padding: 10px;
+    }
+}

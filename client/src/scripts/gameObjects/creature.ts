@@ -1,10 +1,10 @@
 import { Container2D, Sprite2D } from "../engine/container_2d.ts"
 import { v2, Vec2 } from "common/scripts/engine/geometry.ts"
 import { zIndexes } from "common/scripts/others/constants.ts"
-import { CreatureData } from "common/scripts/others/objectsEncode.ts"
 import { CreatureDef, Creatures } from "common/scripts/definitions/objects/creatures.ts"
 import { GameObject } from "../others/gameObject.ts"
 import { Numeric } from "common/scripts/engine/utils.ts";
+import { NetStream } from "common/scripts/engine/stream.ts";
 export class Creature extends GameObject{
     stringType:string="creature"
     numberType: number=10
@@ -16,7 +16,8 @@ export class Creature extends GameObject{
     state:number=0
     dead:boolean=false
 
-    create(args: {}): void {
+    // deno-lint-ignore no-explicit-any
+    create(_args: any): void {
         this.game.camera.addObject(this.container)
     }
 
@@ -28,7 +29,7 @@ export class Creature extends GameObject{
     override on_destroy(): void {
         this.container.destroy()
     }
-    update(dt:number): void {
+    update(_dt:number): void {
         if(this.dest_pos){
             this.position=v2.lerp(this.position,this.dest_pos,this.game.inter_global)
             this.container.rotation=Numeric.lerp_rad(this.container.rotation,this.dest_rot!,this.game.inter_global)
@@ -50,18 +51,19 @@ export class Creature extends GameObject{
     }
     dest_pos?:Vec2
     dest_rot?:number
-    override updateData(data: CreatureData): void {
-        if(this.game.save.get_variable("cv_game_interpolation")&&!data.full){
-            this.dest_pos=data.position
-            this.dest_rot=data.angle
+    override decode(stream: NetStream, full: boolean): void {
+        if(this.game.save.get_variable("cv_game_interpolation")&&!full){
+            this.dest_pos=stream.readPosition()
+            this.dest_rot=stream.readRad()
         }else{
-            this.container.rotation=data.angle
-            this.position=data.position
+            this.position=stream.readPosition()
+            this.container.rotation=stream.readRad()
         }
-        if(data.full){
-            this.set_def(Creatures.getFromNumber(data.full.def))
-            this.hb=this.def.hitbox.transform(this.position)
-            if(data.full.dead){
+        this.state=stream.readUint8()
+        if(full){
+            const [dead]=stream.readBooleanGroup()
+            this.set_def(Creatures.getFromNumber(stream.readUint16()))
+            if(dead){
                 this.kill()
             }
         }

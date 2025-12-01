@@ -29,8 +29,8 @@ export abstract class BaseObject2D{
         this.hb=new NullHitbox2D(v2.new(0,0))
         this.destroyed=false
     }
-    updateData(_data:EncodedData):void{}
-    getData():EncodedData{return {full:{}}}
+    encode(stream:NetStream,full:boolean):void{}
+    decode(stream:NetStream,full:boolean):void{}
     abstract update(dt:number):void
     net_update():void{}
     // deno-lint-ignore no-explicit-any
@@ -46,7 +46,7 @@ export abstract class BaseObject2D{
         dirty:true,
         creation:true,
     }
-    encodeObject(full:boolean,stream:NetStream,encoders?:Record<string,ObjectEncoder>,priv:boolean=false){
+    encodeObject(full:boolean,stream:NetStream,priv:boolean=false){
         const bools=[
             (full||this.dirtyPart)&&this.netSync.dirty,//Dirty Part
             (full||this.dirty)&&this.netSync.dirty,//Dirty Full
@@ -60,11 +60,12 @@ export abstract class BaseObject2D{
             stream.writeInt8(this.layer)
             stream.writeUint8(this.numberType)
             if(bools[0]||bools[1]){
-                const data=this.getData()
+                this.encode(stream,bools[1])
+                /*const data=this.getData()
                 const e=(encoders??this.manager.encoders)[this.stringType]
                 if(!e)return
                 e.encode(bools[1],data,stream)
-                if(priv&&data.private&&e.encode_private)e.encode_private(data.private,stream)
+                if(priv&&data.private&&e.encode_private)e.encode_private(data.private,stream)*/
             }
         }
     }
@@ -175,25 +176,10 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
         return results
     }
 }
-export type EncodedData={
-    // deno-lint-ignore ban-types
-    full?:{}
-    // deno-lint-ignore ban-types
-    private?:{}
-}
-export interface ObjectEncoder{
-    encode:(full:boolean,data:EncodedData,stream:NetStream)=>void
-    // deno-lint-ignore ban-types
-    encode_private?:(data:{},stream:NetStream)=>void
-    decode:(full:boolean,stream:NetStream)=>EncodedData
-    // deno-lint-ignore ban-types
-    decode_private?:(stream:NetStream)=>{}
-}
 export class GameObjectManager2D<GameObject extends BaseObject2D>{
     cells:CellsManager2D<GameObject>
     objects:Record<number,Layer2D<GameObject>>={}
     layers:number[]=[]
-    encoders:Record<string,ObjectEncoder>={}
     ondestroy:(obj:GameObject)=>void=(_)=>{}
     oncreate:(_id:number,_layer:number,_type:number)=>GameObject|undefined
     destroy_queue:GameObject[]=[]
@@ -280,7 +266,7 @@ export class GameObjectManager2D<GameObject extends BaseObject2D>{
         this.objects[layer] = { orden: [], objects: {},updatables:[] };
         this.layers.push(layer);
     }
-    process_object(stream:NetStream,encoders?:Record<string,ObjectEncoder>,priv:boolean=false){
+    process_object(stream:NetStream,priv:boolean=false){
         const b=stream.readBooleanGroup()
         if(b[0]||b[1]||b[2]){
             const oid=stream.readID()
@@ -299,10 +285,11 @@ export class GameObjectManager2D<GameObject extends BaseObject2D>{
             obj.is_new=b[4]
             if(obj){
                 if(b[0]||b[1]){
-                    const enc=(encoders??this.encoders)[obj.stringType]
+                    obj.decode(stream,b[1])
+                    /*const enc=(encoders??this.encoders)[obj.stringType]
                     const data=enc.decode(b[1],stream)
                     if(priv&&enc.decode_private)data.private=enc.decode_private(stream)
-                    obj.updateData(data)
+                    obj.updateData(data)*/
                 }
                 if(b[2]){
                     if(obj.netSync.deletion)obj.destroy()
@@ -311,19 +298,19 @@ export class GameObjectManager2D<GameObject extends BaseObject2D>{
             }
         }
     }
-    proccess_all(stream:NetStream,encoders?:Record<string,ObjectEncoder>,priv?:boolean){
+    proccess_all(stream:NetStream,priv?:boolean){
         const ls=stream.readUint8()
         for(let l=0;l<ls;l++){
             const ee=stream.readUint16()
             for(let i=0;i<ee;i++){
-                this.process_object(stream,encoders,priv)
+                this.process_object(stream,priv)
             }
         }
     }
-    proccess_list(stream:NetStream,process_deletion:boolean=false,encoders?:Record<string,ObjectEncoder>,priv?:boolean){
+    proccess_list(stream:NetStream,process_deletion:boolean=false,priv?:boolean){
         let os=stream.readUint16()
         for(let i=0;i<os;i++){
-            this.process_object(stream,encoders,priv)
+            this.process_object(stream,priv)
         }
         os=stream.readUint16()
         for(let i=0;i<os;i++){
@@ -336,23 +323,23 @@ export class GameObjectManager2D<GameObject extends BaseObject2D>{
             }
         }
     }
-    encode_all(full:boolean=false,stream?:NetStream,encoders?:Record<string,ObjectEncoder>,priv?:boolean):NetStream{
+    encode_all(full:boolean=false,stream?:NetStream,priv?:boolean):NetStream{
         if(!stream)stream=new NetStream(new ArrayBuffer(1024*1024))
         stream.writeUint8(this.layers.length)
         for(const l of this.layers){
             stream.writeUint16(this.objects[l].orden.length)
             for(const o of this.objects[l].orden){
                 const obj=this.objects[l].objects[o]
-                obj.encodeObject(full,stream,encoders,priv)
+                obj.encodeObject(full,stream,priv)
             }
         }
         return stream
     }
-    encode_list(l:GameObject[],last_list:GameObject[]=[],stream?:NetStream,encoders?:Record<string,ObjectEncoder>,priv?:boolean):{last:GameObject[],strm:NetStream}{
+    encode_list(l:GameObject[],last_list:GameObject[]=[],stream?:NetStream,priv?:boolean):{last:GameObject[],strm:NetStream}{
         if(!stream)stream=new NetStream(new ArrayBuffer(1024*1024))
         stream.writeUint16(l.length)
         for(let i=0;i<l.length;i++){
-            l[i].encodeObject(!last_list.includes(l[i]),stream,encoders,priv)
+            l[i].encodeObject(!last_list.includes(l[i]),stream,priv)
         }
         const deletions: GameObject[] = []
         for (let i = 0; i < last_list.length; i++) {

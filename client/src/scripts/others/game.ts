@@ -1,15 +1,14 @@
 import { ClientGame2D, ResourcesManager, Renderer, ColorM, InputManager} from "../engine/mod.ts"
 import { LayersL, zIndexes } from "common/scripts/others/constants.ts";
-import { Angle, Client, DefaultSignals, KDate, Numeric, ParticlesEmitter2D, Vec2, model2d, random, v2 } from "common/scripts/engine/mod.ts";
+import { Client, DefaultSignals, KDate, Numeric, Vec2, model2d, v2 } from "common/scripts/engine/mod.ts";
 import { JoinPacket } from "common/scripts/packets/join_packet.ts";
-import { ObjectsE } from "common/scripts/others/objectsEncode.ts";
 import { Player } from "../gameObjects/player.ts";
 import { Loot } from "../gameObjects/loot.ts";
 import { Bullet } from "../gameObjects/bullet.ts";
 import { Obstacle } from "../gameObjects/obstacle.ts";
 import { GuiManager } from "../managers/guiManager.ts";
 import { Explosion } from "../gameObjects/explosion.ts";
-import { ManipulativeSoundInstance, SoundManager } from "../engine/sounds.ts";
+import { SoundManager } from "../engine/sounds.ts";
 import { Projectile } from "../gameObjects/projectile.ts";
 import { DamageSplashOBJ } from "../gameObjects/damageSplash.ts";
 import { GameObject } from "./gameObject.ts";
@@ -31,15 +30,15 @@ import {  Material2D, WebglRenderer } from "../engine/renderer.ts";
 import { Plane } from "./planes.ts";
 import { isMobile } from "../engine/game.ts";
 import { DeadZoneManager } from "../managers/deadZoneManager.ts";
-import { Tween } from "svelte/motion";
 import { ToggleElement } from "../engine/utils.ts";
 import { type MenuManager } from "../managers/menuManager.ts";
 import { ActionPacket, InputActionType } from "common/scripts/packets/action_packet.ts";
 import { TabManager } from "../managers/tabManager.ts";
 import { Camera3D } from "../engine/container_3d.ts";
-import { ABParticle2D, ClientParticle2D, RainParticle2D } from "../engine/particles.ts";
 import { TranslationManager } from "common/scripts/engine/definitions.ts";
 import { GeneralUpdate, GeneralUpdatePacket } from "common/scripts/packets/general_update.ts";
+import { AmbientManager } from "../managers/ambientManager.ts";
+import { Building } from "../gameObjects/building.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -61,8 +60,6 @@ export class Game extends ClientGame2D<GameObject>{
   grid_mat:Material2D
   scope_zoom:number=0.53
 
-  music:ManipulativeSoundInstance
-  ambience:ManipulativeSoundInstance
   //0.14=l6 32x
   //0.27=l5 16x
   //0.35=l4 8x
@@ -76,11 +73,17 @@ export class Game extends ClientGame2D<GameObject>{
   flying_position:number=0
   happening:boolean=false
 
+  cursors={
+    default:"url('/img/menu/icons/mouse.svg') 0 0, default",
+    pointer:"url('/img/menu/icons/pointer.svg') 21 21, pointer"
+  }
+
   light_map=new Lights2D()
 
   //minimap:MinimapManager=new MinimapManager(this)
 
   dead_zone:DeadZoneManager=new DeadZoneManager(this)
+  ambient:AmbientManager
 
   language:TranslationManager
 
@@ -91,14 +94,7 @@ export class Game extends ClientGame2D<GameObject>{
   fps:number=60
   frame_calc:number=0
 
-  date:KDate={
-    second:0,
-    minute:0,
-    day:10,
-    hour:4,
-    month:3,
-    year:2000
-  }
+  offline:boolean=false
 
   living_count:number[]=[2]
 
@@ -189,7 +185,7 @@ export class Game extends ClientGame2D<GameObject>{
           this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.guiManager.currentWeaponIDX+1,-1,3)})
           break
         case "debug_menu":
-          if(!this.menuManager.api_settings.debug.debug_menu)break
+          if((!this.menuManager.api_settings.debug.debug_menu)&&!this.offline)break
           ToggleElement(this.guiManager.content.debug_menu)
           break
       }
@@ -239,15 +235,12 @@ export class Game extends ClientGame2D<GameObject>{
       (this.activePlayer as Player).rotation=this.action.angle
     }
   }
-  rain_particles_emitter:ParticlesEmitter2D<ClientParticle2D>
-  ambient_particles_emitter:ParticlesEmitter2D<ClientParticle2D>
   constructor(input_manager:InputManager,menu:MenuManager,sounds:SoundManager,consol:GameConsole,resources:ResourcesManager,translation:TranslationManager,renderer:Renderer,objects:Array<new ()=>GameObject>=[]){
-    super(input_manager,consol,resources,sounds,renderer,[...objects,Player,Loot,Bullet,Obstacle,Explosion,Projectile,DamageSplashOBJ,Decal,PlayerBody,Vehicle,Creature])
+    super(input_manager,consol,resources,sounds,renderer,[...objects,Player,Loot,Bullet,Obstacle,Explosion,Projectile,DamageSplashOBJ,Decal,PlayerBody,Vehicle,Creature,Building])
     for(const i of LayersL){
       this.scene.objects.add_layer(i)
     }
     this.language=translation
-    this.scene.objects.encoders=ObjectsE;
 
     this.renderer.background=ColorM.hex("#000");
 
@@ -255,10 +248,7 @@ export class Game extends ClientGame2D<GameObject>{
 
     this.cam3=new Camera3D(this.renderer)
 
-    if(Debug.hitbox){
-      const hc={color:ColorM.hex("#ee000099")}
-      this.resources.load_material2D("hitbox",(this.renderer as WebglRenderer).factorys2D.simple.create(hc))
-    }
+    document.body.style.cursor=this.cursors.default
     this.terrain_gfx.zIndex=zIndexes.Terrain
     this.camera.addObject(this.terrain_gfx)
     this.camera.addObject(this.grid_gfx)
@@ -275,67 +265,17 @@ export class Game extends ClientGame2D<GameObject>{
     this.fake_crosshair.zIndex=zIndexes.DamageSplashs
     this.fake_crosshair.hotspot=v2.new(.5,.5)
 
-    this.light_map.ambient=0.6
     this.light_map.zIndex=zIndexes.Lights
     this.grid_gfx.zIndex=zIndexes.Grid
-    this.rain_particles_emitter=this.particles.add_emiter({
-      delay:0.005,
-      particle:()=>new RainParticle2D({
-        frame:{
-          main:{
-            image:"raindrop_1",
-          },
-          wave:{
-            image:"raindrop_2",
-          }
-        },
-        zindex:{
-          main:zIndexes.Rain1,
-          wave:zIndexes.Rain2,
-        },
-        speed:25,
-        lifetime:random.float(0.5,1.2),
-        scale:{
-          main:random.float(0.7,1.5)
-        },
-        position:v2.random2(v2.sub(this.camera.visual_position,v2.new(7,7)),v2.add(this.camera.visual_position,v2.new(this.camera.width,this.camera.height))),
-        rotation:Angle.deg2rad(45),
-      }),
-      enabled:this.save.get_variable("cv_graphics_climate")
-    })
-    this.ambient_particles_emitter=this.particles.add_emiter({
-      delay:2.5,
-      particle:()=>{
-        const ang=random.rad()
-        const dir=random.rad()
-        const ret=new ABParticle2D({
-          frame:{
-            image:"leaf_01_particle_1"
-          },
-          life_time:10,
-          direction:dir,
-          position:v2.random2(this.camera.visual_position,v2.add(this.camera.visual_position,v2.new(this.camera.width,this.camera.height))),
-          speed:random.float(0.4,1),
-          angle:ang,
-          scale:random.float(0.5,1),
-          to:{
-            angle:ang+random.float(-6,6),
-            direction:dir+random.float(-3,3),
-          }
-        })
-      return ret
-    },
-      enabled:this.save.get_variable("cv_graphics_climate")
-    })
     this.dead_zone.append()
-
-    this.music=this.sounds.add_manipulative_si("music")
-    this.ambience=this.sounds.add_manipulative_si("ambience")
 
     setInterval(()=>{
       this.fps=this.frame_calc
       this.frame_calc=0
     },1000)
+
+    this.ambient=new AmbientManager(this)
+    this.hitbox_view=Debug.hitbox
   }
   add_damageSplash(d:DamageSplash){
     this.scene.objects.add_object(new DamageSplashOBJ(),7,undefined,d)
@@ -360,25 +300,10 @@ export class Game extends ClientGame2D<GameObject>{
     //this.minimap.draw()
   }
   override on_run(): void {
-    
   }
-  ending_music:string[]=[
-    "game_campaing_ending_1",
-    "game_campaing_ending_2"
-  ]
   override on_update(dt:number): void {
     super.on_update(dt)
     this.dead_zone.tick(dt)
-    this.date.second+=dt
-    if(this.date.second>=1){
-      this.date.second=0
-      this.date.minute++
-      if(this.date.minute>=60){
-        this.date.minute=0
-        this.date.hour+=1
-      }
-      this.tab.update_header(this.date)
-    }
     if(this.client&&this.client.opened&&this.can_act){
       this.client.emit(this.action)
       this.action.actions.length=0
@@ -390,32 +315,12 @@ export class Game extends ClientGame2D<GameObject>{
       p.update(dt)
     }
     this.renderer.fullCanvas()
-    this.camera.zoom=(this.scope_zoom*Numeric.clamp(1-(0.5*this.flying_position),0.5,1))*(this.renderer.canvas.width/1920)
-    if(!this.music.running&&!this.guiManager.end_game){
-      if(Math.random()<=0.0002){
-        this.music.set(this.resources.get_audio(
-          random.choose([
-            "game_normal_music_1",
-            "game_normal_music_2",
-            "game_normal_music_3",
-            "game_normal_music_4",
-            "game_normal_music_5",
-          ])
-        ))
-      }
-    }
-    if(this.living_count&&this.living_count[0]<=2){
-      this.guiManager.grand_finale()
-    }
+    this.camera.zoom=(this.scope_zoom*Numeric.clamp(1-(0.5*this.flying_position),0.5,1))
 
-    /*
-    Ambient
-    */
-   if(Math.random()<=0.005){
-    this.bolt()
-   }
-   //FPS Show
-   this.frame_calc++
+    this.ambient.update(dt)
+
+    //FPS Show
+    this.frame_calc++
   }
   update_camera(){
     if(this.activePlayer){
@@ -441,27 +346,35 @@ export class Game extends ClientGame2D<GameObject>{
       this.living_count=up.living_count
     }
     if(up.deadzone!==undefined)this.dead_zone.update_from_data(up.deadzone)
-  }
-  bolt_tween?:Tween<Lights2D>
-  bolt(){
-    if(this.bolt_tween){
-      //
-    }else{
-      this.sounds.play(this.resources.get_audio(`thunder_${random.int(1,3)}`),{
-
-      },"ambience")
-      this.bolt_tween=this.addTween({
-        target: this.light_map,
-        to: { ambient: 0 },
-        duration: 0.1,
-        yoyo: true,
-        onComplete: () => {
-          this.bolt_tween = undefined;
-        },
-      }) as unknown as Tween<Lights2D>
+    if(up.ambient){
+      this.ambient.date=up.ambient.date
     }
   }
-  connect(client:Client,playerName:string){
+  wait_load(callback:()=>void){
+    if(!this.menuManager.loaded){
+      this.addTimeout(this.wait_load.bind(this,callback),100)
+      return
+    }
+    callback()
+  }
+  async start(assets:string[]){
+      await this.menuManager.game_start(assets)
+      this.happening=true
+      this.mainloop(true)
+      this.sounds.listener_position.x=100000
+      this.sounds.listener_position.y=100000
+      this.camera.position.x=100000
+      this.camera.position.y=100000
+  }
+  connect(playerName:string){
+    if(!this.client)return
+    const p=new JoinPacket(playerName)
+    p.is_mobile=isMobile
+    p.skin=Skins.getFromString(this.save.get_variable("cv_loadout_skin"))?.idNumber??0
+    this.client.emit(p)
+    this.ambient.reset()
+  }
+  connected(client:Client,playerName:string){
     this.client=client
     this.light_map.quality=this.save.get_variable("cv_graphics_lights")
     this.client.on("update",(up:UpdatePacket)=>{
@@ -476,14 +389,14 @@ export class Game extends ClientGame2D<GameObject>{
     })
     this.client.on("joined",(jp:JoinedPacket)=>{
       this.guiManager.start()
-      this.ambience.set(this.resources.get_audio("storm_ambience"),true)
       this.guiManager.process_joined_packet(jp)
-      this.happening=true
-      this.mainloop(true)
+      this.ambient.date=jp.date
     })
-    this.client.on("map",(mp:MapPacket)=>{
-      this.terrain.process_map(mp.map)
+    this.client.on("map",async(mp:MapPacket)=>{
+      await this.terrain.process_map(mp.map)
       this.terrain.draw(this.terrain_gfx,1)
+      await this.start(this.terrain.biome!.assets)
+      this.wait_load(this.connect.bind(this,playerName))
       /*this.terrain.draw(this.minimap.terrain_gfx,1)
       this.minimap.init(mp.map)*/
     })
@@ -496,10 +409,7 @@ export class Game extends ClientGame2D<GameObject>{
     }
     this.activePlayer?.destroy()
     this.activePlayer=undefined
-    const p=new JoinPacket(playerName)
-    p.is_mobile=isMobile
-    p.skin=Skins.getFromString(this.save.get_variable("cv_loadout_skin"))?.idNumber??0
-    this.client.emit(p)
+    
     this.activePlayerId=this.client.ID
     console.log("Joined As:",this.activePlayerId)
 
@@ -507,15 +417,12 @@ export class Game extends ClientGame2D<GameObject>{
     this.fake_crosshair.visible=false
 
     this.guiManager.players_name={}
-    const zoom=this.scope_zoom*(this.renderer.canvas.width/300)
-    if(this.scope_zoom!==this.camera.zoom){
-      this.camera.zoom=zoom
-    }
     this.renderer.fullCanvas()
   }
   init_gui(gui:GuiManager){
     this.guiManager=gui
     this.guiManager.init(this)
+    this.tab.toggle_tab_visibility()
   }
 }
 export async function getGame(server:string){

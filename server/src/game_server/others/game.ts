@@ -1,15 +1,14 @@
-import { ID, NetStream, Numeric, ReplayRecorder2D, ValidString, Vec2, random, v2 } from "common/scripts/engine/mod.ts"
-import { GameConstants, Layers, LayersL } from "common/scripts/others/constants.ts"
+import { ID, KDate, NetStream, Numeric, ReplayRecorder2D, ValidString, Vec2, cloneDeep, random, v2 } from "common/scripts/engine/mod.ts"
+import { GameConstants, Layers, LayersL, SpawnModeType } from "common/scripts/others/constants.ts"
 import { Player } from "../gameObjects/player.ts"
 import { Loot } from "../gameObjects/loot.ts"
 import { JoinPacket } from "common/scripts/packets/join_packet.ts"
 import { ActionPacket } from "common/scripts/packets/action_packet.ts"
-import { ObjectsE } from "common/scripts/others/objectsEncode.ts"
 import { Bullet } from "../gameObjects/bullet.ts"
 import { Obstacle } from "../gameObjects/obstacle.ts"
 import { GameMap } from "./map.ts"
 import { Explosion } from "../gameObjects/explosion.ts";
-import { DefaultGamemode, Gamemode } from "./gamemode.ts";
+import { Gamemode, Gamemodes } from "./gamemode.ts";
 import { BulletDef } from "common/scripts/definitions/utils.ts";
 import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts";
 import { ProjectileDef } from "common/scripts/definitions/objects/projectiles.ts";
@@ -27,7 +26,7 @@ import { Badges } from "common/scripts/definitions/loadout/badges.ts";
 import { Creature } from "../gameObjects/creature.ts";
 import { CreatureDef } from "common/scripts/definitions/objects/creatures.ts";
 import { FloorType } from "common/scripts/others/terrain.ts";
-import { Obstacles, SpawnModeType } from "common/scripts/definitions/objects/obstacles.ts";
+import { Obstacles } from "common/scripts/definitions/objects/obstacles.ts";
 import { ConfigType, GameConfig, GameDebugOptions } from "common/scripts/config/config.ts";
 import { GamemodeManager, SoloGamemodeManager, TeamsGamemodeManager } from "./modeManager.ts";
 import { DeadZoneDefinition, DeadZoneManager, DeadZoneMode } from "../gameObjects/deadzone.ts";
@@ -35,6 +34,7 @@ import { GeneralUpdatePacket, PlaneData } from "common/scripts/packets/general_u
 import {PacketManager} from "common/scripts/packets/packet_manager.ts"
 import { LootTablesManager } from "common/scripts/engine/inventory.ts";
 import { Aditional, loot_table_get_item } from "common/scripts/definitions/maps/base.ts";
+import { Building } from "../gameObjects/building.ts";
 export interface PlaneDataServer extends PlaneData{
     velocity:Vec2
     target_pos:Vec2
@@ -116,6 +116,9 @@ export class Game extends ServerGame2D<ServerGameObject>{
 
     started_time:number=0
 
+    date:KDate
+    begin_date:KDate
+
     constructor(config:GameConfig,clients:OfflineClientsManager,id:ID,Config:ConfigType){
         super(Config.game.options.gameTps,id,clients,PacketManager,[
             Player,
@@ -126,7 +129,8 @@ export class Game extends ServerGame2D<ServerGameObject>{
             Projectile,
             PlayerBody,
             Vehicle,
-            Creature
+            Creature,
+            Building
         ])
         for(const i of LayersL){
             this.scene.objects.add_layer(i)
@@ -134,10 +138,9 @@ export class Game extends ServerGame2D<ServerGameObject>{
         this.Config=Config
         this.debug=Config.game.debug
         this.new_list=false
-        this.scene.objects.encoders=ObjectsE
 
         //Gamemode
-        this.gamemode=DefaultGamemode
+        this.gamemode=Gamemodes.snow
         this.map=new GameMap(this)
         this.modeManager=config.team_size>1?new TeamsGamemodeManager(config.team_size,this):new SoloGamemodeManager(this)
         this.modeManager.generate_map(false)
@@ -162,6 +165,9 @@ export class Game extends ServerGame2D<ServerGameObject>{
                 }
             }
         }
+
+        this.date=cloneDeep(this.gamemode.game.date)
+        this.begin_date=cloneDeep(this.gamemode.game.date)
     }
     ntt:number=0
     override on_update(): void {
@@ -192,7 +198,20 @@ export class Game extends ServerGame2D<ServerGameObject>{
             this.netUpdate()
             this.ntt=1/this.Config.game.options.netTps
         }
+
+        if(this.started)this.date.second+=this.dt
+        if(this.date.second>=1){
+            this.date.second=0
+            this.date.minute++
+            if(this.date.minute>=60){
+                this.date.hour+=1
+                this.date.second=0
+                this.date.minute=0
+                this.dirty_ambient=true
+            }
+        }
     }
+    dirty_ambient:boolean=false
     update_data(){
         const data:GameData={
             living_count:this.livingPlayers.length,
@@ -239,13 +258,11 @@ export class Game extends ServerGame2D<ServerGameObject>{
         this.clients.emit(p)
     }
     netUpdate(){
-        for(const p of this.players){
-            if(p.connected){
-                p.update2()
-            }
-        }
+        const s=new NetStream(new ArrayBuffer(5*1024))
+        s.writeUint16(this.general_update.ID)
         this.general_update.content.planes=this.planes
         this.general_update.content.deadzone=undefined
+        this.general_update.content.ambient=undefined
         this.general_update.content.dirty.living_count=this.living_count_dirty
         if(this.living_count_dirty){
             this.general_update.content.living_count=[this.livingPlayers.length]
@@ -254,12 +271,24 @@ export class Game extends ServerGame2D<ServerGameObject>{
         if(this.deadzone.dirty){
             this.general_update.content.deadzone=this.deadzone.state
         }
-        const s=new NetStream(new ArrayBuffer(5*1024))
-        s.writeUint16(this.general_update.ID)
+        if(this.dirty_ambient){
+            this.general_update.content.ambient={
+                date:this.date,
+                rain:0,
+                thunder_storm:0,
+                time_walked:0,
+            }
+        }
+        this.dirty_ambient=false
         this.general_update.encode(s)
+        for(const p of this.players){
+            if(p.connected&&p.activated){
+                p.update2()
+                p.client!.sendStream(s)
+            }
+        }
         this.scene.objects.update_to_net()
         this.scene.objects.apply_destroy_queue()
-        this.clients.sendStream(s)
     }
     add_player(id:number|undefined,username:string,packet:JoinPacket,layer:number=Layers.Normal,connected=true):Player{
         const p=this.scene.objects.add_object(new Player(),layer,id) as Player
@@ -279,7 +308,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
 
         const pos=this.map.getRandomPosition(p.hb,p.id,p.layer,{
             type:SpawnModeType.whitelist,
-            list:[FloorType.Grass],
+            list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
         },this.map.random)
         if(pos)p.position=pos
         p.manager.cells.updateObject(p)
@@ -313,19 +342,28 @@ export class Game extends ServerGame2D<ServerGameObject>{
         p.connected=true
         if(this.Config.database.enabled){
             let ff
-            if(this.subscribe_db){
-                ff=this.subscribe_db[p.username]
-            }else{
-                ff=await(await fetch(`${this.Config.api.global}/get-status/${p.username}`)).json()
+            try{
+                if(this.subscribe_db){
+                    ff=this.subscribe_db[p.username]
+                }else{
+                    ff=await(await fetch(`${this.Config.api.global}/get-status/${p.username}`)).json()
+                }
+            }catch{
+                if(this.subscribe_db){
+                    ff=this.subscribe_db[p.username]
+                }else{
+                    ff=undefined
+                }
             }
 
-            if(ff.user){
+            if(ff?.user){
                 const inv=JSON.parse(ff.user.inventory)
                 const s=Skins.getFromNumber(packet.skin)
                 if(inv.skins.includes(s.idNumber)){
                     p.skin=s
                     p.loadout.skin=s.idString
                 }
+                p.account_status=ff.user
             }
         }else{
             p.username=""
@@ -345,14 +383,16 @@ export class Game extends ServerGame2D<ServerGameObject>{
                 badge:Badges.getFromString(lp.loadout.badge).idNumber
             })
         }
+        jp.date=this.date
         if(this.modeManager.kill_leader){
             jp.kill_leader={
                 id:this.modeManager.kill_leader.id,
                 kills:this.modeManager.kill_leader.status.kills,
             }
         }
+
+        p.activated=true
         client.emit(jp)
-        client.sendStream(this.map.map_packet_stream)
 
         if(this.statistics){
             this.statistics.player.players++
@@ -364,6 +404,8 @@ export class Game extends ServerGame2D<ServerGameObject>{
             vehicle.seats[0].set_player(p)
             p.dirty=true
         }*/
+
+        p.update2()
         return p
     }
     add_npc(name?:string,layer?:number):Player{
@@ -444,6 +486,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
     }
     handleConnections(client:Client,username:string){
         let player:Player|undefined
+        client.sendStream(this.map.map_packet_stream)
         client.on("join",async(packet:JoinPacket)=>{
             if (this.modeManager.can_join()&&!this.fineshed&&!this.scene.objects.exist_all(client.ID,1)){
                 const p=await this.activate_player(username,packet,client)

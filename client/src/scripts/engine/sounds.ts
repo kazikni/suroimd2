@@ -1,5 +1,6 @@
 import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
-import { type Sound } from "./resources.ts";
+import { type ResourcesManager, type Sound } from "./resources.ts";
+import { SignalManager } from "common/scripts/engine/utils.ts";
 
 export interface SoundOptions {
     volume?: number;
@@ -236,6 +237,7 @@ export class ManipulativeSoundInstance {
             if (this.instance && this.instance.buffer !== sound.buffer) {
                 this.instance.stop();
             }
+            if(this.instance&&this.instance.buffer===sound.buffer)return
             const volume = (sound.volume ?? 1) * (this.manager.masterVolume ?? 1) * (this.manager.volumes[this.volume_id] ?? 1);
             this.instance = this.manager.play(sound, { loop, volume }, this.volume_id)!;
         } else {
@@ -248,6 +250,7 @@ export class ManipulativeSoundInstance {
 export class SoundManager {
     // deno-lint-ignore no-explicit-any
     ctx: AudioContext = new (self.AudioContext || (self as any).webkitAudioContext)();
+    audioUnlocked = false
     mute = false;
     muteOld = false;
     masterVolume = 1;
@@ -264,6 +267,8 @@ export class SoundManager {
 
     manipulatives: ManipulativeSoundInstance[] = [];
 
+    signals:SignalManager=new SignalManager()
+
     constructor() {
         // deno-lint-ignore no-explicit-any
         try { (self as any).audioEngine = this; } catch {/**/}
@@ -276,12 +281,88 @@ export class SoundManager {
         for (let i = 0; i < Math.min(16, SoundsMaxInstances); i++) {
             this.soundInstances.push(new SoundInstance(this, this.ctx));
         }
+        this.init_audio_unlock()
     }
+    init_audio_unlock() {
+        const unlock = this.ctx_load.bind(this)
+
+        self.addEventListener("click", unlock, { once: true })
+        self.addEventListener("keydown", unlock, { once: true })
+        
+        window.addEventListener("click", unlock, { once: true })
+        window.addEventListener("keydown", unlock, { once: true })
+
+        //self.addEventListener("touchstart", unlock, { once: true })
+        //self.addEventListener("touchend", unlock, { once: true })
+    }
+    init_html_sound_bindings(volume_id: string, resources: ResourcesManager) {
+        const handler = (ev: Event) => {
+            const target = ev.currentTarget as HTMLElement;
+            const soundId = target.getAttribute("play-sound");
+            if (!soundId) return;
+
+            const sound = resources.get_audio(soundId);
+            if (!sound) {
+                console.warn(`⚠️ Sound '${soundId}' not found in resources`);
+                return;
+            }
+
+            this.play(sound, undefined, volume_id);
+        };
+
+        const soundElements = document.querySelectorAll<HTMLElement>("[play-sound]");
+        soundElements.forEach((el,_k)=>{
+            if ((el as any)._soundBound) return;
+            (el as any)._soundBound = true;
+
+            el.addEventListener("click", handler);
+            //el.addEventListener("touchstart", handler);
+        })
+    }
+
+    ctx_load() {
+        if (this.audioUnlocked) return
+
+        const ctx = this.ctx
+        if (!ctx) return
+
+        const finishUnlock = () => {
+            if (this.audioUnlocked) return
+            this.audioUnlocked = true
+            this.signals.emit("load")
+        }
+
+        // deno-lint-ignore ban-ts-comment
+        //@ts-ignore
+        if (ctx.state === "suspended" || ctx.state === "interrupted") {
+            ctx.resume().then(finishUnlock).catch(err => {
+                console.warn("⚠️ Failed to resume AudioContext:", err)
+            })
+        } else {
+            finishUnlock()
+        }
+    }
+    finishUnlock = () => {
+        if (this.audioUnlocked) return;
+        this.audioUnlocked = true;
+        self.removeEventListener("click", this.ctx_load)
+        self.removeEventListener("touchstart", this.ctx_load)
+        self.removeEventListener("touchend", this.ctx_load)
+        self.removeEventListener("keydown", this.ctx_load)
+        console.log("🔊 AudioContext resumed — sounds enabled")
+        this.signals.emit("load")
+    };
+
 
     add_manipulative_si(volume_id: string): ManipulativeSoundInstance {
         const m = new ManipulativeSoundInstance(volume_id, this);
         this.manipulatives.push(m);
         return m;
+    }
+    get_manipulative_si(volume_id: string):ManipulativeSoundInstance|undefined{
+        for(const m of this.manipulatives){
+            if(m.volume_id===volume_id)return m
+        }
     }
 
     play(sound: Sound, params: Partial<SoundOptions> = {}, volume_group?: string): SoundInstance | undefined {

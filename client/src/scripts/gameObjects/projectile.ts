@@ -1,6 +1,5 @@
-import { ProjectileData } from "common/scripts/others/objectsEncode.ts"
 import { ProjectileDef, Projectiles } from "common/scripts/definitions/objects/projectiles.ts"
-import { CircleHitbox2D, v2 } from "common/scripts/engine/mod.ts"
+import { CircleHitbox2D, NetStream, v2 } from "common/scripts/engine/mod.ts"
 import { GameObject } from "../others/gameObject.ts"
 import { Sprite2D } from "../engine/container_2d.ts"
 export class Projectile extends GameObject{
@@ -30,18 +29,22 @@ export class Projectile extends GameObject{
     constructor(){
         super()
     }
-    override updateData(data:ProjectileData){
-        if(data.full){
-            this.def=Projectiles.getFromNumber(data.full.definition)
-            this.hb=new CircleHitbox2D(data.position,this.def.radius)
-            this.sprite.set_frame({
-                image:this.def.frames.world,
-                hotspot:v2.new(.5,.5),
-                scale:1
-            },this.game.resources)
+    set_definition(def:ProjectileDef){
+        if(this.def)return
+        this.def=def
+        this.hb=new CircleHitbox2D(this.position,this.def.radius)
+        this.sprite.set_frame({
+            image:this.def.frames.world,
+            hotspot:v2.new(.5,.5),
+            scale:1
+        },this.game.resources)
+    }
+    override decode(stream: NetStream, full: boolean): void {
+        this.position=stream.readPosition()
+        this.rotation=stream.readRad()
+        this.zpos=stream.readFloat(0,1,1)
+        if(full){
+            this.set_definition(Projectiles.getFromNumber(stream.readID()))
         }
-        this.position=data.position
-        this.rotation=data.rotation
-        this.zpos=data.z
     }
 }

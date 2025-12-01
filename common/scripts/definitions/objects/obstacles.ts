@@ -1,29 +1,8 @@
 import { v2 } from "../../engine/geometry.ts";
 import { CircleHitbox2D,Hitbox2D,Definitions,Definition, RotationMode, FrameTransform } from "../../engine/mod.ts";
-import { zIndexes } from "../../others/constants.ts";
+import { Spawn, SpawnMode, zIndexes } from "../../others/constants.ts";
 import { RectHitbox2D } from "../../engine/hitbox.ts";
-import { FloorType } from "../../others/terrain.ts";
-export enum  SpawnModeType{
-    any,
-    blacklist,
-    whitelist
-}
-export type SpawnMode={
-    type:SpawnModeType.any
-}|{
-    type:SpawnModeType.blacklist|SpawnModeType.whitelist
-    list:FloorType[]
-}
 
-export const Spawn={
-    any:{
-        type:SpawnModeType.any,
-    },
-    grass:{
-        type:SpawnModeType.whitelist,
-        list:[FloorType.Grass]
-    },
-}
 export interface ObstacleBehaviorDoor{
     type:0,
     open_delay?:number
@@ -39,8 +18,8 @@ export interface ObstacleDef extends Definition{
     health:number
     hitbox?:Hitbox2D
     spawnHitbox?:Hitbox2D
-    noCollision?:boolean
-    noBulletCollision?:boolean
+    no_collision?:boolean
+    no_bullet_collision?:boolean
     invisibleOnMap?:boolean
     scale?:{
         min?:number
@@ -58,6 +37,7 @@ export interface ObstacleDef extends Definition{
         tint?:number
     }
     variations?:number
+    biome_skins?:string[]
     zIndex?:number
     rotationMode?:number
 
@@ -67,7 +47,7 @@ export interface ObstacleDef extends Definition{
     lootTable?:string
 
     interactDestroy?:boolean
-    reflectBullets?:boolean
+    reflect_bullets?:boolean
 
     spawnMode:SpawnMode
 
@@ -126,6 +106,9 @@ Obstacles.insert(
         frame:{
             particle:"stone_particle",
         },
+        biome_skins:[
+            "snow"
+        ],
         frame_transform:{
             scale:2
         },
@@ -149,7 +132,7 @@ Obstacles.insert(
         zIndex:zIndexes.Obstacles1,
         onDestroyExplosion:"barrel_explosion",
         material:"metal",
-        reflectBullets:true,
+        reflect_bullets:true,
         frame:{
             particle:"metal_particle"
         },
@@ -162,6 +145,7 @@ Obstacles.insert(
         idString:"oak_tree",
         health:120,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.4),
+        spawnHitbox:new CircleHitbox2D(v2.new(0,0),0.6),
         scale:{
             destroy:0.9,
             max:1.2,
@@ -173,6 +157,7 @@ Obstacles.insert(
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles4,
         material:"tree",
+        biome_skins:["snow"],
         frame:{
             particle:"oak_tree_particle"
         },
@@ -216,7 +201,7 @@ Obstacles.insert(
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
         material:"iron", //TODO Copper Material
-        reflectBullets:true,
+        reflect_bullets:true,
         lootTable:"copper_crate",
         frame:{
             particle:"metal_particle"
@@ -240,7 +225,7 @@ Obstacles.insert(
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
         material:"iron",
-        reflectBullets:true,
+        reflect_bullets:true,
         lootTable:"iron_crate",
         frame:{
             particle:"metal_particle"
@@ -264,7 +249,7 @@ Obstacles.insert(
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
         material:"iron",
-        reflectBullets:true,
+        reflect_bullets:true,
         lootTable:"gold_crate",
         frame:{
             particle:"metal_particle"
@@ -277,13 +262,13 @@ Obstacles.insert(
     {
         idString:"bush",
         health:70,
-        hitbox:new CircleHitbox2D(v2.new(0,0),0.6),
-        noCollision:true,
+        hitbox:new CircleHitbox2D(v2.new(0,0),0.7),
+        no_collision:true,
         scale:{
             destroy:0.8
         },
         frame_transform:{
-            scale:1
+            scale:2
         },
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles3,
@@ -291,6 +276,7 @@ Obstacles.insert(
         frame:{
             particle:"leaf_01_particle_1"
         },
+        biome_skins:["snow"],
         spawnMode:Spawn.grass
     },
     {
@@ -311,5 +297,29 @@ Obstacles.insert(
             open_duration:0.15,
             offset:0
         }
+    },
+
+    //Christmas
+    {
+        idString:"christmas_tree",
+        health:300,
+        hitbox:new CircleHitbox2D(v2.new(0,0),0.6),
+        spawnHitbox:new CircleHitbox2D(v2.new(0,0),1),
+        scale:{
+            destroy:0.9,
+            max:1.2,
+            min:1
+        },
+        frame_transform:{
+            scale:2
+        },
+        lootTable:"christmas_tree",
+        rotationMode:RotationMode.full,
+        zIndex:zIndexes.Obstacles4,
+        material:"tree",
+        frame:{
+            particle:"oak_tree_particle"
+        },
+        spawnMode:Spawn.grass
     },
 )

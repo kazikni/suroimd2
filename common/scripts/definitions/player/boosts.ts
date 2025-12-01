@@ -3,7 +3,9 @@ export enum BoostType{
     Shield,
     Adrenaline,
     Mana,
-    Addiction
+    Addiction,
+    GreenBless,
+    Death
 }
 export interface BoostDef{
     name:string
@@ -35,5 +37,15 @@ export const Boosts={
         name:"addiction",
         color:"#e13",
         type:BoostType.Addiction
+    },
+    [BoostType.GreenBless]:{
+        name:"green_bless",
+        color:"#1f3",
+        type:BoostType.GreenBless
+    },
+    [BoostType.Death]:{
+        name:"death",
+        color:"#001",
+        type:BoostType.Death
     }
 } as Record<BoostType,BoostDef>

@@ -11,7 +11,8 @@ export class Decal extends GameObject{
 
     lifetime:number=30
 
-    create(args: any) {
+    // deno-lint-ignore no-explicit-any
+    create(_args: any) {
         this.game.camera.addObject(this.sprite)
     }
 

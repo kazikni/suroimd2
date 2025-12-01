@@ -8,7 +8,14 @@ export function CalculateDoorHitbox(hitbox:RectHitbox2D,side:Orientation,door:Ob
         0:hitbox,
         1:hitbox.transform(
             v2.new(3,0),
-            1,0
+            1
         )
     }
+}
+export function CalculatePlayerLevel(xp:number,base_xp:number=10,factor:number=1.5):number{
+    return Math.floor(Math.pow(xp / base_xp, 1 / factor)+1)
+}
+export function CalculatePlayerLevelProgress(xp:number,base_xp:number=10,factor:number=1.5):number{
+    const level=Math.pow(xp / base_xp, 1 / factor)+1
+    return level-Math.floor(level)
 }

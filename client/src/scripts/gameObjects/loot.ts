@@ -1,5 +1,4 @@
-import { LootData } from "common/scripts/others/objectsEncode.ts";
-import { Angle, CircleHitbox2D, v2, Vec2 } from "common/scripts/engine/mod.ts";
+import { Angle, CircleHitbox2D, NetStream, v2, Vec2 } from "common/scripts/engine/mod.ts";
 import { GameConstants, zIndexes } from "common/scripts/others/constants.ts";
 import { GameObject } from "../others/gameObject.ts";
 import { type Camera2D, Container2D, type Renderer, type Sound, Sprite2D } from "../engine/mod.ts";
@@ -8,7 +7,7 @@ import { GameItem, GameItems } from "common/scripts/definitions/alldefs.ts"
 import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { ease } from "common/scripts/engine/utils.ts";
 import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
-import { v2m } from "common/scripts/engine/geometry.ts";
+import { v2m, τ } from "common/scripts/engine/geometry.ts";
 export class Loot extends GameObject{
     stringType:string="loot"
     numberType: number=2
@@ -26,7 +25,7 @@ export class Loot extends GameObject{
         this.hb=new CircleHitbox2D(v2.new(3,3),0.3)
         this.game.camera.addObject(this.container)
     }
-    update(dt:number): void {
+    update(_dt:number): void {
         if(this.dest_pos){
             v2m.lerp(this.position,this.dest_pos,this.game.inter_global)
         }
@@ -50,21 +49,19 @@ export class Loot extends GameObject{
     override on_destroy(): void {
         this.container.destroy()
     }
-    override render(camera: Camera2D, renderer: Renderer, _dt: number): void {
-        /*if(Debug.hitbox){
-            renderer.draw_hitbox2D(this.hb,this.game.resources.get_material2D("hitbox_loot"),camera.visual_position)
-        }*/
+    override render(_camera: Camera2D, _renderer: Renderer, _dt: number): void {
+        
     }
     dest_pos?:Vec2
-    override updateData(data:LootData){
-        if(this.game.save.get_variable("cv_game_interpolation")&&!data.full){
-            this.dest_pos=data.position
+    override decode(stream: NetStream, full: boolean): void {
+        if(this.game.save.get_variable("cv_game_interpolation")&&!full){
+            this.dest_pos=stream.readPosition()
         }else{
-            this.position=data.position
+            this.position=stream.readPosition()
         }
-        if(data.full){
-            this.item=GameItems.valueNumber[data.full.item]
-            this.count=data.full.count
+        if(full){
+            this.item=GameItems.valueNumber[stream.readUint16()]
+            this.count=stream.readUint8()
             switch(this.item.item_type!){
                 case InventoryItemType.gun:
                     this.sprite_main.frame=this.game.resources.get_sprite(this.item.idString)
@@ -150,7 +147,7 @@ export class Loot extends GameObject{
                     this.sprite_main.frame=this.game.resources.get_sprite(ff)
                     this.sprite_main.visible=true
                     this.sprite_main.scale=v2.new(0.5,.5)
-                    this.sprite_main.rotation=3.141592/2
+                    this.sprite_main.rotation=τ
                     this.sprite_outline.frame=this.game.resources.get_sprite(`null_outline`)
                     this.sprite_outline.visible=true;
                     this.sprite_outline.scale=v2.new(0.9,0.9);
@@ -159,7 +156,7 @@ export class Loot extends GameObject{
                 }
             }
             if(this.is_new){
-                this.container.scale=v2.new(0.05,0.05)
+                v2m.single(this.container.scale,0.05)
                 this.game.addTween({
                     duration:3,
                     target:this.container.scale,

@@ -16,7 +16,7 @@
             "debug_menu":true
         },
         "options": {
-            "gameTps": 60,
+            "gameTps": 100,
             "netTps": 30
         },
         "modes":[

@@ -23,6 +23,85 @@
         pointer-events: none;
     }
 }
+#menu-background-effects{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    top: 0px;
+}
+#menu-bullets{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    background: url("/img/menu/background/effects/bullets.png");
+    background-size: cover;
+    animation: shake_bullets 8s infinite alternate linear;
+    opacity: 50%;
+}
+@keyframes shake_bullets {
+    0% { transform:rotate(-1deg) translate(-1%,1%); }
+    50% { transform:rotate(1deg) translate(1%,0.5%); }
+    100% { transform:rotate(-1deg) translate(1%,-1%); }
+}
+#both-ui{
+    width: 100%;
+    height: 100%;
+}
+#loading-screen{
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    position: absolute;
+    background-image: url("/img/menu/background/loading_background.png");
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+    z-index: 101;
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    #loading-screen-logo{
+        left: 20px;
+        top: 20px;
+        background-image: url("/img/menu/logos/MD/MD.svg");
+        background-size: cover;
+        width: 100px;
+        height: 100px;
+        animation: rotating 0.7s infinite alternate linear;
+    }
+    #loading-hint{
+        position: absolute;
+        left: 0px;
+        bottom: 0px;
+        padding: 2px;
+        background-color: #0003;
+    }
+    transition: opacity 0.5s ease-in-out;
+    @media screen and (max-width: palette.$screen_medium) {
+        #loading-screen-logo{
+            left: 10px;
+            top: 10px;
+            width: 50px;
+            height: 50px;
+        }
+    }
+}
+
+@keyframes rotating {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(90deg);
+    }
+}
 #top-left-section{
     position: absolute;
     display: block;
@@ -189,7 +268,6 @@
         margin-right: 20px;
     }
 }
-//New Menu
 #title-section {
     width: 500px;
     z-index: 1;
@@ -198,7 +276,7 @@
     margin-bottom: 100px;
     animation: TitleAnimation 23s infinite ease-in-out alternate;
     @media screen and (max-width: palette.$screen_medium) {
-        width: 230px;
+        width: 200px;
         margin-bottom: 15px;
     }
 }
@@ -219,14 +297,18 @@
     width: fit-content;
     height: fit-content;
     align-items: center;
+    opacity: 0;
+    transition: opacity 1s linear;
     button{
         padding-left: 40px;
         padding-right: 40px;
+        width: 300px;
     }
     @media screen and (max-width: palette.$screen_medium) {
         gap:3px;
         button{
-            font-size: 10px;
+            font-size: 15px;
+            width: 200px;
         }
     }
 }
@@ -280,7 +362,7 @@
 #gamemode-image{
     width: 400px;
     height: 400px;
-    background-image: url("/img/menu/modes/normal.png");
+    background-image: url("/img/menu/modes/snow.gif");
     border: 1px solid #037;
     border-radius: 10px;
     background-size: 400px 400px;

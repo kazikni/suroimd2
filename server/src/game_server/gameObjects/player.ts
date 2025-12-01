@@ -1,14 +1,13 @@
-import { CircleHitbox2D, Client, NullVec2, Numeric, RectHitbox2D, v2, Vec2 } from "common/scripts/engine/mod.ts"
+import { CircleHitbox2D, Client, NetStream, NullVec2, Numeric, RectHitbox2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
 import { ActionPacket, InputAction, InputActionType } from "common/scripts/packets/action_packet.ts"
-import { PlayerAnimation, PlayerData } from "common/scripts/others/objectsEncode.ts"
-import { ActionsType, GameConstants } from "common/scripts/others/constants.ts"
+import { ActionsType, GameConstants, PlayerAnimation, PlayerAnimationType } from "common/scripts/others/constants.ts"
 import { GInventory,GunItem,LItem} from "../player/inventory.ts"
 import { DamageSplash, UpdatePacket } from "common/scripts/packets/update_packet.ts"
 import { DamageParams } from "../others/utils.ts"
 import { type Obstacle } from "./obstacle.ts"
 import { ActionsManager } from "common/scripts/engine/inventory.ts"
 import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts"
-import { DamageSourceDef, DamageSources, GameItems, GameObjectDef, Weapons } from "common/scripts/definitions/alldefs.ts"
+import { DamageSourceDef, DamageSources, GameItems, GameObjectDef, GameObjectsDefs, Weapons } from "common/scripts/definitions/alldefs.ts"
 import { type PlayerModifiers } from "common/scripts/others/constants.ts"
 import { AccessoriesManager } from "../player/accesories.ts"
 import { ServerGameObject } from "../others/gameObject.ts"
@@ -28,6 +27,7 @@ import { ProjectileDef } from "common/scripts/definitions/objects/projectiles.ts
 import { Explosions } from "common/scripts/definitions/objects/explosions.ts"
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
+import { Building } from "./building.ts";
 
 export class Player extends ServerGameObject{
     oldPosition:Vec2
@@ -35,6 +35,7 @@ export class Player extends ServerGameObject{
     numberType: number=1
     name:string=""
     rotation:number=0
+    velocity:Vec2=v2.new(0,0)
     recoil?:{speed:number,delay:number}
 
     skin:SkinDef=Skins.getFromString("default_skin")
@@ -76,10 +77,20 @@ export class Player extends ServerGameObject{
         kills:0,
         rank:0,
     }
+
+    account_status={
+        coins:0,
+        xp:0,
+        wins:0,
+        special_wins:0,
+        games_total:0,
+        kills:0,
+    }
     earned={
         coins:0,
         xp:0,
         score:0,
+        win:0,
     }
     username:string=""
     
@@ -92,10 +103,6 @@ export class Player extends ServerGameObject{
 
     group?:Group
     groupId?:number
-
-    push_vorce:Vec2=v2.new(0,0)
-
-    left_handed:boolean
 
     current_floor:FloorType=0
 
@@ -113,6 +120,7 @@ export class Player extends ServerGameObject{
         reload:false,
         swamp_guns:false,
         attacking:false,
+        swicthed:false,
 
         aim_speed:0,
 
@@ -135,8 +143,6 @@ export class Player extends ServerGameObject{
 
         this.actions=new ActionsManager(this)
 
-        this.left_handed=false
-
         this.accessories=new AccessoriesManager(this,3)
     }
     interact(user: Player): void {
@@ -147,6 +153,7 @@ export class Player extends ServerGameObject{
     dead=false
     downed=false
     connected=false
+    activated=false
 
     invensibility_time:number=0
     imortal:boolean=false
@@ -164,6 +171,7 @@ export class Player extends ServerGameObject{
         critical_mult:1,
         luck:1,
         mana_consume:1,
+        damage_reduction:1,
     }
 
     effects:Map<number,EffectInstance>=new Map()
@@ -186,10 +194,26 @@ export class Player extends ServerGameObject{
     }
 
     update_modifiers(){
-        this.modifiers.damage=this.modifiers.speed=this.modifiers.mana_consume=this.modifiers.health=this.modifiers.boost=this.modifiers.bullet_speed=this.modifiers.bullet_size=this.modifiers.critical_mult=1
+        this.modifiers.damage=this.modifiers.speed=this.modifiers.mana_consume=this.modifiers.health=this.modifiers.boost=this.modifiers.bullet_speed=this.modifiers.bullet_size=this.modifiers.critical_mult=this.modifiers.damage_reduction=1
         const gamemode=this.game.gamemode
-        if(this.boost_def.type===BoostType.Addiction){
-            this.modifiers.damage+=(1-(this.boost/this.maxBoost))*gamemode.player.boosts.addiction.damage
+        switch(this.boost_def.type){
+            case BoostType.Null:
+            case BoostType.Shield:
+            case BoostType.Adrenaline:
+            case BoostType.Mana:
+                break
+            case BoostType.Addiction:
+                this.modifiers.damage+=(1-(this.boost/this.maxBoost))*gamemode.player.boosts.addiction.damage
+                break
+            case BoostType.GreenBless:
+                this.modifiers.damage_reduction*=1-(gamemode.player.boosts.green_bless.damage_reduction*(this.boost/this.maxBoost))
+                break
+            case BoostType.Death:
+                this.modifiers.damage+=(1-(this.boost/this.maxBoost))*gamemode.player.boosts.death.damage
+                this.modifiers.speed+=(1-(this.boost/this.maxBoost))*gamemode.player.boosts.death.speed
+                this.modifiers.damage_reduction*=0.8
+                this.modifiers.damage_reduction-=(1-(this.boost/this.maxBoost))*gamemode.player.boosts.death.damage_reduction
+                break
         }
 
         for(const acc of this.accessories.slots){
@@ -235,6 +259,18 @@ export class Player extends ServerGameObject{
                 })
                 break
             case SideEffectType.Heal:
+                if(this.boost_def.type===BoostType.Death){
+                    if(sf.boost){
+                        if(sf.boost.def.type===BoostType.Death){
+                            this.boost-=sf.boost.amount/4
+                            break
+                        }else if(sf.boost.def.type!==BoostType.GreenBless){
+                            break
+                        }
+                    }else{
+                        break
+                    }
+                }
                 if(sf.health){
                     this.health=Math.min(this.health+sf.health.amount,this.maxHealth*(sf.health.max??1))
                 }
@@ -280,12 +316,17 @@ export class Player extends ServerGameObject{
         if(this.dead)return
         //Movement
         const gamemode=this.game.gamemode
-        let speed=1*(this.recoil?this.recoil.speed:1)
+        const current_floor=Floors[this.current_floor]
+        const acceleration=1/(1+dt*(
+            200
+            * (current_floor.acceleration??1)
+        ))
+        let speed=4.7*(this.recoil?this.recoil.speed:1)
                   * (this.actions.current_action&&this.actions.current_action.type===ActionsType.Consuming?this.using_healing_speed:1)
                   * (this.inventory.currentWeaponDef?.speed_mod??1)
                   * this.modifiers.speed
                   * (this.downed?0.4:1)
-                  * (this.parachute?1:((Floors[this.current_floor].speed_mult??1)))
+                  * (this.parachute?1:((current_floor.speed_mult??1)))
                   * (this.projectile_holding?0.7:1)
         if(this.recoil){
             this.recoil.delay-=dt
@@ -293,12 +334,12 @@ export class Player extends ServerGameObject{
             if(this.recoil.delay<=0)this.recoil=undefined
         }
         switch(this.boost_def.type){
-            case BoostType.Shield:
-                break
             case BoostType.Adrenaline:
                 speed*=1+(gamemode.player.boosts.adrenaline.speed*(this.boost/this.maxBoost))
                 this.boost=Math.max(this.boost-gamemode.player.boosts.adrenaline.decay*dt,0)
                 this.health=Math.min(this.health+(this.boost*dt)*gamemode.player.boosts.adrenaline.regen,this.maxHealth)
+                break
+            case BoostType.Shield:
                 break
             case BoostType.Mana:
                 this.boost=Numeric.lerp(this.boost,this.maxBoost,gamemode.player.boosts.mana.regen*dt)
@@ -314,6 +355,27 @@ export class Player extends ServerGameObject{
                         position:this.position,
                         critical:false,
                     })
+                }else{
+                    this.boost_t-=dt
+                }
+                break
+            }
+            case BoostType.GreenBless:{
+                this.health=Math.min(this.health+(this.boost*dt)*gamemode.player.boosts.green_bless.regen,this.maxHealth)
+                break
+            }
+            case BoostType.Death:{
+                if(this.boost===0){
+                    this.kill({
+                        amount:this.health,
+                        critical:true,
+                        position:this.position,
+                        reason:DamageReason.Abstinence
+                    })
+                }
+                if(this.boost_t<=0){
+                    this.boost_t=1
+                    this.boost=Math.max(this.boost-((this.maxBoost/gamemode.player.boosts.death.life_time)),0)
                 }else{
                     this.boost_t-=dt
                 }
@@ -337,7 +399,9 @@ export class Player extends ServerGameObject{
             if(this.seat.rotation!==undefined)this.rotation=this.seat.rotation
             if(this.seat.pillot)this.seat.vehicle.move(this.input.movement,this.input.reload,dt,this.alternative_vehicle_control)
         }else{
-            this.position=v2.add(this.position,v2.add(v2.scale(this.input.movement,5*speed*dt),v2.scale(this.push_vorce,dt)))
+            const move=v2.scale(this.input.movement,speed)
+            v2m.lerp(this.velocity,move,acceleration)
+            v2m.add(this.position,this.position,v2.scale(this.velocity,dt))
             this.rotation=this.input.rotation
             if(this.parachute){
                 speed*=1.7+(0.5+this.parachute.value)
@@ -351,9 +415,8 @@ export class Player extends ServerGameObject{
         if(!v2.is(this.position,this.oldPosition)){
             this.oldPosition=v2.duplicate(this.position)
             this.manager.cells.updateObject(this)
-            this.push_vorce=v2.scale(this.push_vorce,1/(1+dt*4))
             this.game.map.clamp_hitbox(this.hb)
-            this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,FloorType.Water)
+            this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
         }
 
         
@@ -397,15 +460,24 @@ export class Player extends ServerGameObject{
                 if(obj.id===this.id)continue
                 switch(obj.stringType){
                     case "obstacle":
-                        if((obj as Obstacle).def.noCollision)break
+                        if((obj as Obstacle).def.no_collision)break
                         if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
                             if(can_interact&&this.input.interaction&&(obj as Obstacle).hb.collidingWith(this.hb)){
                                 (obj as Loot).interact(this)
                                 can_interact=false
                             }
                             const ov=this.hb.overlapCollision((obj as Obstacle).hb)
-                            if(ov){
-                                this.position=v2.sub(this.position,v2.scale(ov.dir,ov.pen))
+                            for(const c of ov){
+                                this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
+                            }
+                        }
+                        break
+                    case "building":
+                        if((obj as Building).def.no_collisions)break
+                        if(obj.hb){
+                            const ov=this.hb.overlapCollision(obj.hb)
+                            for(const c of ov){
+                                this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
                             }
                         }
                         break
@@ -442,6 +514,7 @@ export class Player extends ServerGameObject{
         this.input.emote=undefined
     }
     update_input(){
+        this.input.swicthed=false
         if(this.input.reload&&this.inventory.currentWeapon&&this.inventory.currentWeapon.itemType===InventoryItemType.gun){
             (this.inventory.currentWeapon as GunItem).reloading=true
             this.input.reload=false
@@ -634,10 +707,9 @@ export class Player extends ServerGameObject{
         if(params.owner&&params.owner instanceof Player){
             const is_ally=this.game.modeManager.is_ally(this,params.owner)
             if(
-                params.owner.id!==this.id&&
-                (is_ally&&!(this.friendly_fire&&params.owner.friendly_fire))
+                (params.owner.id!==this.id&&is_ally&&!(this.friendly_fire&&params.owner.friendly_fire))
             )return
-            mod*=params.owner.modifiers.damage
+            if(params.owner.id!==this.id)mod*=params.owner.modifiers.damage
         }
         if(this.vest){
             mod-=this.vest.reduction
@@ -650,6 +722,7 @@ export class Player extends ServerGameObject{
         if(params.critical){
             mod+=this.modifiers.critical_mult-1
         }
+        damage*=this.modifiers.damage_reduction
         damage*=mod
         params.amount=damage
         this.piercingDamage(params)
@@ -748,6 +821,7 @@ export class Player extends ServerGameObject{
         this.downedBySource=params.source
         this.health=this.maxHealth
         this.boost=0
+        this.boost_def=Boosts[BoostType.Null]
 
         if(params.owner&&params.owner instanceof Player){
             this.game.send_killfeed_message({
@@ -768,8 +842,6 @@ export class Player extends ServerGameObject{
                 type:KillFeedMessageType.down,
             })
         }
-
-        this.push_vorce=v2.add(this.push_vorce,v2.scale(v2.from_RadAngle(v2.lookTo(params.position,this.position)),5))
     }
     revive(){
         if(!this.downed)return
@@ -899,24 +971,44 @@ export class Player extends ServerGameObject{
             this.game.livingPlayers.splice(idx,1);
         }
     }
-    override getData(): PlayerData {
-        return {
-            position:this.position,
-            rotation:this.rotation,
-            dead:this.dead,
-            shield:this.boost_def===Boosts[BoostType.Shield]&&this.boost>0,
-            left_handed:this.left_handed,
-            parachute:this.parachute,
-            driving:this.seat!==undefined,
-            attacking:this.input.attacking,
-            emote:this.input.emote,
-            full:{
-                vest:this.vest?this.vest.idNumber!+1:0,
-                helmet:this.helmet?this.helmet.idNumber!+1:0,
-                current_weapon:Weapons.keysString[this.inventory.currentWeapon?.def.idString??""]??-1,
-                animation:this.current_animation,
-                backpack:this.inventory.backpack.idNumber!,
-                skin:this.skin.idNumber!
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position)
+        .writeRad(this.rotation)
+        .writeBooleanGroup(
+            this.dead,
+            this.boost_def===Boosts[BoostType.Shield]&&this.boost>0,
+            this.seat!==undefined,
+            this.parachute!==undefined,
+            this.input.emote!==undefined,
+            this.input.attacking,
+            this.input.swicthed
+        )
+        if(this.parachute){
+            stream.writeFloat(this.parachute.value,0,1,1)
+        }
+        if(this.input.emote){
+            stream.writeUint16(GameObjectsDefs.keysString[this.input.emote.idString])
+        }
+        if(full){
+            stream.writeBooleanGroup(this.current_animation!==undefined)
+            .writeUint8(this.vest?this.vest.idNumber!+1:0)
+            .writeUint8(this.helmet?this.helmet.idNumber!+1:0)
+            .writeUint8(this.inventory.backpack.idNumber!)
+            .writeUint16(this.skin.idNumber!)
+            .writeInt16(Weapons.keysString[this.inventory.currentWeapon?.def.idString??""]??-1)
+            
+            if(this.current_animation!==undefined){
+                stream.writeUint8(this.current_animation.type)
+                switch(this.current_animation.type){
+                    case PlayerAnimationType.Reloading:
+                        stream.writeUint8(this.current_animation.alt_reload?1:0)
+                        break
+                    case PlayerAnimationType.Consuming:
+                        stream.writeUint16(this.current_animation.item)
+                        break
+                    default:
+                        break
+                }
             }
         }
     }

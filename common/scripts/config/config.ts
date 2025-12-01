@@ -35,6 +35,9 @@ export interface ApiSettingsS{
     debug:{
         debug_menu:boolean
     }
+    database:{
+        enabled:boolean
+    }
 }
 export interface ConfigType {
     api: {

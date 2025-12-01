@@ -1,9 +1,8 @@
 import { Container2D, Sprite2D } from "../engine/container_2d.ts";
-import { VehicleData } from "common/scripts/others/objectsEncode.ts";
 import { VehicleDef, Vehicles } from "common/scripts/definitions/objects/vehicles.ts";
 import { v2, v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { zIndexes } from "common/scripts/others/constants.ts";
-import { Numeric } from "common/scripts/engine/mod.ts";
+import { NetStream, Numeric } from "common/scripts/engine/mod.ts";
 import { GameObject } from "../others/gameObject.ts";
 export class Vehicle extends GameObject{
     stringType:string="vehicle"
@@ -70,19 +69,18 @@ export class Vehicle extends GameObject{
 
     dest_rot?:number
     dest_pos?:Vec2
-    override updateData(data: VehicleData): void {
-        if(this.game.save.get_variable("cv_game_interpolation")&&!data.full){
-            this.dest_pos=data.position
-            this.dest_rot=data.rotation
+    override decode(stream: NetStream, full: boolean): void {
+        if(this.game.save.get_variable("cv_game_interpolation")&&!full){
+            this.dest_pos=stream.readPosition()
+            this.dest_rot=stream.readRad()
         }else{
-            this.position=data.position
-            this.container.rotation=data.rotation
-            this.container.position=data.position
+            this.position=stream.readPosition()
+            this.container.rotation=stream.readRad()
+            this.container.position=this.position
             this.manager.cells.updateObject(this)
         }
-        if(data.full){
-            this.set_def(Vehicles.getFromNumber(data.full.def))
+        if(full){
+            this.set_def(Vehicles.getFromNumber(stream.readUint8()))
         }
-        this.dest_dir=Numeric.clamp(data.direction, -Math.PI / 8, Math.PI / 8)
     }
 }

@@ -5,6 +5,8 @@ import { type GunDef } from "common/scripts/definitions/items/guns.ts";
 import { type BackpackDef } from "common/scripts/definitions/items/backpacks.ts";
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { GameItem } from "common/scripts/definitions/alldefs.ts";
+import { mergeDeep } from "common/scripts/engine/utils.ts";
+import { KDate } from "common/scripts/engine/definitions.ts";
 
 export interface InventoryGiftItem{
     item:GameItem,
@@ -38,6 +40,16 @@ export interface Gamemode{
                 abstinence:number
                 speed:number
             }
+            green_bless:{
+                regen:number
+                damage_reduction:number
+            }
+            death:{
+                life_time:number
+                damage:number
+                damage_reduction:number
+                speed:number
+            }
             default_boost:BoostType
         },
         respawn?:{
@@ -51,24 +63,35 @@ export interface Gamemode{
         no_battle_plane?:boolean
         map:string
         lobby:string
+        date:KDate
     }
 }
 export const DefaultGamemode:Gamemode={
     player:{
         boosts:{
             adrenaline:{
-                decay:0.3,
-                speed:0.2,
+                decay:0.25,
+                speed:0.23,
                 regen:0.01
             },
             mana:{
                 regen:0.03
             },
             addiction:{
-                decay:0.25,
-                damage:0.8,
-                speed:0.8,
+                decay:0.15,
+                damage:0.7,
+                speed:0.5,
                 abstinence:0.009
+            },
+            green_bless:{
+                regen:0.01,
+                damage_reduction:0.2,
+            },
+            death:{
+                life_time:160,
+                damage:0.5,
+                damage_reduction:0.5,
+                speed:0.7
             },
             default_boost:BoostType.Adrenaline
         },
@@ -85,6 +108,33 @@ export const DefaultGamemode:Gamemode={
     game:{
         no_battle_plane:false,
         map:"normal",
-        lobby:"lobby"
+        lobby:"lobby",
+        date:{
+            second:0,
+            minute:43,
+            hour:4,
+            month:3,
+            day:10,
+            year:2000
+        }
     }
+}
+
+export const Gamemodes:Record<string,Gamemode>={
+    normal:DefaultGamemode,
+    snow:mergeDeep({},DefaultGamemode,{
+        game:{
+            map:"snow",
+            lobby:"lobby",
+            no_battle_plane:DefaultGamemode.game.no_battle_plane,
+            date:{
+                second:0,
+                minute:2,
+                hour:3,
+                month:3,
+                day:11,
+                year:2001
+            }
+        }
+    } satisfies Partial<Gamemode>) as Gamemode
 }

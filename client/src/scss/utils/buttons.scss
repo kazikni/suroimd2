@@ -9,7 +9,7 @@
     font-size: 30px;
     text-align: center;
     padding: 5px 20px;
-    cursor: pointer;
+    cursor: url('/img/menu/icons/pointer.svg') 21 21, pointer;
     transition: all 0.3s ease;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     
@@ -24,10 +24,11 @@
         transform: translateY(1px);
     }
 
-    @media screen and (max-width: palette.$screen_large) {
+    @media screen and (max-width: palette.$screen_medium) {
         font-size: 15px;
         padding: 2px 10px;
         text-align: center;
+        border-radius: 6px;
     }
 }
 
@@ -76,6 +77,7 @@
     height: 30px;
     outline: none;
     box-shadow: 1px 1px 3px #0009;
+    cursor: url('/img/menu/icons/pointer.svg') 21 21, pointer;
     @media screen and (max-width: palette.$screen_large) {
         padding: 3px;
         font-size: 8px;
@@ -110,6 +112,8 @@
 .input-green {
     @extend .text-input;
     border: 2px solid rgba(0, 170, 119, 0.5);
+
+    cursor: url('/img/menu/icons/pointer.svg') 21 21, pointer;
     
     &:focus {
         border-color: rgba(0, 170, 119, 0.8);
@@ -125,7 +129,7 @@
     font-size: 30px;
     text-align: center;
     padding: 5px 20px;
-    cursor: pointer;
+    cursor: url('/img/menu/icons/pointer.svg') 21 21, pointer;
     transition: all 0.3s ease;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     
@@ -155,7 +159,7 @@
     font-family: "Russo-One", sans-serif;
     font-size: 26px;
     text-align: center;
-    cursor: pointer;
+    cursor: url('/img/menu/icons/pointer.svg') 21 21, pointer;
     transition: all 0.25s ease-in-out;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
     padding: 10px 20px;

@@ -2,7 +2,7 @@ import { AKeyFrame } from "../../engine/definitions.ts";
 import { Angle, v2 } from "../../engine/geometry.ts";
 import { Definitions,Definition } from "../../engine/mod.ts";
 import { ease } from "../../engine/utils.ts";
-import { DefaultFistRig, FistRig, ItemQuality, WeaponRig } from "../../others/item.ts";
+import { DefaultFistRig, FistRig, ItemQuality, WeaponFrames, WeaponRig } from "../../others/item.ts";
 import { InventoryItemType } from "../utils.ts";
 export interface MeleeDef extends Definition{
     quality:ItemQuality
@@ -20,6 +20,7 @@ export interface MeleeDef extends Definition{
     arms?:FistRig
     image?:WeaponRig
     animation?:AKeyFrame[]
+    frames?:WeaponFrames
 }
 export function AnimationSwing(time:number):AKeyFrame[]{
     const r=Angle.deg2rad(90)
@@ -136,7 +137,7 @@ Melees.insert(
         quality:ItemQuality.Common,
         radius:0.5,
         size:0,
-        attack_delay:0.2,
+        attack_delay:0.4,
         switchDelay:0.5,
         damage_delays:[0.11],
         arms:{
@@ -155,7 +156,6 @@ Melees.insert(
             position:DefaultFistRig.right!.position,
             rotation:-0.5,
             zIndex:1,
-            left_handed_suport:true,
             hotspot:v2.new(0.33,0.5)
         },
         animation:[

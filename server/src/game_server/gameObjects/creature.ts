@@ -1,13 +1,13 @@
 import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
 import { ServerGameObject } from "../others/gameObject.ts";
 import { type Player } from "./player.ts";
-import { CreatureData } from "common/scripts/others/objectsEncode.ts";
 import { type CreatureDef } from "common/scripts/definitions/objects/creatures.ts";
 import { CreaturesUpdates, CreatureUFunc } from "../defs/creatures_extra.ts";
 import { DamageParams } from "../others/utils.ts";
 import { LootTableItemRet } from "common/scripts/engine/inventory.ts";
 import { Obstacle } from "./obstacle.ts";
 import { GameItem } from "common/scripts/definitions/alldefs.ts";
+import { NetStream } from "common/scripts/engine/stream.ts";
 
 export class Creature extends ServerGameObject{
     stringType:string="creature"
@@ -65,7 +65,7 @@ export class Creature extends ServerGameObject{
             if(obj.id===this.id)continue
             switch(obj.stringType){
                 case "obstacle":
-                    if((obj as Obstacle).def.noCollision)break
+                    if((obj as Obstacle).def.no_collision)break
                     if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
                         const ov=this.hb.overlapCollision((obj as Obstacle).hb)
                         if(ov){
@@ -88,15 +88,13 @@ export class Creature extends ServerGameObject{
             this.loot=this.game.loot_tables.get_loot(this.def.lootTable,{withammo:true})
         }
     }
-    override getData(): CreatureData {
-        return {
-            position:this.position,
-            angle:this.angle,
-            state:this.state,
-            full:{
-                dead:this.dead,
-                def:this.def.idNumber!
-            }
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position)
+        .writeRad(this.angle)
+        .writeUint8(this.state)
+        if(full){
+            stream.writeBooleanGroup(this.dead)
+            stream.writeUint16(this.def.idNumber!)
         }
     }
 }

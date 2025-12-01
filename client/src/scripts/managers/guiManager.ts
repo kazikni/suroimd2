@@ -1,5 +1,5 @@
 import { Game } from "../others/game.ts";
-import { DamageReason, InventoryItemData } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemData, InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
 import { Angle, Numeric, random, v2, Vec2 } from "common/scripts/engine/mod.ts";
 import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
@@ -21,321 +21,8 @@ import { type Loot } from "../gameObjects/loot.ts";
 import { type Obstacle } from "../gameObjects/obstacle.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
-const crosshairSVG = `
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   width="139.00586"
-   height="139.00781"
-   viewBox="-26 -28 139.00586 139.00781"
-   version="1.1"
-   id="svg14"
-   sodipodi:docname="aim.svg"
-   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
-   inkscape:export-filename="MD.png"
-   inkscape:export-xdpi="585.14288"
-   inkscape:export-ydpi="585.14288"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview14"
-     pagecolor="#505050"
-     bordercolor="#ffffff"
-     borderopacity="1"
-     inkscape:showpageshadow="0"
-     inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="1"
-     inkscape:deskcolor="#505050"
-     inkscape:zoom="2.4538289"
-     inkscape:cx="30.768241"
-     inkscape:cy="138.76273"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg14"
-     showgrid="false" />
-  <defs
-     id="defs7">
-    <clipPath
-       id="b">
-      <circle
-         cy="-15"
-         r="9.5"
-         id="circle1"
-         cx="0" />
-      <circle
-         cy="-15"
-         r="9.5"
-         transform="rotate(120)"
-         id="circle2"
-         cx="0" />
-      <circle
-         cy="-15"
-         r="9.5"
-         transform="rotate(-120)"
-         id="circle3"
-         cx="0" />
-    </clipPath>
-    <mask
-       maskUnits="userSpaceOnUse"
-       id="mask14">
-      <g
-         id="g18"
-         transform="matrix(-0.3980914,0.68951456,-0.68951456,-0.3980914,15.914388,-5.5218685)">
-        <path
-           fill="#ffffff"
-           d="M -17.911372,-20.069095 H 49.912244 V 47.754521 H -17.911372 Z"
-           id="path14"
-           style="stroke-width:1.25599" />
-        <path
-           d="m 18.512422,-15.045124 v -5.023971 H 13.48845 v 5.023971 m 1.88399,21.3518796 v 5.0239714 h 1.255992 V 6.3067556"
-           id="path15"
-           style="stroke-width:1.25599" />
-        <circle
-           cy="-4.9971805"
-           r="13.187925"
-           id="circle15"
-           cx="16.000437"
-           style="stroke-width:1.25599" />
-        <g
-           transform="matrix(-0.62799645,1.0877218,-1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g16">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path16"
-             style="stroke-width:1" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle16"
-             cx="0" />
-        </g>
-        <g
-           transform="matrix(-0.62799645,-1.0877218,1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g17">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path17" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle17"
-             cx="0" />
-        </g>
-        <circle
-           r="3.7679787"
-           id="circle18"
-           cx="16.000437"
-           cy="13.842713"
-           style="stroke-width:1.25599" />
-      </g>
-    </mask>
-    <mask
-       maskUnits="userSpaceOnUse"
-       id="mask18">
-      <g
-         id="g22"
-         transform="matrix(-0.3980914,-0.68951456,0.68951456,-0.3980914,-3.1751162,16.543199)"
-         style="stroke-width:1.25599">
-        <path
-           fill="#ffffff"
-           d="M -17.911372,-20.069095 H 49.912244 V 47.754521 H -17.911372 Z"
-           id="path18" />
-        <path
-           d="m 18.512422,-15.045124 v -5.023971 H 13.48845 v 5.023971 m 1.88399,21.3518796 v 5.0239714 h 1.255992 V 6.3067556"
-           id="path19" />
-        <circle
-           cy="-4.9971805"
-           r="13.187925"
-           id="circle19"
-           cx="16.000437" />
-        <g
-           transform="matrix(-0.62799645,1.0877218,-1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g20">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path20" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle20"
-             cx="0" />
-        </g>
-        <g
-           transform="matrix(-0.62799645,-1.0877218,1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g21">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path21" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle21"
-             cx="0" />
-        </g>
-        <circle
-           r="3.7679787"
-           id="circle22"
-           cx="16.000437"
-           cy="13.842713" />
-      </g>
-    </mask>
-    <mask
-       maskUnits="userSpaceOnUse"
-       id="mask22">
-      <g
-         id="g26"
-         transform="matrix(0.79618284,0,0,0.79618284,-12.739273,-11.021331)">
-        <path
-           fill="#ffffff"
-           d="M -17.911372,-20.069095 H 49.912244 V 47.754521 H -17.911372 Z"
-           id="path22" />
-        <path
-           d="m 18.512422,-15.045124 v -5.023971 H 13.48845 v 5.023971 m 1.88399,21.3518796 v 5.0239714 h 1.255992 V 6.3067556"
-           id="path23" />
-        <circle
-           cy="-4.9971805"
-           r="13.187925"
-           id="circle23"
-           cx="16.000437" />
-        <g
-           transform="matrix(-0.62799645,1.0877218,-1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g24">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path24" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle24"
-             cx="0" />
-        </g>
-        <g
-           transform="matrix(-0.62799645,-1.0877218,1.0877218,-0.62799645,16.000436,13.842713)"
-           id="g25">
-          <path
-             d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-             id="path25" />
-          <circle
-             cy="-15"
-             r="10.5"
-             id="circle25"
-             cx="0" />
-        </g>
-        <circle
-           r="3.7679787"
-           id="circle26"
-           cx="16.000437"
-           cy="13.842713" />
-      </g>
-    </mask>
-    <mask
-       id="b-3"
-       maskUnits="userSpaceOnUse"
-       x="-30"
-       y="-30"
-       width="60"
-       height="60">
-      <path
-         d="M -27,-27 H 27 V 27 H -27 Z"
-         fill="#ffffff"
-         id="path3" />
-      <path
-         d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-         id="path4" />
-      <circle
-         cy="-15"
-         r="10.5"
-         id="circle4"
-         cx="0" />
-      <g
-         transform="rotate(120)"
-         id="g5">
-        <path
-           d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-           id="path5" />
-        <circle
-           cy="-15"
-           r="10.5"
-           id="circle5"
-           cx="0" />
-      </g>
-      <g
-         transform="rotate(-120)"
-         id="g6">
-        <path
-           d="m 2,-23 v -4 h -4 v 4 m 1.5,17 v 4 h 1 v -4"
-           id="path6" />
-        <circle
-           cy="-15"
-           r="10.5"
-           id="circle6"
-           cx="0" />
-      </g>
-      <circle
-         r="3"
-         id="circle7"
-         cx="0"
-         cy="0" />
-    </mask>
-    <clipPath
-       id="d">
-      <circle
-         cy="-15"
-         r="9.5"
-         id="circle1-6"
-         cx="0" />
-      <circle
-         transform="rotate(120)"
-         cy="-15"
-         r="9.5"
-         id="circle2-7"
-         cx="0" />
-      <circle
-         transform="rotate(-120)"
-         cy="-15"
-         r="9.5"
-         id="circle3-5"
-         cx="0" />
-    </clipPath>
-  </defs>
-  <g
-     id="g10"
-     style="stroke:none;fill:#ffffff;fill-opacity:1">
-    <path
-       style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;enable-background:accumulate;stop-color:#000000;stop-opacity:1;opacity:1;stroke:none;fill:#ffffff;fill-opacity:1"
-       d="m 44,-18.496094 c -33.091761,0 -60,26.9082392 -60,60 0,33.091761 26.908239,60.000004 60,60.000004 33.091761,0 60,-26.908243 60,-60.000004 0,-33.0917608 -26.908239,-60 -60,-60 z m 0,7.652344 c 28.955854,0 52.347656,23.391802 52.347656,52.347656 C 96.347656,70.45976 72.955854,93.851562 44,93.851562 15.044146,93.851562 -8.3476563,70.45976 -8.3476563,41.503906 -8.3476563,12.548052 15.044146,-10.84375 44,-10.84375 Z"
-       id="path1" />
-    <g
-       id="g9"
-       transform="translate(10,9.503906)"
-       style="stroke:none;fill:#ffffff;fill-opacity:1">
-      <path
-         style="baseline-shift:baseline;display:inline;overflow:visible;opacity:1;vector-effect:none;stroke-width:1.51539;enable-background:accumulate;stop-color:#000000;stop-opacity:1;stroke:none;fill:#ffffff;fill-opacity:1"
-         d="m -36,28.048828 v 7.902344 h 50.534161 v -7.902344 z"
-         id="path2"
-         sodipodi:nodetypes="ccccc" />
-      <path
-         style="baseline-shift:baseline;display:inline;overflow:visible;opacity:1;vector-effect:none;stroke-width:1.50237;enable-background:accumulate;stop-color:#000000;stop-opacity:1;stroke:none;fill:#ffffff;fill-opacity:1"
-         d="m 53.336192,28.048828 v 7.902344 h 49.669668 v -7.902344 z"
-         id="path7"
-         sodipodi:nodetypes="ccccc" />
-      <path
-         style="baseline-shift:baseline;display:inline;overflow:visible;opacity:1;vector-effect:none;stroke-width:1.51966;enable-background:accumulate;stop-color:#000000;stop-opacity:1;stroke:none;fill:#ffffff;fill-opacity:1"
-         d="m 29.550781,-37.503906 v 50.824278 h 7.904297 v -50.824278 z"
-         id="path8"
-         sodipodi:nodetypes="ccccc" />
-      <path
-         style="baseline-shift:baseline;display:inline;overflow:visible;opacity:1;vector-effect:none;stroke-width:1.45361;enable-background:accumulate;stop-color:#000000;stop-opacity:1;stroke:none;fill:#ffffff;fill-opacity:1"
-         d="m 29.550781,55.002097 v 46.501813 h 7.904297 V 55.002097 Z"
-         id="path9"
-         sodipodi:nodetypes="ccccc" />
-    </g>
-  </g>
-</svg>`
+import { CrosshairManager } from "./crosshairManager.ts";
+import { DefaultCrosshair } from "../defs/crosshair.ts";
 export interface HelpGuiState{
     driving:boolean
     gun:boolean
@@ -526,8 +213,6 @@ export class GuiManager{
 
         this.update_ammos({})
         document.addEventListener("contextmenu", e => e.preventDefault());
-        HideElement(this.content.gameD)
-        ShowElement(this.content.menuD)
         HideElement(this.content.emote_wheel.main)
         HideElement(this.content.information_killbox)
 
@@ -638,13 +323,15 @@ export class GuiManager{
         HideElement(this.content.post_proccess.vignetting)
         if(this.game.save.get_variable("cv_graphics_post_proccess")>=GraphicsDConfig.Advanced){
             ShowElement(this.content.post_proccess.tiltshift)
-        }else if(this.game.save.get_variable("cv_graphics_post_proccess")>=GraphicsDConfig.Normal){
+        }
+        if(this.game.save.get_variable("cv_graphics_post_proccess")>=GraphicsDConfig.Normal){
             ShowElement(this.content.post_proccess.vignetting)
             ShowElement(this.content.post_proccess.recolor)
         }
         this.game.renderer.canvas.focus()
 
         this.content.killeader_span.innerText=this.game.language.get("killleader-wait",{})
+        this.enableCrosshair()
     }
     handle_slot_click(e:MouseEvent){
         const t=e.currentTarget as HTMLDivElement
@@ -678,7 +365,7 @@ export class GuiManager{
                 const def=Ammos.getFromString(a)
                 const c=`${ammos[a]}${def.liquid?"l":""}`
                 const htm=`<div class="ammo-slot" id="ammo-${a}">
-                    <image class="icon" src="img/game/common/items/ammos/${a}.svg"></image>
+                    <image class="icon" src="img/game/main/items/ammos/${a}.svg"></image>
                     <span class="count">${c}</span>
                 </div>`
 
@@ -752,7 +439,7 @@ export class GuiManager{
         this.game.gameOver=false
         for(const p of jp.players){
             const badge_frame=p.badge!==undefined?Badges.getFromNumber(p.badge).idString:""
-            const badge_html=badge_frame===""?"":`<img class="badge-icon" src="./img/game/common/loadout/badges/${badge_frame}.svg">`
+            const badge_html=badge_frame===""?"":`<img class="badge-icon" src="./img/game/main/loadout/badges/${badge_frame}.svg">`
             this.players_name[p.id]={name:p.name,badge:badge_html,full:`${badge_html}${p.name}`}
         }
         if(jp.kill_leader){
@@ -761,8 +448,6 @@ export class GuiManager{
                 player:jp.kill_leader
             })
         }
-        ShowElement(this.content.gameD)
-        HideElement(this.content.menuD)
     }
     state:HelpGuiState={
         driving:false,
@@ -785,14 +470,12 @@ export class GuiManager{
             }
         }
     }
-    end_game=false
     clear(){
         this.content.killfeed.innerHTML=""
         this.content.killeader_span.innerText=""
         this.killleader=undefined
         this.content.help_gui.innerText=""
 
-        this.end_game=false
         this.information_killbox_messages=[]
         this.information_killbox_time=0
 
@@ -808,19 +491,6 @@ export class GuiManager{
     }
     information_killbox_messages:string[]=[]
     information_killbox_time:number=0
-    grand_finale(){
-        if(this.end_game)return
-        this.end_game=true
-        this.game.music.set(null)
-        this.game.addTimeout(()=>{
-            if(this.game.living_count[0]>2){
-                this.end_game=false
-                return
-            }
-            this.game.music.set(this.game.resources.get_audio(random.choose(this.game.ending_music)))
-            this.information_killbox_messages.push(`Grand Finale`)
-        },3)
-    }
     assign_killleader(msg:KillFeedMessageKillleader){
         this.killleader={
             id:msg.player.id,
@@ -835,7 +505,7 @@ export class GuiManager{
         switch(msg.type){
             case KillFeedMessageType.join:{
                 const badge_frame=msg.playerBadge!==undefined?Badges.getFromNumber(msg.playerBadge).idString:""
-                const badge_html=badge_frame===""?"":`<img class="badge-icon" src="./img/game/common/loadout/badges/${badge_frame}.svg">`
+                const badge_html=badge_frame===""?"":`<img class="badge-icon" src="./img/game/main/loadout/badges/${badge_frame}.svg">`
                 this.players_name[msg.playerId]={badge:badge_html,name:msg.playerName,full:`${badge_html}${msg.playerName}`}
                 elem.innerHTML=this.game.language.get("killfeed-join",{"player":this.players_name[msg.playerId].full})
                 break
@@ -931,12 +601,24 @@ export class GuiManager{
             elem.remove()
         },4)
     }
-    enableCrosshair(svg: string=crosshairSVG, size: number = 32) {
-        const svgUrl = `data:image/svg+xml;base64,${btoa(svg)}`
-        document.body.style.cursor = `url(${svgUrl}) ${size/2} ${size/2}, crosshair`
+    crosshair=false
+    enableCrosshair() {
+        //CrosshairManager.setCursor(this.content.gameD,DynamicCrosshair)
+        //CrosshairManager.setCursor(this.content.gameD,AimCrosshair)
+        CrosshairManager.setCursor(document.body,DefaultCrosshair)
+        this.crosshair=true
+    }
+    update_crosshair(){
+        if(!this.crosshair)return
+        let spread=0
+        if(this.game.activePlayer?.current_weapon?.item_type===InventoryItemType.gun){
+            spread=this.game.activePlayer.current_weapon.spread??0
+        }
+        CrosshairManager.updateCrosshair(document.body,(spread*11)*this.game.scope_zoom)
     }
     disableCrosshair() {
-        document.body.style.cursor = "default"
+        document.body.style.cursor = this.game.cursors.default
+        this.crosshair=false
     }
     update_gui(priv:PrivateUpdate){
         this.set_health(priv.health,priv.max_health)
@@ -1076,6 +758,7 @@ export class GuiManager{
                 }
             }
         }
+        this.update_crosshair()
     }
     show_game_over(g:GameOverPacket){
         if(this.game.gameOver)return
@@ -1086,7 +769,7 @@ export class GuiManager{
         if(g.Win){
             this.content.gameOver_main_message.innerHTML=this.game.language.get("gameover-you-win",{})
         }else{
-            this.game.music.set(null)
+            this.game.ambient.music.set(null)
             if(!this.players_name[g.Eliminator])return
             this.content.gameOver_main_message.innerHTML=this.game.language.get("gameover-eliminated-by",{
                 player:`<span id="gameover-eliminator">${this.players_name[g.Eliminator].full}</span>`

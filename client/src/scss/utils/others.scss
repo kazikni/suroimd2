@@ -32,6 +32,30 @@
     @media screen and (max-width: palette.$screen_medium) {
         font-size: 15px;
     }
+    pointer-events: none;
+    user-select: none;
+}
+.span-medium{
+    color: #eee;
+    font-size: 20px;
+    font-family: "Russo-One",Arial;
+    @media screen and (max-width: palette.$screen_medium) {
+        font-size: 10px;
+    }
+    pointer-events: none;
+    user-select: none;
+    font-weight: 100;
+}
+
+.span-medium-icon {
+    width: 18px;
+    margin-bottom: -3px;
+    margin-left: 3px;
+}
+.span-large-icon {
+    width: 30px;
+    margin-bottom: -3px;
+    margin-left: 3px;
 }
 .text{
     color: #eee;

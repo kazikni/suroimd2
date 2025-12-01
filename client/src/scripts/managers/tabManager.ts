@@ -113,19 +113,12 @@ export enum TabState{
 }
 export class TabManager {
     game: Game
-    tab = document.querySelector("#tab-view") as HTMLDivElement
-    appsContainer = this.tab.querySelector("#tab-apps") as HTMLDivElement
-    content = {
-        header_text_1: document.querySelector("#tab-header-info-1") as HTMLSpanElement,
-        wallpaper: this.tab.querySelector("#tab-content") as HTMLDivElement,
-        tab_apps:this.tab.querySelector("#tab-apps") as HTMLDialogElement,
-        tab_current_app:this.tab.querySelector("#tab-current-app") as HTMLDivElement,
-
-        back_button:this.tab.querySelector("#tab-exit-button") as HTMLButtonElement,
-    };
+    tab = document.createElement("div")
+    appsContainer:HTMLDivElement
+    content:Record<string,HTMLElement>
 
     full_tab: boolean = false
-    visible_tab: boolean = true
+    visible_tab: boolean = false
     apps: TabApp[] = []
 
     state:TabState=TabState.InitialPage
@@ -137,6 +130,36 @@ export class TabManager {
 
     constructor(game: Game) {
         this.game = game
+        this.tab.innerHTML=`
+<div id="tab-content">
+    <div id="tab-apps">
+    <div class="tab-app">
+        <img src="/img/menu/gui/tab/icons/map.png" draggable="false" app-id="map" class="tab-app-icon">
+    </div>
+    </div>
+    <div id="tab-current-app">
+
+    </div>
+</div>
+<div id="tab-content-header">
+    <p id="tab-header-info-1">4AM 10/03/2010</p>
+    <img draggable="false" src="/img/menu/logos/MD/MD.svg">
+</div>
+<div id="tab-buttons">
+    <div id="tab-exit-button"></div>
+</div>
+`
+        this.content = {
+            header_text_1: this.tab.querySelector("#tab-header-info-1") as HTMLSpanElement,
+            wallpaper: this.tab.querySelector("#tab-content") as HTMLDivElement,
+            tab_apps:this.tab.querySelector("#tab-apps") as HTMLDialogElement,
+            tab_current_app:this.tab.querySelector("#tab-current-app") as HTMLDivElement,
+
+            back_button:this.tab.querySelector("#tab-exit-button") as HTMLButtonElement,
+        };
+        this.tab.id="tab-view"
+        this.tab.className="tab-view-minimized"
+        this.appsContainer=this.tab.querySelector("#tab-apps") as HTMLDivElement
         this.appsContainer.innerHTML=""
         this.set_wallpaper("/img/menu/gui/tab/tab_wallpaper_abstract.png")
 
@@ -145,8 +168,11 @@ export class TabManager {
 
         this.add_app(new MessageTabApp(this))
 
-        this.tab.onclick=(_e)=>{
-            this.game.input_manager.focus=false
+        this.tab.onmouseover=(_e)=>{
+            if(this.full_tab)this.game.input_manager.focus=false
+        }
+        this.tab.onmouseout=(_e)=>{
+            if(this.full_tab)this.game.input_manager.focus=true
         }
     }
 
@@ -158,9 +184,9 @@ export class TabManager {
         this.visible_tab = !this.visible_tab
         if(this.full_tab)this.toggle_tab_full()
         if(this.visible_tab){
-            ShowElement(this.tab,true)
+            this.game.guiManager.content.game_gui.appendChild(this.tab)
         }else{
-            HideElement(this.tab,true)
+            this.tab.remove()
         }
     }
 

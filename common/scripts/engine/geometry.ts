@@ -1,4 +1,5 @@
 import { random, SeededRandom } from "./random.ts"
+import { Numeric } from "./utils.ts";
 export interface Vec2{
     x:number
     y:number
@@ -6,6 +7,8 @@ export interface Vec2{
 export type Orientation=0|1|2|3
 export type RadAngle=number
 export type DegAngle=number
+export const π = 3.141592
+export const τ = 1.570796
 function float32ToUint32(value: number): number {
     const floatView = new Float32Array(1)
     const intView = new Uint32Array(floatView.buffer)
@@ -144,6 +147,11 @@ export const v2m=Object.freeze({
         vec.x=x * cos - y * sin
         vec.y=x * sin + y * cos
     },
+
+    neg(vec:Vec2){
+        vec.x=-vec.x
+        vec.y=-vec.y
+    }
 })
 export const v2_sides:Array<Vec2>=[
     {
@@ -869,16 +877,19 @@ export const Angle=Object.freeze({
     rad2deg(angle:RadAngle):DegAngle {
         return angle * 180 / Math.PI
     },
+    normalize(a: RadAngle): number {
+        return Numeric.abs_module(a - π, τ) - π
+    },
     side_rad(side:Orientation){
         switch(side){
             case 0:
                 return 0
             case 1:
-                return 3.141592/2
+                return τ
             case 2:
-                return 3.141592
+                return π
             case 3:
-                return -(3.141592/2)
+                return -τ
         }
     },
     side_deg(side:Orientation){
@@ -961,7 +972,7 @@ export function SmoothShape2D(polygon: Vec2[], subdivisions: number = 8): Vec2[]
 export type OverlapCollision2D={
     dir:Vec2
     pen:number
-}|undefined|null
+}
 export const Collision=Object.freeze({
     circle_with_circle(circle_1_radius:number,circle_2_radius:number,circle_1_position:Vec2,circle_2_position:Vec2){
         return v2.distance(circle_1_position,circle_2_position)<circle_1_radius+circle_2_radius
@@ -974,7 +985,6 @@ export const Collision=Object.freeze({
         const distSq = v2.distanceSquared(circle_position, closest);
         return distSq <= (circle_radius * circle_radius);
     },
-
     circle_with_rect_ov(circle_pos: Vec2, radius: number, rect_min: Vec2, rect_max: Vec2) {
         const closest = v2.clamp2(circle_pos, rect_min, rect_max);
 
@@ -986,10 +996,10 @@ export const Collision=Object.freeze({
             const dist = Math.sqrt(distSq) || 0.000001;
             const penetration = radius - dist;
 
-            const normal = v2.scale(diff, 1 / dist);
+            const normal = v2.scale(diff, -(1 / dist));
 
             return {
-                dir: v2.scale(normal,-1),
+                dir: normal,
                 pen: penetration
             };
         }

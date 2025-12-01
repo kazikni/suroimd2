@@ -1,14 +1,15 @@
 import { Hitbox2D, NetStream, NullHitbox2D, NullVec2, PolygonHitbox2D, RectHitbox2D, SeededRandom, Vec2, jaggedRectangle, random, v2 } from "common/scripts/engine/mod.ts";
 import { type Game } from "./game.ts";
 import { Obstacle } from "../gameObjects/obstacle.ts";
-import { ObstacleDef, Obstacles, SpawnMode, SpawnModeType } from "common/scripts/definitions/objects/obstacles.ts"
+import { ObstacleDef, Obstacles } from "common/scripts/definitions/objects/obstacles.ts"
 import { IslandDef, MapDef } from "common/scripts/definitions/maps/base.ts"
 import { MapPacket,MapObjectEncode } from "common/scripts/packets/map_packet.ts"
 import { FloorType, generate_rivers, TerrainManager } from "common/scripts/others/terrain.ts"
-import { Layers } from "common/scripts/others/constants.ts"
+import { Layers, SpawnMode, SpawnModeType } from "common/scripts/others/constants.ts"
 import { CircleHitbox2D } from "common/scripts/engine/hitbox.ts"
 import { Creatures } from "common/scripts/definitions/objects/creatures.ts"
-import {BuildingDef} from "common/scripts/definitions/objects/buildings_base.ts"
+import {BuildingDef, Buildings} from "common/scripts/definitions/objects/buildings_base.ts"
+import { Building } from "../gameObjects/building.ts";
 export type map_gen_algorithm=(map:GameMap,random:SeededRandom)=>void
 export const generation={
     island:(def:IslandDef)=>{
@@ -31,7 +32,7 @@ export const generation={
                     {name:"main",padding:0}
                 ])
                 for(const r of rivers){
-                    map.terrain.add_floor(FloorType.Water,r.collisions.main,Layers.Normal)
+                    map.terrain.add_floor(def.terrain.rivers.floor??FloorType.Water,r.collisions.main,Layers.Normal)
                 }
             }
             for(const spawn of def.spawn??[]){
@@ -43,7 +44,7 @@ export const generation={
                             const obj=map.game.add_creature(v2.new(0,0),def,item.layer)
                             const pos=map.getRandomPosition(obj.hb,obj.id,obj.layer,item.spawn??def.spawn??{
                                 type:SpawnModeType.whitelist,
-                                list:[FloorType.Grass]
+                                list:[FloorType.Grass,FloorType.Ice]
                             },random)
                             if(!pos){
                                 obj.destroy()
@@ -51,10 +52,16 @@ export const generation={
                             }
                             obj.position=pos
                         }
-                    }else{
+                    }else if(Obstacles.exist(item.id)){
                         const def=Obstacles.getFromString(item.id)
                         for(let idx=0;idx<count;idx++){
                             const obj=map.generate_obstacle(def,random,item.spawn,item.layer)
+                            if(!obj)break
+                        }
+                    }else if(Buildings.exist(item.id)){
+                        const def=Buildings.getFromString(item.id)
+                        for(let idx=0;idx<count;idx++){
+                            const obj=map.generate_building(def,random,item.spawn,item.layer)
                             if(!obj)break
                         }
                     }
@@ -67,7 +74,7 @@ export const generation={
                     const loot=map.game.loot_tables.get_loot(l.table,{withammo:true})
                     const pos:Vec2|undefined=map.getRandomPosition(new CircleHitbox2D(v2.new(0,0),0.6),-1,layer,{
                         type:SpawnModeType.blacklist,
-                        list:[FloorType.Water]
+                        list:[map.def.default_floor??FloorType.Water]
                     },random)
                     if(!pos)break
                     for(const ll of loot){
@@ -157,9 +164,27 @@ export class GameMap{
         o.manager.cells.updateObject(o)
         return o
     }
+    generate_building(def:BuildingDef,random:SeededRandom,spawn?:SpawnMode,layer?:Layers):Building|undefined{
+        const b=new Building()
+        b.set_definition(def)
+        b.layer=layer??Layers.Normal
+        const p=this.getRandomPosition(def.spawnHitbox?def.spawnHitbox.clone():(def.hitbox?def.hitbox.clone():new NullHitbox2D(v2.new(0,0))),b.id,layer??b.layer,spawn??b.def.spawnMode,random)
+        if(!p){
+            b.destroy()
+            return undefined
+        }
+        
+        this.game.scene.objects.add_object(b,b.layer,undefined,{
+            def:def
+        })
+        b.generate(p,0)
+        return b
+    }
+    def!:MapDef
     generate(definition:MapDef,seed:number=random.float(0,231412)){
         const random=new SeededRandom(seed)
         this.random=random
+        this.def=definition
 
         this.game.loot_tables.clear()
         this.game.loot_tables.add_tables(definition.loot_tables)
@@ -174,12 +199,11 @@ export class GameMap{
         algorithm(this,random)
         this.game.clients.packets_manager.encode(this.encode(seed),this.map_packet_stream)
     }
-    add_building(def:BuildingDef,position:Vec2,side:0|1|2|3=0){
-        for(const o of def.obstacles){
-            const odef=Obstacles.getFromString(o.id)
-            const obj=this.add_obstacle(odef,o.rotation)
-            obj.set_position(v2.add_with_orientation(position,o.position,side))
-        }
+    add_building(def:BuildingDef,position:Vec2,side:0|1|2|3,layer:number=Layers.Normal){
+        const b=new Building()
+        this.game.scene.objects.add_object(b,layer,undefined,{})
+        b.set_definition(def)
+        b.generate(position,side)
     }
     encode(seed:number):MapPacket{
         const p=new MapPacket()
@@ -200,7 +224,8 @@ export class GameMap{
             terrain:this.terrain.floors,
             size:this.size,
             seed:seed,
-            objects
+            objects,
+            biome:this.def.biome
         }
         return p
     }

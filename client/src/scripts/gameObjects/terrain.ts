@@ -6,6 +6,7 @@ import { type Game } from "../others/game.ts";
 import { HitboxType2D, PolygonHitbox2D } from "common/scripts/engine/hitbox.ts";
 import { model2d } from "common/scripts/engine/models.ts";
 import { Debug } from "../others/config.ts";
+import { BiomeDef } from "common/scripts/definitions/maps/base.ts";
 
 export class TerrainM extends TerrainManager{
     map!:MapConfig
@@ -14,21 +15,31 @@ export class TerrainM extends TerrainManager{
         super()
         this.game=game
     }
-    process_map(mp:MapConfig){
-        this.map=mp
-        for(const f of mp.terrain){
-            this.add_floor(f.type,f.hb,f.layer,f.smooth)
-        }
+    process_map(mp:MapConfig):Promise<void>{
+        return new Promise<void>((resolve, _reject) => {
+            this.map=mp
+            for(const f of mp.terrain){
+                this.add_floor(f.type,f.hb,f.layer,f.smooth)
+            }
+            this.biome=mp.biome
+            resolve()
+        })
     }
+    biome?:BiomeDef
 
-    draw(graphic:Graphics2D,scale:number){
+    draw(graphic:Graphics2D,scale:number){  
         for(const f of this.floors){
+            const flb=this.biome?.floors[f.type]
             graphic.beginPath()
             graphic.set_hitbox(f.hb)
             //if(f.smooth)graphic.smooth_shape()
             graphic.repeat_size=3
             graphic.endPath()
-            graphic.fill_color(ColorM.number(Floors[f.type].default_color))
+            const col=
+            (flb?.color!==undefined)?
+            flb?.color:
+            Floors[f.type].default_color
+            graphic.fill_color(ColorM.number(col))
             graphic.fill()
         }
 

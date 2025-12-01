@@ -1,8 +1,8 @@
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { Definitions,Definition, DeepPartial } from "../../engine/mod.ts";
 import { mergeDeep } from "../../engine/utils.ts";
-import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig } from "../../others/item.ts";
-import { type BulletDef, InventoryItemType } from "../utils.ts";
+import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponFrames } from "../../others/item.ts";
+import { type BulletDef, BulletReflection, InventoryItemType } from "../utils.ts";
 export enum FireMode{
     Auto,
     Single,
@@ -87,6 +87,7 @@ export type GunDef={
     }
     arms?:FistRig
     image?:WeaponRig
+    frames?:WeaponFrames
     caseParticle?:{
         position:Vec2
         at_begin?:boolean
@@ -177,7 +178,7 @@ Guns.insert(
         fireMode:FireMode.Single,
         class:GunClasses.Pistol,
         quality:ItemQuality.Common,
-        ammoSpawnAmount:25,
+        ammoSpawnAmount:45,
         bullet:{
             def:{
                 damage:11,
@@ -187,6 +188,55 @@ Guns.insert(
                 speed:31,
                 obstacleMult:1.2,
                 tracer:tracers.small
+            }
+        },
+        reload:{
+            delay:2,
+            capacity:15,
+        },
+        recoil:{
+            duration:0.34,
+            speed:0.8
+        },
+        speed_mod:0.98,
+        arms:WeaponsArmRig[3],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0xaaaaaa
+        },
+        gasParticles:GasParticles.pistols,
+        muzzleFlash:MuzzleFlash.normal,
+        image:WeaponsRig[0],
+        dual:{
+            dual_offset:0.2,
+            fireDelay:0.15,
+            reload:{
+                capacity:30,
+                delay:3
+            }
+        }
+    },
+    {
+        idString:"yellow_laser_gun",
+        fireDelay:0.2,
+        spread:0.7,
+        lenght:0.8,
+        size:6,
+        ammoType:"9mm",
+        fireMode:FireMode.Single,
+        class:GunClasses.Pistol,
+        quality:ItemQuality.Common,
+        ammoSpawnAmount:25,
+        bullet:{
+            def:{
+                damage:11,
+                radius:0.02,
+                range:100,
+                falloff:0.8,
+                speed:31,
+                obstacleMult:1.2,
+                tracer:tracers.small,
+                reflection:BulletReflection.All
             }
         },
         reload:{
@@ -202,6 +252,10 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         image:WeaponsRig[0],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0xaaaaaa
+        },
         dual:{
             dual_offset:0.2,
             fireDelay:0.15,
@@ -319,7 +373,16 @@ Guns.insert(
         },
         muzzleFlash:MuzzleFlash.normal,
         speed_mod:0.95,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            rotation:0
+        },
     },
     {
         idString:"famas",
@@ -356,7 +419,16 @@ Guns.insert(
             speed:0.5
         },
         speed_mod:0.95,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            rotation:0
+        },
     },
     {
         idString:"mp5",
@@ -398,7 +470,7 @@ Guns.insert(
     },
     {
         idString:"vector",
-        fireDelay:0.05,
+        fireDelay:0.03,
         switchDelay:0.7,
         spread:2,
         lenght:0.6,
@@ -409,7 +481,7 @@ Guns.insert(
         quality:ItemQuality.Mythic,
         bullet:{
             def:{
-                damage:7,
+                damage:6,
                 radius:0.014,
                 range:60,
                 criticalMult:1.5,
@@ -429,14 +501,18 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         arms:WeaponsArmRig[2],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x3f3a2f
+        },
         image:{
-            position:v2.new(0.3,0.0),
+            position:v2.new(0.6,0.0),
             rotation:0
         },
     },
     {
         idString:"uzi",
-        fireDelay:0.06,
+        fireDelay:0.03,
         switchDelay:0.7,
         spread:9,
         lenght:0.68,
@@ -463,7 +539,17 @@ Guns.insert(
             speed:0.77
         },
         speed_mod:1,
-        gasParticles:GasParticles.automatic
+        gasParticles:GasParticles.automatic,
+        arms:WeaponsArmRig[2],
+        frames:{
+            world:"weapon_small_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.6,0.0),
+            scale:1.2,
+            rotation:0
+        },
     },
     {
         idString:"kar98k",
@@ -723,7 +809,16 @@ Guns.insert(
             speed:0.75
         },
         speed_mod:1,
-        gasParticles:GasParticles.shotgun
+        gasParticles:GasParticles.shotgun,
+        arms:WeaponsArmRig[0],
+        frames:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f
+        },
+        image:{
+            position:v2.new(0.45,0.0),
+            rotation:0
+        },
     },
     {
         idString:"rpg7",
@@ -732,7 +827,7 @@ Guns.insert(
         lenght:1,
         size:6,
         ammoType:"explosive_ammo",
-        fireMode:FireMode.Auto,
+        fireMode:FireMode.Single,
         class:GunClasses.Miscellaneous,
         quality:ItemQuality.Legendary,
         ammoSpawnAmount:11,
@@ -807,6 +902,7 @@ Guns.insert(
                 speed:30,
                 criticalMult:4,
                 obstacleMult:5,
+                reflection:BulletReflection.None,
                 tracer:{
                     height:6,
                     width:6,

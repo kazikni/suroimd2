@@ -1,62 +1,58 @@
-# Suroimd.io 2 Pre-Beta
+# Suroimd.io 2 Pre-Beta-2
 ## News
 __                                                                                                      __
 ### Mains
-* **DeadZone!!!!!**
-* **Emotes!!**
-* **Gameplay Musics!**
-* **ThunderStorm!**
-* Kill Leader Sounds
-* Tab
-* Badges
-* Loot Sounds And Gui
-* Alternative Vehicles Control
-* Translations
+* **SNOW MAP!!** Mary Christmas
+* Containers
+* Christmas Tree
+* A New Movimentation
+* Snow Storm
+* Ice
+* Ice Slide
+* Biome Musics
+* Day And Night Cycle
 __                                                                                                      __
 ### Menu
-* Debug Menu (Press Delete Or R3 To Access)
-* Fps Analizer
-* Crosshair
-* Alice Winner Skin
-* A New Background Art
+* Menu Music
+* Loading Screen
+* A Sound For Buttons Click
+* Normal Mode Image Changed To A Gif
+* A New Gif For Snow Mode
+* Accounts Enabled For Test - PLEASE DONT USE YOUR REAL PASSWORD
+* News Now Suport Markdown
 __                                                                                                      __
 ### Items
-* Explosive Ammo - A New Ammo
-* Gasoline - A New Ammo And Liquid
-* RPG-7 - A Rocket Launcher When use Explosive Ammo
-* M2-2 - A Flamethrower
-* Projectiles Return
-* Projectiles Throw And Hold
-* Vests Icon
-* Vests Visual In Game
+* Yellow Laser Pistol: A Weapon Madded To Test Reflections
+* Red Soda: A Alternative For Small Red Crystal
+* M9 Sounds
+* M9 Placeholder Graphics
+* Green Soda And Green Bless
+* Black Soda And Death
+* Medikit Sfx
+* Bandage Sfx
+* Pills Sfx
 __                                                                                                      __
-### Keys And Controls
-* Swamp Guns Slot (Use F)
+### Others
+* New Snow Musics
 __                                                                                                      __
 ## Changes
 __                                                                                                      __
 ### Items
-* Survival Knife Animation
-* Survival Knife Redesign
-* Famas - 556mm Epic Gun. The First Burst Gun
-* Hammer Redesign
-* Axe Redesign
-* Swing Melee Animation
-* Melee Loot View
-* Melees On Loot Table
+* Quickswitch Improvement
+* Survival Knife Attack Delay Come From 0.2s To 0.4s
+* Bandage Now Healing Come From 15 To 20
+* Soda Become Yellow Soda
+* Small Blue Potion Become Blue Soda
+* Small Purple Potion Become Purple Soda
+* Small Red Crystal Just Heal Until 50%
 __                                                                                                      __
 ### Others
-* **Web Workers!!** Now The Game Run 2 times faster in campaing mode
-* Bots Now Start With Items
-* Remove Expanded Inventory
-* A Redesign In Almost Everthing
+* Readd Rivers
+* Some Musics Change The Biome
 __                                                                                                      __
 ## Fixes
-* **GIANT OPTIMISATION!!!** No More Lag
-* **REQUEST ANIMATION FRAME!**
-* Triangulation On Terrain
+* Rect Hitbox Damage
 __                                                                                                      __
 # Play The Game
 https://suroimd.io
-The Is Just Playable In Offline Mode.
 If You Found A Bug, Glitch Or Issue Report To Me Or in #❌issues

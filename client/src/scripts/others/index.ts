@@ -1,4 +1,4 @@
-import { ResourcesManager, WebglRenderer} from "../engine/mod.ts"
+import { ResourcesManager, ShowElement, WebglRenderer} from "../engine/mod.ts"
 import { Game} from "./game.ts"
 import { ConfigCasters, ConfigDefaultActions, ConfigDefaultValues } from "./config.ts";
 import "../../scss/main.scss"
@@ -26,12 +26,17 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
         "loot":1,
         "obstacles":1,
         "explosions":1,
-        "ambience":1
+        "ambience":1,
+        "ui":1
     }
 
     const renderer=new WebglRenderer(canvas)
 
     const resources=new ResourcesManager(renderer.gl,sounds)
+    await resources.load_audio("menu_music",{src:"/sounds/musics/menu_music.mp3",volume:1},"essentials")
+    await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1},"essentials")
+
+    sounds.init_html_sound_bindings("ui",resources)
 
     const GameSave=new GameConsole()
     GameSave.input_manager=inputs
@@ -71,19 +76,20 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
             this.game.onstop=this.closeGame.bind(this)
         }
         async playGame(join_config:JoinConfig){
-            if(this.game.happening||!menu_manager.loaded)return
+            if(this.game.happening)return
             let socket:BasicSocket
             if (join_config.offline) {
                 const worker = new Worker(new URL("./worker_server.ts", import.meta.url), {
                     type: "module",
                 });
 
+                this.game.offline=true
                 worker.postMessage({
                     type: "start",
                     config: {
                         game: {
                             options: {
-                                gameTps: 60,
+                                gameTps: 100,
                                 netTps: 30
                             },
                             debug:{
@@ -101,10 +107,8 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
                 });
 
                 socket = new WorkerSocket(worker);
-
-                const c = new Client(socket, PacketManager);
-                c.onopen = this.game.connect.bind(this.game, c, GameSave.get_variable("cv_loadout_name"));
             }else{
+                this.game.offline=false
                 const reg=menu_manager.api_settings.regions[GameSave.get_variable("cv_game_region")]
                 const ser=new IPLocation(reg.host,reg.port)
                 const ghost=await((await fetch(`${ser.toString("http")}/api/get-game`)).json())
@@ -112,14 +116,13 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
                     socket=new WebSocket(`ws${ghost.address}/api/ws`) as unknown as BasicSocket
                 }
             }
+            ShowElement(menu_manager.content.loading_screen,true)
             const c=new Client(socket!,PacketManager)
-            c.onopen=this.game.connect.bind(this.game,c,GameSave.get_variable("cv_loadout_name"))
-
+            c.onopen=this.game.connected.bind(this.game,c,GameSave.get_variable("cv_loadout_name"))
             this.game.running=true
-            menu_manager.game_start()
         }
         closeGame(){
-            menu_manager.update_account()
+            if(menu_manager.account.enabled)menu_manager.account.update_account()
             this.game.scene.objects.clear()
             this.game.guiManager.clear()
             this.game.menuManager.game_end()

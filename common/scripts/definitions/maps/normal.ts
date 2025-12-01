@@ -1,7 +1,19 @@
 import { v2 } from "../../engine/geometry.ts";
 import { FloorType } from "../../others/terrain.ts";
-import { type MapDef } from "./base.ts";
+import { BiomeDef, type MapDef } from "./base.ts";
+export const NormalBiome:BiomeDef={
+    floors:{
 
+    },
+    assets:[
+        "normal"
+    ],
+    ambient:{
+        particles:["leaf_01_particle_1"],
+        rain:true,
+        sound:"storm_ambience"
+    }
+}
 export const NormalMap:MapDef={
     loot_tables:{
         //Guns
@@ -41,8 +53,8 @@ export const NormalMap:MapDef={
             {table:"legendary_guns",weight:0.01}
         ],
         "melees":[
-            {table:"axe",weight:10},
-            {table:"sledgehammer",weight:1},
+            {item:"axe",weight:10},
+            {item:"sledgehammer",weight:1},
         ],
         "special_guns":[
             {table:"uncommon_guns",weight:29},
@@ -53,38 +65,39 @@ export const NormalMap:MapDef={
         ],
         //Consumibles
         "consumibles":[
-            {table:"healing",weight:13},
-            {table:"adrenaline",weight:6},
-            {table:"shield",weight:2},
-            {table:"addiction",weight:0.7},
+            {"item":"bandage","count":5,"weight":1000},
+            {"item":"yellow_soda","count":1,"weight":950},
+            {"item":"blue_soda","count":2,"weight":700},
+            {"item":"inhaler","count":1,"weight":400},
+            {"item":"medikit","count":1,"weight":350},
+            {"item":"blue_potion","count":1,"weight":240},
+            {"item":"small_red_crystal","count":4,"weight":130},
+            {"item":"red_soda","count":1,"weight":110},
+            {"item":"red_crystal","count":2,"weight":60},
+            {"item":"yellow_pills","count":1,"weight":4},
+            {"item":"blue_pills","count":1,"weight":4},
+            {"item":"red_pills","count":1,"weight":2.5},
+            {"item":"green_soda","count":1,"weight":3},
+            {"item":"black_soda","count":1,"weight":1.25}
         ],
         "special_consumibles":[
-            {table:"healing",count:2,weight:13},
-            {table:"adrenaline",count:2,weight:6},
-            {table:"shield",count:2,weight:2},
-            {table:"addiction",count:2,weight:0.7},
-        ],
-        "healing":[
-            {item:"bandage",count:5,weight:1},
-            {item:"medikit",count:1,weight:0.6},
-        ],
-        "adrenaline":[
-            {item:"soda",count:1,weight:100},
-            {item:"inhaler",count:1,weight:40},
-            {item:"yellow_pills",count:1,weight:3},
-        ],
-        "shield":[
-            {item:"small_blue_potion",count:2,weight:100},
-            {item:"blue_potion",count:1,weight:40},
-            {item:"blue_pills",count:1,weight:3},
-        ],
-        "addiction":[
-            {item:"small_red_crystal",count:4,weight:100},
-            {item:"red_crystal",count:2,weight:40},
-            {item:"red_pills",count:1,weight:3},
+            {"item":"bandage","count":10,"weight":1000},
+            {"item":"yellow_soda","count":2,"weight":950},
+            {"item":"blue_soda","count":3,"weight":700},
+            {"item":"inhaler","count":2,"weight":400},
+            {"item":"medikit","count":1,"weight":350},
+            {"item":"blue_potion","count":2,"weight":240},
+            {"item":"small_red_crystal","count":6,"weight":130},
+            {"item":"red_soda","count":2,"weight":110},
+            {"item":"red_crystal","count":2,"weight":60},
+            {"item":"yellow_pills","count":1,"weight":4},
+            {"item":"blue_pills","count":1,"weight":4},
+            {"item":"red_pills","count":1,"weight":2.5},
+            {"item":"green_soda","count":2,"weight":3},
+            {"item":"black_soda","count":2,"weight":1.25}
         ],
         "mana":[
-            {item:"small_purple_potion",count:2,weight:100},
+            {item:"purple_soda",count:2,weight:100},
             {item:"purple_potion",count:1,weight:40},
             {item:"purple_pills",count:1,weight:3},
         ],
@@ -198,25 +211,28 @@ export const NormalMap:MapDef={
             [{weight:10,count:1,table:""},{weight:1,count:1,table:"ammos"}],
         ]
     },
+    biome:NormalBiome,
     generation:{
         island:{
             size:v2.new(500,500),
-            ground_loot:[{count:900,table:"ground_loot"}],
+            ground_loot:[{count:80,table:"ground_loot"}],
             spawn:[
                 [
-                    {id:"oak_tree",count:2900},
-                    {id:"stone",count:2000},
-                    {id:"bush",count:1500},
-                    {id:"wood_crate",count:700},
+                    {id:"container_1",count:25},
+                    {id:"container_2",count:25},
+                    {id:"oak_tree",count:2700}, //90% of 3000
+                    {id:"stone",count:1800}, //90% of 2000
+                    {id:"bush",count:1350}, //90% of 1500
+                    {id:"wood_crate",count:630},//90% of 700
                     {id:"copper_crate",count:20},
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
-                    {id:"barrel",count:700}
+                    {id:"barrel",count:630}, //90% of 700
                 ]
             ],
             terrain:{
                 base:FloorType.Water,
-                /*rivers:{
+                rivers:{
                     divisions:100,
                     spawn_floor:1,
                     expansion:32,
@@ -235,7 +251,7 @@ export const NormalMap:MapDef={
                             weight:1
                         }
                     ]
-                },*/
+                },
                 floors:[
                     {
                         padding:30,
@@ -254,7 +270,6 @@ export const NormalMap:MapDef={
         }
     },
 }
-
 export const NormalLobby:MapDef={
     loot_tables:NormalMap.loot_tables,
     generation:{
@@ -270,8 +285,8 @@ export const NormalLobby:MapDef={
                     {id:"copper_crate",count:3},
                     {id:"barrel",count:8},
 
-                    {id:"pig",count:10},
-                    {id:"chicken",count:10}
+                    /*{id:"pig",count:10},
+                    {id:"chicken",count:10}*/
                 ]
             ],
             terrain:{
@@ -312,5 +327,96 @@ export const NormalLobby:MapDef={
                 ]
             }
         },
+    },
+    biome:NormalBiome,
+}
+export const SnowBiome:BiomeDef={
+    floors:{
+        [FloorType.Sand]:{
+            color:0x8a979e
+        }
+    },
+    biome_skin:"snow",
+    assets:["normal","christmas"],
+    ambient:{
+        particles:[],
+        rain:false,
+        snow:true,
+        sound:"snowstorm_ambience"
     }
+}
+export const SnowMap:MapDef={
+    loot_tables:{...NormalMap.loot_tables,
+        christmas_tree:[
+            [{item:"kar98k",weight:10},{item:"awp",weight:1}],
+            [{item:"m870",weight:10},{item:"spas12",weight:1}],
+
+            [{table:"special_healings",count:3,weight:6}],
+            [{table:"ammos",count:6,weight:6}],
+            [{table:"special_equipments",count:3,weight:6}],
+            [{table:"airdrop_equipments",weight:6}],
+            [{table:"melees",count:1,weight:6}],
+        ]
+    },
+    default_floor:FloorType.Ice,
+    biome:SnowBiome,
+    generation:{
+        island:{
+            size:v2.new(500,500),
+            ground_loot:[{count:80,table:"ground_loot"}],
+            spawn:[
+                [
+                    {id:"christmas_tree",count:3},
+                    {id:"container_1",count:25},
+                    {id:"container_2",count:25},
+                    {id:"oak_tree",count:2700}, //90% of 3000
+                    {id:"stone",count:1800}, //90% of 2000
+                    {id:"bush",count:1350}, //90% of 1500
+                    {id:"wood_crate",count:630},//90% of 700
+                    {id:"copper_crate",count:20},
+                    {id:"iron_crate",count:1},
+                    {id:"gold_crate",count:1},
+                    {id:"barrel",count:630}, //90% of 700
+                ]
+            ],
+            terrain:{
+                base:FloorType.Ice,
+                rivers:{
+                    divisions:100,
+                    spawn_floor:1,
+                    expansion:32,
+                    floor:FloorType.Ice,
+                    defs:[
+                        {
+                            rivers:[
+                                {sub_river_width:5,width:7,width_variation:1,sub_river_chance:0.5},
+                                {sub_river_width:5,width:8,width_variation:1,sub_river_chance:0.1},
+                            ],
+                            weight:10
+                        },
+                        {
+                            rivers:[
+                                {sub_river_width:10,width:15,width_variation:1,sub_river_chance:0.9},
+                            ],
+                            weight:1000
+                        }
+                    ]
+                },
+                floors:[
+                    {
+                        padding:30,
+                        type:FloorType.Sand,
+                        spacing:3,
+                        variation:3,
+                    },
+                    {
+                        padding:14,
+                        type:FloorType.Snow,
+                        spacing:3,
+                        variation:3,
+                    }
+                ]
+            }
+        }
+    },
 }

@@ -1,7 +1,6 @@
 {
   "tasks": {
     "dev:game": "deno run --watch -A ./src/game_server/others/main.ts",
-    "dev:api:deno": "deno run --watch -A ./src/api/api.ts",
     "dev:api":"go run src/api/main.go",
     "build:api":"go build -o dist/main.exe src/api/main.go",
     "prod_l:api":"sudo /usr/local/go/bin/go run src/api/main.go",

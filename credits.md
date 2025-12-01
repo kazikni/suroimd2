@@ -1,9 +1,9 @@
 # Suroimd.io 2
 ## Programmers
-* @kaklik
+* @kazikni
 * @viktor_hg
 ## Designers
-* @kaklik
+* @kazikni
 * @namerio
 * @cheerfulbull_29688
 * @endermanking
@@ -15,12 +15,13 @@
 * @.ryanzero
 * @rivals2444
 * I Wanna Be The Guy
+* Some Youtube Musics
 * NoCopyrightSound
 ## Additional Art
 * @sentido_ss
 * @bien.star
 ## Creator
-* Kaklik
+* Kazikni
 ## Special Thanks To
 @hasanger 
 @1092384

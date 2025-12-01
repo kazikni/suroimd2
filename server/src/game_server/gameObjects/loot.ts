@@ -1,5 +1,4 @@
-import { CircleHitbox2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
-import { LootData } from "common/scripts/others/objectsEncode.ts";
+import { CircleHitbox2D, NetStream, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
 import { GameConstants } from "common/scripts/others/constants.ts";
 import { ServerGameObject } from "../others/gameObject.ts";
 import { type Player } from "./player.ts";
@@ -11,6 +10,8 @@ import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
 import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
+import { Floors, FloorType } from "common/scripts/others/terrain.ts";
+import { Building } from "./building.ts";
 
 export class Loot extends ServerGameObject{
     velocity:Vec2
@@ -105,38 +106,57 @@ export class Loot extends ServerGameObject{
         return
     }
     oldPos:Vec2=v2.new(-1,-1)
+    current_floor:FloorType=FloorType.Water
     update(dt:number): void {
-        v2m.add_component(this.position,this.velocity.x*dt,this.velocity.y*dt)
         if(!v2.is(this.position,this.oldPos)){
             this.dirtyPart=true
             this.oldPos=v2.duplicate(this.position)
             this.game.map.clamp_hitbox(this.hb)
             this.manager.cells.updateObject(this)
+            this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
         }
+        const cf=Floors[this.current_floor]
+        const speed=1
+                  * (cf.speed_mult??1)
         const others=this.manager.cells.get_objects(this.hb,this.layer)
         for(const other of others){
             switch(other.stringType){
                 case "loot":{
                     if(other.id===this.id)continue
                     const col=this.hb.overlapCollision(other.hb)
-                    if(col){
-                        this.velocity=v2.sub(this.velocity,v2.scale((col.dir.x===1&&col.dir.y===0)?v2.random(-1,1):col.dir,0.025))
+                    if(col.length>0){
+                        this.velocity=v2.sub(this.velocity,v2.scale((col[0].dir.x===1&&col[0].dir.y===0)?v2.random(-1,1):col[0].dir,3*dt))
                     }
                     break
                 }
                 case "obstacle":{
-                    if((other as Obstacle).dead||(other as Obstacle).def.noCollision||!(other.hb))break
+                    if((other as Obstacle).dead||(other as Obstacle).def.no_collision||!(other.hb))break
                     const col=this.hb.overlapCollision(other.hb)
-                    if(col){
-                        this.position=v2.sub(this.position,v2.scale(col.dir,col.pen))
-                        this.velocity=v2.sub(this.velocity,v2.scale((col.dir.x===1&&col.dir.y===0)?v2.random(-1,1):col.dir,0.03))
+                    for(const c of col){
+                        this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
+                        this.velocity=v2.sub(this.velocity,v2.scale((c.dir.x===1&&c.dir.y===0)?v2.random(-1,1):c.dir,0.03))
+                    }
+                    break
+                }
+                case "building":{
+                    if((other as Building).def.no_collisions||!(other.hb))break
+                    const col=this.hb.overlapCollision(other.hb)
+                    for(const c of col){
+                        this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
+                        this.velocity=v2.sub(this.velocity,v2.scale((c.dir.x===1&&c.dir.y===0)?v2.random(-1,1):c.dir,0.03))
                     }
                     break
                 }
             }
             
         }
-        v2m.scale(this.velocity,this.velocity,1/(1+dt*GameConstants.loot.velocityDecay))
+        if(this.velocity.x!=0||this.velocity.y!=0){
+            v2m.scale(this.velocity,this.velocity,1/(1+dt*(
+                GameConstants.loot.velocityDecay/
+                ((cf.acceleration??13)/13)
+            )))
+            v2m.add_component(this.position,this.velocity.x*speed*dt,this.velocity.y*speed*dt)
+        }
     }
     push(speed:number,angle:number){
         const a=v2.from_RadAngle(angle)
@@ -173,13 +193,11 @@ export class Loot extends ServerGameObject{
         }
         this.real_radius=this.hb.radius
     }
-    override getData(): LootData {
-        return {
-            position:this.position,
-            full:{
-                item:GameItems.keysString[this.item.idString],
-                count:this.count
-            }
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position)
+        if(full){
+            stream.writeUint16(GameItems.keysString[this.item.idString])
+            .writeUint8(this.count)
         }
     }
 }

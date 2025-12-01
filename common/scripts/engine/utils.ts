@@ -470,6 +470,11 @@ export function getPatterningShape(
 }
 
 export const Numeric={
+    abs_module(a: number, n: number): number {
+        return a >= 0
+            ? a % n
+            : (a % n + n) % n
+    },
     clamp(value:number,min:number,max:number):number{
         return value<max?value>min?value:min:max
     },

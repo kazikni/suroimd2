@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
@@ -26,9 +26,10 @@
           <div id="game-mobile-gui" style="display: none; pointer-events: none;">
             <kl-joystick id="left-joystick"></kl-joystick>
             <kl-joystick id="right-joystick"></kl-joystick>
-            <button id="btn-mobile-interact" class="btn-green"><span>E</span></button>
-            <button id="btn-mobile-inventory" class="btn-green"><span>I</span></button>
-            <button id="btn-mobile-reload" class="btn-green"><span>R</span></button>
+            <div id="mobile-action-buttons">
+              <button id="btn-mobile-interact" class="btn-green"><span>E</span></button>
+              <button id="btn-mobile-reload" class="btn-green"><span>R</span></button>
+            </div>
           </div>
           <div id="emote-wheel" class="emote-wheel">
             <img src="/img/game/common/loadout/emotes/emote_happy.svg" id="emote-wheel-top" class="emote-wheel-part wheel-part-top"></img>
@@ -36,25 +37,6 @@
             <img src="/img/game/common/loadout/emotes/emote_sad.svg" id="emote-wheel-left" class="emote-wheel-part wheel-part-left"></img>
             <img src="/img/game/common/loadout/emotes/emote_neutral.svg" id="emote-wheel-right" class="emote-wheel-part wheel-part-right"></img>
             <img src="/img/menu/gui/emote_wheel_hover_center.svg" id="emote-wheel-hover" class="wheel-hover wheel-hover-center"></img>
-          </div>
-          <div id="tab-view" class="tab-view-minimized">
-            <div id="tab-content">
-              <div id="tab-apps">
-                <div class="tab-app">
-                  <img src="/img/menu/gui/tab/icons/map.png" draggable="false" app-id="map" class="tab-app-icon">
-                </div>
-              </div>
-              <div id="tab-current-app">
-
-              </div>
-            </div>
-            <div id="tab-content-header">
-              <p id="tab-header-info-1">4AM 10/03/2010</p>
-              <img draggable="false" src="/img/menu/logos/MD/MD.svg">
-            </div>
-            <div id="tab-buttons">
-              <div id="tab-exit-button"></div>
-            </div>
           </div>
           <div id="help-gui">
           </div>
@@ -155,26 +137,29 @@
           <button class="btn-blue" id="debug-spawn-item">Spawn Item</button>
         </div>
       </div>  
+      <div id="vignetting-gfx"></div>
       <canvas id="game-canvas"></canvas>
       <div id="bloom-gfx"></div>
       <div id="tiltshift-gfx"></div>
-      <div id="vignetting-gfx"></div>
       <div id="recolor-gfx"></div>
     </div>
     <div id="menu">
-      <div id="menu-options">
-        <img id="title-section" src="img/menu/logos/title.png"></img>
-        <a href="/?menu=play"><button id="play-button-m" class="btn-blue">Play</button></a>
-        <a href="/?menu=loadout"><button id="loadout-button-m" class="btn-blue">Loadout</button></a>
-        <a href="/?menu=settings"><button id="settings-button-m" class="btn-blue">Settings</button></a>
-        <a href="/?menu=account"><button id="acccount-button-m" class="btn-blue">Accounts</button></a>
-        <a href="/?menu=about"><button id="about-button-m" class="btn-blue">About</button></a>
+      <div id="menu-background-effects">
+        <div id="menu-bullets"></div>
       </div>
-      <kl-md-submenu id="menu-play-submenu" class="md-menu-game" style="opacity: 0;">
+      <div id="menu-options">
+        <img id="title-section" src="/img/menu/logos/title.png" draggable="false"></img>
+        <button menu-id="play" id="play-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Play</button>
+        <button menu-id="loadout" id="loadout-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Loadout</button>
+        <button menu-id="settings" id="settings-button-m" class="btn-blue menu-options-btn" play-sound="button_click">Settings</button>
+        <button menu-id="account" id="account-button-m" class="btn-blue menu-options-btn">Account</button>
+        <button menu-id="about" id="about-button-m" class="btn-blue menu-options-btn" play-sound="button_click">About</button>
+      </div>
+      <kl-md-submenu id="menu-play-submenu" class ="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button id="btn-play-normal" class="btn-green">Normal</button>
-              <button id="btn-play-campaign" class="btn-green">Campaign</button>
+              <button id="btn-play-normal" class="btn-green" play-sound="button_click">Normal</button>
+              <button id="btn-play-campaign" class="btn-green" play-sound="button_click">Campaign</button>
               <p></p>
               <select id="select-region" class="select-blue">
               </select>
@@ -194,17 +179,15 @@
                 <button class="btn-blue">1</button>
               </div>
             </kl-md-extra>
-            <a href="/"><button class="btn-red close-btn">X</button></a>
+            <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
       </kl-md-submenu>
       <kl-md-submenu id="menu-loadout-submenu" class="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button class="btn-green" id="btn-loadout-skins">Skins</button>
+              <button class="btn-green" id="btn-loadout-skins" play-sound="button_click">Skins</button>
               <p></p>
               <input class="input-green" placeholder="Name" id="insert-name"></input>
-            </kl-md-menu-options>
-            <kl-md-menu-options>
             </kl-md-menu-options>
             <kl-md-extra id="loadout-sm-extra">
               <div id="loadout-sm-extra-content">
@@ -214,43 +197,18 @@
 
               </div>
             </kl-md-extra>
-            <a href="/"><button class="btn-red close-btn">X</button></a>
+            <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
       </kl-md-submenu>
       <kl-md-submenu id="menu-account-submenu" class="md-menu-game" style="opacity: 0;">
-        <kl-md-submenu-content>
-            <kl-md-menu-options>
-              <button class="btn-green" id="btn-account-login">Login</button>
-              <button class="btn-green" id="btn-account-register">Register</button>
-              <p></p>
-            </kl-md-menu-options>
-            <kl-md-menu-options>
-            </kl-md-menu-options>
-            <kl-md-extra id="loadout-sm-extra">
-              <div class="background-menu-md background-menu-ss background-menu" id="account-sm-login">
-                <span>Login</span>
-                <input class="text-input" id="input-login-name" placeholder="Username">
-                <input class="text-input" id="input-login-password" type="password" placeholder="Password">
-                <button class="btn-green" id="btn-login">Login</button>
-              </div>
-              <div class="background-menu-md background-menu-ss background-menu" id="account-sm-register">
-                <span>Registry</span>
-                <input class="text-input" id="input-register-name" placeholder="Username">
-                <input class="text-input" id="input-register-password" type="password" placeholder="Password">
-                <input class="text-input" id="input-register-confirm-password" type="password" placeholder="Confirm Password">
-                <button class="btn-green" id="btn-register">Registry</button>
-              </div>
-            </kl-md-extra>
-            <a href="/"><button class="btn-red close-btn">X</button></a>
-        </kl-md-submenu-content>
       </kl-md-submenu>
       <kl-md-submenu id="menu-settings-submenu" class="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button class="btn-green" id="btn-settings-graphics">Graphics</button>
-              <button class="btn-green" id="btn-settings-game">Game</button>
-              <button class="btn-green" id="btn-settings-sounds">Sounds</button>
-              <button class="btn-green" id="btn-settings-keys">Keys</button>
+              <button class="btn-green" id="btn-settings-graphics" play-sound="button_click">Graphics</button>
+              <button class="btn-green" id="btn-settings-game" play-sound="button_click">Game</button>
+              <button class="btn-green" id="btn-settings-sounds" play-sound="button_click">Sounds</button>
+              <button class="btn-green" id="btn-settings-keys" play-sound="button_click">Keys</button>
             </kl-md-menu-options>
             <kl-md-extra id="loadout-sm-extra">
               <div class="background-menu-md background-menu-ss background-menu" id="settings-sm-graphics">
@@ -318,15 +276,16 @@
                 </div>
               </div>
             </kl-md-extra>
-            <a href="/"><button class="btn-red close-btn">X</button></a>
+            <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
-      </kl-md-submenu><kl-md-submenu id="menu-about-submenu" class="md-menu-game" style="opacity: 0;">
+      </kl-md-submenu>
+      <kl-md-submenu id="menu-about-submenu" class="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button id="btn-about-social" class="btn-green">Social</button>
-              <button id="btn-about-news" class="btn-green">News</button>
-              <button id="btn-about-rules" class="btn-green">Rules</button>
-              <button id="btn-about-credits" class="btn-green">Credits</button>
+              <button id="btn-about-social" class="btn-green" play-sound="button_click">Social</button>
+              <button id="btn-about-news" class="btn-green" play-sound="button_click">News</button>
+              <button id="btn-about-rules" class="btn-green" play-sound="button_click">Rules</button>
+              <button id="btn-about-credits" class="btn-green" play-sound="button_click">Credits</button>
             </kl-md-menu-options>
             <kl-md-extra id="about-sm-extra">
               <div id="about-sm-social" class="background-menu-md background-menu">
@@ -334,10 +293,10 @@
                   <a href="https://discord.gg/7czkBvtmSU" target="_blank" class="social-link">
                     <i class="social-icon discord"></i>
                   </a>
-                  <a href="https://youtube.com/@kaklik13" target="_blank" class="social-link">
+                  <a href="https://youtube.com/@kazikni" target="_blank" class="social-link">
                     <i class="social-icon youtube"></i>
                   </a>
-                  <a href="https://github.com/kaklikOf13/suroimd2" target="_blank" class="social-link">
+                  <a href="https://github.com/kazikni/suroimd2" target="_blank" class="social-link">
                     <i class="social-icon github"></i>
                   </a>
                   <a href="/files/windows-build-lasted.zip" target="_blank" class="social-link">
@@ -440,7 +399,7 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
                   <hr>
                   <h3>Designers</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   <li>@yourhumbledrastic</li>
                   <li>@cheerfulbull_29688</li>
                   <li>@littlethief69</li>
@@ -448,13 +407,13 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
                   <hr>
                   <h3>Menu Designers</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   <li>@namerio</li>
                   </ul>
                   <hr>
                   <h3>Sound Designers</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   <li>@teardwop</li>
                   <li>Web</li>
                   </ul>
@@ -469,17 +428,17 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
                   <hr>
                   <h3>Programmers</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   </ul>
                   <hr>
                   <h3>Game Designers</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   </ul>
                   <hr>
                   <h3>Created By</h3>
                   <ul>
-                  <li>@kaklik</li>
+                  <li>@kazikni</li>
                   </ul>
                   <hr>
                   <h3>Special Thanks</h3>
@@ -490,9 +449,18 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
                 </div>
               </div>
             </kl-md-extra>
-            <a href="/"><button class="btn-red close-btn">X</button></a>
+            <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
       </kl-md-submenu>
+    </div>
+    <div id="both-ui">
+      <div id="loading-screen">
+        <div id="loading-screen-logo"></div>
+        <p id="loading-screen-span" class="span">Loading...</p>
+        <div id="loading-hint">
+          <p id="loading-hint-span" class="span">Barrels Explode</p>
+        </div>
+      </div>
     </div>
     <script type="module" src="./src/scripts/others/index.ts" async></script>
   </body>

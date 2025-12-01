@@ -70,6 +70,7 @@ export class SoloGamemodeManager extends GamemodeManager{
     on_finish(){
         this.game.addTimeout(()=>{
             for(const p of this.game.livingPlayers){
+                p.earned.win=1
                 p.send_game_over(true)
             }
             this.game.killing_game=true

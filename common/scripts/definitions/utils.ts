@@ -1,6 +1,11 @@
 import { type NetStream } from "../engine/stream.ts";
 import { Definition } from "../engine/definitions.ts";
 import { ItemQuality } from "../others/item.ts";
+export enum BulletReflection{
+    All=0,
+    Only_Reflective=1,
+    None=2
+}
 export interface BulletDef{
     damage:number
     falloff?:number
@@ -22,6 +27,7 @@ export interface BulletDef{
         }
         color?:number
     }
+    reflection?:BulletReflection
     obstacleMult?:number
     criticalMult?:number
     on_hit_explosion?:string

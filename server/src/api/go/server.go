@@ -65,6 +65,10 @@ func (s *ApiServer) DBInit() error {
 		score INTEGER DEFAULT 0,
 		coins INTEGER DEFAULT 0,
 		xp INTEGER DEFAULT 0,
+		wins INTEGER DEFAULT 0,
+		special_wins INTEGER DEFAULT 0,
+		games_total INTEGER DEFAULT 0,
+		kills INTEGER DEFAULT 0,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`)
 	if err != nil {
@@ -122,6 +126,7 @@ func (apiServer *ApiServer) HandleFunctions() {
 	api_r.HandleFunc("/get-settings", apiServer.handleGetSettings)
 	api_r.HandleFunc("/register", apiServer.handleRegister)
 	api_r.HandleFunc("/login", apiServer.handleLogin)
+	api_r.HandleFunc("/logout", apiServer.handleLogout)
 	api_r.HandleFunc("/get-your-status", apiServer.handleGetYourStatus)
 	api_r.HandleFunc("/get-status/{id}", apiServer.handleGetStatus)
 	api_r.HandleFunc("/internal/update-user", apiServer.handleUpdateUser)

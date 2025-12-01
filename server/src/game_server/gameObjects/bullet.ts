@@ -1,6 +1,5 @@
-import {CircleHitbox2D, Numeric, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
-import { BulletData } from "common/scripts/others/objectsEncode.ts";
-import { BulletDef, DamageReason } from "common/scripts/definitions/utils.ts";
+import {CircleHitbox2D, NetStream, Numeric, OverlapCollision2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
+import { BulletDef, BulletReflection, DamageReason } from "common/scripts/definitions/utils.ts";
 import { Obstacle } from "./obstacle.ts";
 import { Player } from "./player.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
@@ -9,9 +8,11 @@ import { DamageSourceDef } from "common/scripts/definitions/alldefs.ts";
 import { Creature } from "./creature.ts";
 import { Explosions } from "common/scripts/definitions/objects/explosions.ts";
 import { SideEffectType } from "common/scripts/definitions/player/effects.ts";
+import { Building } from "./building.ts";
 
 export class Bullet extends ServerGameObject{
     velocity:Vec2
+    dir:Vec2
     stringType:string="bullet"
     numberType: number=3
     defs!:BulletDef
@@ -39,6 +40,7 @@ export class Bullet extends ServerGameObject{
     constructor(){
         super()
         this.velocity=v2.new(0,0)
+        this.dir=v2.new(0,0)
         this.netSync.deletion=false
     }
     interact(_user: Player): void {
@@ -95,27 +97,39 @@ export class Bullet extends ServerGameObject{
                     break
                 }
                 case "obstacle":
-                    if((obj as Obstacle).def.noBulletCollision)break
+                    if((obj as Obstacle).def.no_bullet_collision)break
                     if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
-                        const col1=this.hb.overlapCollision((obj as Obstacle).hb)
+                        const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
+                        const main_col:OverlapCollision2D[]=[...col1]
                         //const col2 = (obj as Obstacle).hb.overlapLine(this.old_position,this.position)!
-                        //if(!col2&&!col1)continue
-                        if(!col1)continue
-                        //if(!col2)continue
+                        if(main_col.length===0)continue
                         const od=(obj as Obstacle).health;
                         (obj as Obstacle).damage({amount:(this.damage*(this.defs.obstacleMult??1)),owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
-                        /*if((obj as Obstacle).def.reflectBullets&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
-                            const rotation = 2 * Math.atan2(col2.normal.y, col2.normal.x) - this.angle
-                            this.position = v2.add(this.position, v2.new(Math.sin(rotation), -Math.cos(rotation)))
-                            this.reflect(rotation)
-                        }*/
+                        let reflected=false
+                        if(((obj as Obstacle).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
+                            this.reflect(main_col[0].dir)
+                            reflected=true
+                        }
                         this.on_hit()
-                        if((obj as Obstacle).dead){
+                        if((obj as Obstacle).dead&&!reflected){
                             this.damage-=od*(this.defs.obstacleMult??1)
-                            if(this.damage>0&&!(obj as Obstacle).def.reflectBullets&&!this.defs.on_hit_explosion){
+                            if(this.damage>0){
                                 this.game.add_bullet(this.position,this.angle,this.defs,this.owner,this.ammo,this.source)
                             }
                         }
+                    }
+                    break
+                case "building":
+                    if((obj as Building).def.no_bullet_collision)break
+                    if(obj.hb){
+                        const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
+                        //const col2 = (obj as Obstacle).hb.overlapLine(this.initialPosition,this.position)
+                        const main_col:OverlapCollision2D[]=[...col1]
+                        if(main_col.length===0)continue
+                        if(((obj as Building).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
+                            this.reflect(main_col[0].dir)
+                        }
+                        this.on_hit()
                     }
                     break
             }
@@ -126,8 +140,9 @@ export class Bullet extends ServerGameObject{
         this.defs=args.defs
         this.hb=new CircleHitbox2D(args.position,this.defs.radius*this.modifiers.size)
         this.initialPosition=v2.duplicate(this.hb.position)
+        this.old_position=v2.duplicate(this.position)
         this.maxDistance=this.defs.range/2.5
-        
+
         const ad=args.ammo?Ammos.getFromString(args.ammo):undefined
         this.tracerColor=this.defs.tracer.color??(ad?ad.defaultTrail:0xffffff)
         this.projColor=this.defs.tracer.proj.color??(ad?ad.defaultProj:0xffffff)
@@ -139,42 +154,62 @@ export class Bullet extends ServerGameObject{
         this.damage=args.defs.damage
     }
     set_direction(angle:number){
-        this.velocity=v2.maxDecimal(v2.scale(v2.from_RadAngle(angle),this.defs.speed*this.modifiers.speed),4)
+        this.dir=v2.from_RadAngle(angle)
+        this.velocity=v2.scale(this.dir,this.defs.speed*this.modifiers.speed)
         this.dirty=true
         this.angle=angle;
-
         (this.hb as CircleHitbox2D).radius=this.defs.radius*this.modifiers.size
     }
-    reflect(angle:number){
-        const b=this.game.add_bullet(this.position,angle,this.defs,this.owner,this.ammo,this.source)
-        b.damage=this.damage/2
-        b.reflectionCount=this.reflectionCount+1
+    reflect(normal: Vec2) {
+        v2m.neg(normal)
+        const dot = v2.dot(this.dir,normal)
+        const reflected = {
+            x: this.dir.x - 2 * dot * normal.x,
+            y: this.dir.y - 2 * dot * normal.y,
+        }
+
+        const rotation = Math.atan2(reflected.y, reflected.x)
+
+        v2m.add(this.position, this.position, reflected)
+
+        const b = this.game.add_bullet(
+            this.position,
+            rotation,
+            this.defs,
+            this.owner,
+            this.ammo,
+            this.source
+        )
+        b.damage = this.damage / 2
+        b.reflectionCount = this.reflectionCount + 1
     }
+
     override on_destroy(): void {
         delete this.game.bullets[this.id]
     }
     tracerColor:number=0
     projColor:number=0
-    override getData(): BulletData {
-        return {
-            position:this.position,
-            tticks:this.tticks,
-            full:{
-                critical:this.critical,
-                initialPos:this.initialPosition,
-                maxDistance:this.maxDistance,
-                radius:(this.hb as CircleHitbox2D).radius,
-                speed:this.defs.speed*this.modifiers.speed,
-                angle:this.angle,
-                tracerWidth:this.defs.tracer.width,
-                tracerHeight:this.defs.tracer.height*this.modifiers.size,
-                tracerColor:this.tracerColor,
-                projWidth:this.defs.tracer.proj.width,
-                projHeight:this.defs.tracer.proj.height*this.modifiers.size,
-                projColor:this.projColor,
-                projIMG:this.defs.tracer.proj.img,
-                projParticle:this.defs.tracer.particles?.frame??0
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position)
+        .writeFloat(this.tticks,0,100,2)
+        if(full){
+            stream.writePosition(this.initialPosition)
+            .writeFloat32(this.maxDistance)
+            .writeFloat((this.hb as CircleHitbox2D).radius,0,2,2)
+            .writeFloat32(this.defs.speed*this.modifiers.speed)
+            .writeRad(this.angle)
+            .writeUint8(this.reflectionCount)
+            .writeFloat(this.defs.tracer.width,0,100,3)
+            .writeFloat(this.defs.tracer.height*this.modifiers.size,0,6,2)
+            .writeUint32(this.tracerColor)
+            .writeUint8(this.defs.tracer.proj.img)
+            if(this.defs.tracer.proj.img>0){
+                stream.writeFloat(this.defs.tracer.proj.width,0,6,2)
+                .writeFloat(this.defs.tracer.proj.height,0,6,2)
+                .writeUint32(this.projColor)
             }
+            stream.writeUint8(this.defs.tracer.particles?.frame??0)
+            .writeBooleanGroup(this.critical)
         }
     }
 }

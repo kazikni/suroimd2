@@ -19,6 +19,9 @@ func (s *ApiServer) handleGetSettings(w http.ResponseWriter, r *http.Request) {
 	ret["debug"] = map[string]any{
 		"debug_menu": s.Config.Game.Debug.DebugMenu,
 	}
+	ret["database"] = map[string]any{
+		"enabled": s.Config.Database.Enabled,
+	}
 	json.NewEncoder(w).Encode(ret)
 }
 
@@ -46,7 +49,6 @@ func (s *ApiServer) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verifica usuário existente
 	var existingName string
 	err := s.accounts_db.QueryRow("SELECT name FROM players WHERE name = ?", name).Scan(&existingName)
 	if err != sql.ErrNoRows && err != nil {
@@ -105,7 +107,7 @@ func (s *ApiServer) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := http.Cookie{
-		Name:     "user",
+		Name:     "username",
 		Value:    name,
 		HttpOnly: true,
 		Path:     "/",
@@ -116,9 +118,30 @@ func (s *ApiServer) handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Write([]byte("Logged in"))
 }
+func (s *ApiServer) handleLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(204)
+		return
+	}
+
+	origin := r.Header.Get("Origin")
+	s.corsHeaders(w, origin)
+
+	cookie := http.Cookie{
+		Name:     "username",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status":"Logged out"}`))
+}
 
 func (s *ApiServer) getUserNameFromCookie(r *http.Request) string {
-	cookie, err := r.Cookie("user")
+	cookie, err := r.Cookie("username")
 	if err != nil {
 		return ""
 	}
@@ -136,7 +159,7 @@ func (s *ApiServer) handleGetYourStatus(w http.ResponseWriter, r *http.Request) 
 	s.corsHeaders(w, origin)
 
 	if username == "" {
-		http.Error(w, "Not logged in", 401)
+		http.Error(w, "{\"username\":null}", 401)
 		return
 	}
 
@@ -145,13 +168,17 @@ func (s *ApiServer) handleGetYourStatus(w http.ResponseWriter, r *http.Request) 
 		Coins     int    `json:"coins"`
 		XP        int    `json:"xp"`
 		Score     int    `json:"score"`
+		Wins int `json:"wins"`
+		SpecialWins int `json:"special_wins"`
+		GamesTotal int `json:"games_total"`
+		Kills int `json:"kills"`
 		Inventory string `json:"inventory"`
 	}
 
-	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, inventory FROM players WHERE name = ?", username).
-		Scan(&user.Name, &user.Coins, &user.XP, &user.Score, &user.Inventory)
+	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, wins, special_wins, games_total, kills, inventory FROM players WHERE name = ?", username).
+		Scan(&user.Name, &user.Coins, &user.XP, &user.Score,&user.Wins,&user.SpecialWins,&user.GamesTotal, &user.Kills, &user.Inventory)
 	if err != nil {
-		http.Error(w, "User not found", 404)
+		http.Error(w, "{\"user\":null}", 404)
 		return
 	}
 
@@ -177,15 +204,19 @@ func (s *ApiServer) handleGetStatus(w http.ResponseWriter, r *http.Request) {
 	s.corsHeaders(w, origin)
 
 	var user struct {
-		Name      string `json:"name"`
+		Name      string `json:"username"`
 		Coins     int    `json:"coins"`
 		XP        int    `json:"xp"`
 		Score     int    `json:"score"`
+		Wins int `json:"wins"`
+		SpecialWins int `json:"special_wins"`
+		GamesTotal int `json:"games_total"`
+		Kills int `json:"kills"`
 		Inventory string `json:"inventory"`
 	}
 
-	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, inventory FROM players WHERE name = ?", username).
-		Scan(&user.Name, &user.Coins, &user.XP, &user.Score, &user.Inventory)
+	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, wins, special_wins, games_total, kills, inventory FROM players WHERE name = ?", username).
+		Scan(&user.Name, &user.Coins, &user.XP, &user.Score,&user.Wins,&user.SpecialWins,&user.GamesTotal, &user.Kills, &user.Inventory)
 	if err != nil {
 		http.Error(w, "User not found", 404)
 		return
@@ -216,27 +247,35 @@ func (s *ApiServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var data struct {
-		Name  string `json:"name"`
+		Username  string `json:"username"`
 		Coins int    `json:"coins"`
 		XP    int    `json:"xp"`
 		Score int    `json:"score"`
+		Wins int `json:"wins"`
+		SpecialWins int `json:"special_wins"`
+		GamesTotal int `json:"games_total"`
+		Kills int `json:"kills"`
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		http.Error(w, "Invalid JSON", 400)
 		return
 	}
 
-	if data.Name == "" {
+	if data.Username == "" {
 		http.Error(w, "Missing username", 400)
 		return
 	}
 
 	_, err = s.accounts_db.Exec(`
 		UPDATE players SET
-			coins = coins + ?,
-			xp = xp + ?,
-			score = score + ?
-		WHERE name = ?`, data.Coins, data.XP, data.Score, data.Name)
+			coins = ?,
+			xp = ?,
+			score = ?,
+			wins = ?,
+			special_wins = ?,
+			games_total = games_total + ?,
+			kills = kills + ?
+		WHERE name = ?`, data.Coins, data.XP, data.Score, data.Wins, data.SpecialWins, data.GamesTotal, data.Kills, data.Username)
 	if err != nil {
 		http.Error(w, "Database error", 500)
 		return

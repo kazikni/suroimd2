@@ -41,7 +41,7 @@ const config: UserConfig = {
 
     plugins: [
         svelte(),
-        spritesheet({"common":"common","normal":"normal"},undefined,[
+        spritesheet({"main":"main","normal":"normal","christmas":"christmas"},undefined,[
             {name:"very-low",scale:0.35},
             {name:"low",scale:0.5},
             {name:"medium",scale:0.75},
@@ -49,8 +49,8 @@ const config: UserConfig = {
             {name:"very-high",scale:2},
         ]),
         AudiosLists([{
-            input:"public/sounds/game/common",
-            output:"sounds/game/common.json"
+            input:"public/sounds/game/main",
+            output:"sounds/game/main.json"
         }])
     ],
 

@@ -1,7 +1,6 @@
-import { CircleHitbox2D, NullVec2, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts"
+import { CircleHitbox2D, NetStream, NullVec2, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { type Player } from "./player.ts";
 import { ProjectileDef } from "common/scripts/definitions/objects/projectiles.ts";
-import { ProjectileData } from "common/scripts/others/objectsEncode.ts";
 import { ServerGameObject } from "../others/gameObject.ts";
 import { Explosions } from "common/scripts/definitions/objects/explosions.ts";
 
@@ -65,14 +64,12 @@ export class Projectile extends ServerGameObject{
         }
         this.owner=args.owner
     }
-    override getData(): ProjectileData {
-        return {
-            position:this.position,
-            rotation:this.rotation,
-            z:this.zpos,
-            full:{
-                definition:this.defs.idNumber!
-            }
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position)
+        .writeRad(this.rotation)
+        .writeFloat(this.zpos,0,1,1)
+        if(full){
+            stream.writeID(this.defs.idNumber!)
         }
     }
 }

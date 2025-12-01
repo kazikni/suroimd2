@@ -1,5 +1,4 @@
-import { CircleHitbox2D, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts"
-import { VehicleData } from "common/scripts/others/objectsEncode.ts";
+import { CircleHitbox2D, NetStream, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { type Player } from "./player.ts";
 import { ServerGameObject } from "../others/gameObject.ts"; 
 import {VehicleDef} from "common/scripts/definitions/objects/vehicles.ts"
@@ -163,15 +162,13 @@ export class Vehicle extends ServerGameObject{
     }
     override on_destroy(): void {
     }
-    override getData(): VehicleData {
-        return {
-            position:this.position,
-            rotation:this.angle,
-            direction:this.direction,
-            full:{
-                dead:this.dead,
-                def:this.def.idNumber!
-            }
+    override encode(stream: NetStream, full: boolean): void {
+        stream.writePosition(this.position) 
+        .writeRad(this.angle)
+        .writeRad(this.direction)
+        if(full){
+            stream.writeBooleanGroup(this.dead)
+            stream.writeUint8(this.def.idNumber!)
         }
     }
 }

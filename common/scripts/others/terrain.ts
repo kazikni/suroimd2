@@ -6,20 +6,31 @@ import { Numeric } from "../engine/utils.ts";
 
 export enum FloorType {
     Grass = 0,
+    Snow,
     Sand,
     Water,
+    Ice,
 }
-
+export enum FloorKind{
+    Void=0,
+    Solid,
+    Liquid,
+    Ice
+}
 export interface FloorDef {
     default_color: number;
     speed_mult?: number;
+    acceleration?:number;
+    floor_kind:FloorKind
 }
 export interface RiversDef { weight: number; rivers: RiverDef[] }[]
 
 export const Floors: Record<FloorType, FloorDef> = {
-    [FloorType.Grass]: { default_color: 0x4d9635},
-    [FloorType.Sand]: { default_color: 0xb59924 },
-    [FloorType.Water]: { default_color: 0x2466a2, speed_mult: 0.6 },
+    [FloorType.Grass]: { default_color: 0x4d9635,floor_kind:FloorKind.Solid},
+    [FloorType.Snow]: { default_color: 0xb3c0c7,floor_kind:FloorKind.Solid},
+    [FloorType.Sand]: { default_color: 0xb59924,floor_kind:FloorKind.Solid},
+    [FloorType.Water]: { default_color: 0x2466a2, speed_mult: 0.6, floor_kind:FloorKind.Liquid },
+    [FloorType.Ice]: { default_color: 0x4681a3, acceleration:30, floor_kind:FloorKind.Ice},
 };
 
 export interface Floor {

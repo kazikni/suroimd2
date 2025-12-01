@@ -4,7 +4,7 @@ import { random } from "common/scripts/engine/random.ts";
 import { v2 } from "common/scripts/engine/geometry.ts";
 import { BehaviourTree, Default_Tree_Settings } from "common/scripts/engine/AI/behaviour_tree.ts";
 import { bots_actions, BotSettings, BotWorld, EaseBotBRTree } from "../defs/bot_ia_tree.ts";
-import { EmoteDef, Emotes } from "common/scripts/definitions/loadout/emotes.ts";
+import { Emotes } from "common/scripts/definitions/loadout/emotes.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { Consumibles } from "common/scripts/definitions/items/consumibles.ts";
