@@ -18,6 +18,8 @@ __                                                                              
 * A Sound For Buttons Click
 * Normal Mode Image Changed To A Gif
 * A New Gif For Snow Mode
+* Accounts Enabled For Test - PLEASE DONT USE YOUR REAL PASSWORD
+* News Now Suport Markdown
 __                                                                                                      __
 ### Items
 * Yellow Laser Pistol: A Weapon Madded To Test Reflections
@@ -32,8 +34,6 @@ __                                                                              
 __                                                                                                      __
 ### Others
 * New Snow Musics
-__                                                                                                      __
-### Keys And Controls
 __                                                                                                      __
 ## Changes
 __                                                                                                      __

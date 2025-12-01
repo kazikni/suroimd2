@@ -113,3 +113,82 @@ export function ShowTab(tab:string,tabs:Record<string,HTMLElement>,opacity?:bool
         ShowElement(tabs[tab],opacity)
     }
 }
+function escapeHtml(s: string) {
+    return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function inlineFormat(s: string) {
+    s = s.replace(/`([^`]+)`/g, (_, m) => `<code>${m}</code>`);
+    s = s.replace(/\*\*([^*]+)\*\*/g, (_, m) => `<strong>${m}</strong>`);
+    s = s.replace(/\*([^*]+)\*/g, (_, m) => `<em>${m}</em>`);
+    return s;
+}
+
+// NEW ✔
+function isHtml(line: string): boolean {
+    return /^\s*<\/?[a-zA-Z][^>]*>/.test(line);
+}
+
+export function formatToHtml(src: string): string {
+    const lines = src.split("\n")
+    const out: string[] = []
+    let inList = false
+
+    for (const rawLine of lines) {
+        const line = rawLine.trim()
+        if (line === "") continue
+
+        if (line === "___") {
+            if (inList) {
+                out.push("</ul>")
+                inList = false
+            }
+            out.push("<hr>")
+            continue
+        }
+
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/)
+        if (headingMatch) {
+            if (inList) {
+                out.push("</ul>")
+                inList = false
+            }
+            const level = headingMatch[1].length
+            const text = inlineFormat(escapeHtml(headingMatch[2]))
+            out.push(`<h${level}>${text}</h${level}>`)
+            continue
+        }
+
+        if (/^\*\s+/.test(line)) {
+            const item = inlineFormat(escapeHtml(line.replace(/^\*\s+/, "")))
+            if (!inList) {
+                out.push("<ul>")
+                inList = true
+            }
+            out.push(`<li>${item}</li>`)
+            continue
+        }
+
+        if (isHtml(line)) {
+            if (inList) {
+                out.push("</ul>")
+                inList = false
+            }
+            out.push(line)
+            continue
+        }
+
+        if (inList) {
+            out.push("</ul>")
+            inList = false
+        }
+
+        out.push(`<p>${inlineFormat(escapeHtml(line))}</p>`)
+    }
+
+    if (inList) out.push("</ul>")
+    return out.join("\n")
+}
