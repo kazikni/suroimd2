@@ -1,4 +1,4 @@
-import {CircleHitbox2D, IntersectionRes, NetStream, Numeric, OverlapCollision2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
+import {CircleHitbox2D, NetStream, Numeric, OverlapCollision2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
 import { BulletDef, BulletReflection, DamageReason } from "common/scripts/definitions/utils.ts";
 import { Obstacle } from "./obstacle.ts";
 import { Player } from "./player.ts";
@@ -100,7 +100,6 @@ export class Bullet extends ServerGameObject{
                     if((obj as Obstacle).def.no_bullet_collision)break
                     if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
                         const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
-                        const col2 = []
                         const main_col:OverlapCollision2D[]=[...col1]
                         //const col2 = (obj as Obstacle).hb.overlapLine(this.old_position,this.position)!
                         if(main_col.length===0)continue
@@ -124,7 +123,7 @@ export class Bullet extends ServerGameObject{
                     if((obj as Building).def.no_bullet_collision)break
                     if(obj.hb){
                         const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
-                        const col2 = []
+                        //const col2 = (obj as Obstacle).hb.overlapLine(this.initialPosition,this.position)
                         const main_col:OverlapCollision2D[]=[...col1]
                         if(main_col.length===0)continue
                         if(((obj as Building).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){

@@ -86,16 +86,19 @@ export class AccountManager{
 <br>
 <div id="status-container-info">
     <span class="span" id="coin-status-span">
-        <img class="span-large-icon" src="./img/menu/icons/coin.svg"> ${status.user.coins}
+        Coins: ${status.user.coins}<img class="span-large-icon" src="./img/menu/icons/coin.svg">
     </span>
-    <span class="span" id="win-status-span">
-        <img class="span-large-icon" src="./img/menu/icons/win.svg"> ${status.user.wins}
+    <span class="span" id="kills-status-span">
+        Kills: ${status.user.kills}<img class="span-large-icon" src="./img/menu/icons/kills.svg">
     </span>
-    <span class="span" id="win-status-span">
-        <img class="span-large-icon" src="./img/menu/icons/special_win.svg"> ${status.user.special_wins}
+    <span class="span" id="wins-status-span">
+        Wins: ${status.user.wins}<img class="span-large-icon" src="./img/menu/icons/win.svg">
+    </span>
+    <span class="span" id="special-wins-status-span">
+        Special Wins: ${status.user.special_wins}<img class="span-large-icon" src="./img/menu/icons/special_win.svg">
     </span>
     <span class="span" id="games-status-span">
-        <img class="span-large-icon" src="./img/menu/icons/game.svg"> ${status.user.games_total}
+        Games Played: ${status.user.games_total}<img class="span-large-icon" src="./img/menu/icons/game.svg">
     </span>
 </div>
 `

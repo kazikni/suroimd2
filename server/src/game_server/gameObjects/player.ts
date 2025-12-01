@@ -77,10 +77,20 @@ export class Player extends ServerGameObject{
         kills:0,
         rank:0,
     }
+
+    account_status={
+        coins:0,
+        xp:0,
+        wins:0,
+        special_wins:0,
+        games_total:0,
+        kills:0,
+    }
     earned={
         coins:0,
         xp:0,
         score:0,
+        win:0,
     }
     username:string=""
     

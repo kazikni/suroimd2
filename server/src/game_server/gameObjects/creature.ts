@@ -65,7 +65,7 @@ export class Creature extends ServerGameObject{
             if(obj.id===this.id)continue
             switch(obj.stringType){
                 case "obstacle":
-                    if((obj as Obstacle).def.noCollision)break
+                    if((obj as Obstacle).def.no_collision)break
                     if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
                         const ov=this.hb.overlapCollision((obj as Obstacle).hb)
                         if(ov){

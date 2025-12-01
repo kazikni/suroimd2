@@ -342,19 +342,28 @@ export class Game extends ServerGame2D<ServerGameObject>{
         p.connected=true
         if(this.Config.database.enabled){
             let ff
-            if(this.subscribe_db){
-                ff=this.subscribe_db[p.username]
-            }else{
-                ff=await(await fetch(`${this.Config.api.global}/get-status/${p.username}`)).json()
+            try{
+                if(this.subscribe_db){
+                    ff=this.subscribe_db[p.username]
+                }else{
+                    ff=await(await fetch(`${this.Config.api.global}/get-status/${p.username}`)).json()
+                }
+            }catch{
+                if(this.subscribe_db){
+                    ff=this.subscribe_db[p.username]
+                }else{
+                    ff=undefined
+                }
             }
 
-            if(ff.user){
+            if(ff?.user){
                 const inv=JSON.parse(ff.user.inventory)
                 const s=Skins.getFromNumber(packet.skin)
                 if(inv.skins.includes(s.idNumber)){
                     p.skin=s
                     p.loadout.skin=s.idString
                 }
+                p.account_status=ff.user
             }
         }else{
             p.username=""

@@ -107,7 +107,7 @@ func (s *ApiServer) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := http.Cookie{
-		Name:     "user",
+		Name:     "username",
 		Value:    name,
 		HttpOnly: true,
 		Path:     "/",
@@ -128,7 +128,7 @@ func (s *ApiServer) handleLogout(w http.ResponseWriter, r *http.Request) {
 	s.corsHeaders(w, origin)
 
 	cookie := http.Cookie{
-		Name:     "user",
+		Name:     "username",
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
@@ -141,7 +141,7 @@ func (s *ApiServer) handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ApiServer) getUserNameFromCookie(r *http.Request) string {
-	cookie, err := r.Cookie("user")
+	cookie, err := r.Cookie("username")
 	if err != nil {
 		return ""
 	}
@@ -159,7 +159,7 @@ func (s *ApiServer) handleGetYourStatus(w http.ResponseWriter, r *http.Request) 
 	s.corsHeaders(w, origin)
 
 	if username == "" {
-		http.Error(w, "{\"user\":null}", 401)
+		http.Error(w, "{\"username\":null}", 401)
 		return
 	}
 
@@ -204,15 +204,19 @@ func (s *ApiServer) handleGetStatus(w http.ResponseWriter, r *http.Request) {
 	s.corsHeaders(w, origin)
 
 	var user struct {
-		Name      string `json:"name"`
+		Name      string `json:"username"`
 		Coins     int    `json:"coins"`
 		XP        int    `json:"xp"`
 		Score     int    `json:"score"`
+		Wins int `json:"wins"`
+		SpecialWins int `json:"special_wins"`
+		GamesTotal int `json:"games_total"`
+		Kills int `json:"kills"`
 		Inventory string `json:"inventory"`
 	}
 
-	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, inventory FROM players WHERE name = ?", username).
-		Scan(&user.Name, &user.Coins, &user.XP, &user.Score, &user.Inventory)
+	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, wins, special_wins, games_total, kills, inventory FROM players WHERE name = ?", username).
+		Scan(&user.Name, &user.Coins, &user.XP, &user.Score,&user.Wins,&user.SpecialWins,&user.GamesTotal, &user.Kills, &user.Inventory)
 	if err != nil {
 		http.Error(w, "User not found", 404)
 		return
@@ -243,7 +247,7 @@ func (s *ApiServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var data struct {
-		Name  string `json:"name"`
+		Username  string `json:"username"`
 		Coins int    `json:"coins"`
 		XP    int    `json:"xp"`
 		Score int    `json:"score"`
@@ -257,7 +261,7 @@ func (s *ApiServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if data.Name == "" {
+	if data.Username == "" {
 		http.Error(w, "Missing username", 400)
 		return
 	}
@@ -269,9 +273,9 @@ func (s *ApiServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 			score = ?,
 			wins = ?,
 			special_wins = ?,
-			games_total = ?,
+			games_total = games_total + ?,
 			kills = kills + ?
-		WHERE name = ?`, data.Coins, data.XP, data.Score, data.Name,data.Wins,data.SpecialWins,data.GamesTotal,data.Kills)
+		WHERE name = ?`, data.Coins, data.XP, data.Score, data.Wins, data.SpecialWins, data.GamesTotal, data.Kills, data.Username)
 	if err != nil {
 		http.Error(w, "Database error", 500)
 		return
