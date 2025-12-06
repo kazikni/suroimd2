@@ -1,6 +1,6 @@
-import { IPLocation } from "common/scripts/engine/utils.ts";
-import { Casters } from "../engine/console.ts";
-import { GamepadButtonID, Key } from "../engine/mod.ts";
+import { IPLocation } from "common/scripts/engine/utils.ts"
+import { Casters } from "../engine/console.ts"
+import { GamepadButtonID, Key } from "../engine/mod.ts"
 
 /*
 * LOCAL SERVER
@@ -26,6 +26,7 @@ export const ConfigCasters=Object.freeze({
     cv_loadout_skin:Casters.toString,
 
     cv_graphics_resolution:Casters.generateUnionCaster(["very-low","low","medium","high","very-high"]),
+    cv_graphics_renderer:Casters.generateUnionCaster(["webgl1","webgl2"]),
     cv_graphics_particles:Casters.toInt,
     cv_graphics_lights:Casters.toInt,
     cv_graphics_post_proccess:Casters.toInt,
@@ -43,6 +44,7 @@ export const ConfigDefaultValues={
     cv_loadout_skin:"default_skin",
     cv_loadout_name:"",
 
+    cv_graphics_renderer:"webgl2",
     cv_graphics_resolution:"high",
     cv_graphics_particles:GraphicsDConfig.Advanced,
     cv_graphics_lights:GraphicsDConfig.Advanced,

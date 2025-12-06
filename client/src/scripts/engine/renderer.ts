@@ -529,6 +529,8 @@ export class WebglRenderer extends Renderer {
     readonly factorys3D:{
         simple:GLMaterial3DFactory<GL3D_SimpleMatArgs>,
     }
+
+    readonly isWebGL2: boolean;
     proccess_factory<T>(fac_def:GLMaterial2DFactoryCall<T>):GLMaterial2DFactory<T>{
         const prog=this.createProgram(fac_def.vertex,fac_def.frag)
         const fac={
@@ -554,11 +556,18 @@ export class WebglRenderer extends Renderer {
         return fac
     }
     factorys2D_consts:Record<string,Record<string,WebGLUniformLocation|number>>={}
-    constructor(canvas: HTMLCanvasElement, background: Color = ColorM.default.white) {
+    constructor(canvas: HTMLCanvasElement, background: Color = ColorM.default.white, version: 1 | 2 = 2) {
         super(canvas);
-        const gl = this.canvas.getContext("webgl", { antialias: true });
+        const gl =
+            version === 2
+                ? canvas.getContext("webgl2", { antialias: true })
+                : canvas.getContext("webgl", { antialias: true })
+        
+        if (!gl) throw new Error(`Failed to initialize WebGL${version}`)
+        this.gl = gl as any
+        this.isWebGL2 = version === 2
+
         this.background = background;
-        this.gl = gl!;
         //Tex Program
         const tex_program = gl!.createProgram();
         gl!.attachShader(tex_program!, this.createShader(texVertexShaderSource, gl!.VERTEX_SHADER))

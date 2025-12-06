@@ -16,8 +16,17 @@ import { NewMDLanguageManager } from "./languages.ts";
 import { PacketManager } from "common/scripts/packets/packet_manager.ts";
 (async() => {
     const canvas=document.querySelector("#game-canvas") as HTMLCanvasElement
+
     const inputs=new InputManager(100)
     inputs.bind(canvas)
+
+    const GameSave=new GameConsole()
+    GameSave.input_manager=inputs
+    GameSave.default_actions=ConfigDefaultActions
+    GameSave.casters=ConfigCasters
+    GameSave.default_values=ConfigDefaultValues
+    GameSave.init("suroimd2-config")
+
     const sounds=new SoundManager()
     const tm=await NewMDLanguageManager("english","/languages")
     sounds.volumes={
@@ -30,7 +39,7 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
         "ui":1
     }
 
-    const renderer=new WebglRenderer(canvas)
+    const renderer=new WebglRenderer(canvas,undefined,GameSave.get_variable("cv_graphics_renderer")==="webgl1"?1:2)
 
     const resources=new ResourcesManager(renderer.gl,sounds)
     await resources.load_audio("menu_music",{src:"/sounds/musics/menu_music.mp3",volume:1},"essentials")
@@ -38,12 +47,7 @@ import { PacketManager } from "common/scripts/packets/packet_manager.ts";
 
     sounds.init_html_sound_bindings("ui",resources)
 
-    const GameSave=new GameConsole()
-    GameSave.input_manager=inputs
-    GameSave.default_actions=ConfigDefaultActions
-    GameSave.casters=ConfigCasters
-    GameSave.default_values=ConfigDefaultValues
-    GameSave.init("suroimd2-config")
+    
 
     const menu_manager=new MenuManager(GameSave,resources,sounds)
     menu_manager.start()

@@ -1,5 +1,5 @@
     import { Skins } from "common/scripts/definitions/loadout/skins.ts";
-    import { type GameConsole } from "../engine/console.ts";
+    import { SettingInputConfig, type GameConsole } from "../engine/console.ts";
     import { ResourcesManager } from "../engine/resources.ts";
     import { HideElement, ShowElement } from "../engine/utils.ts";
     import { api, API_BASE } from "../others/config.ts";
@@ -29,7 +29,55 @@
                 credits: ["credits", "about"],
             }
         };
-
+        submenus_options:Record<string,Record<string,Record<string,SettingInputConfig>>>={
+            "settings":{
+                "graphics":{
+                    "renderer":{
+                        options:[{name:"Webgl1",value:"webgl1"},{name:"Webgl2",value:"webgl2"}],
+                        type:"select"
+                    },
+                    "resolution":{
+                        options:[
+                            {name:"Very Low",value:"very-low"},
+                            {name:"Low",value:"low"},
+                            {name:"Medium",value:"medium"},
+                            {name:"high",value:"high"},
+                            {name:"Very High",value:"very-high"},
+                        ],
+                        type:"select"
+                    },
+                    "particles":{
+                        options:[
+                            {value:"0",name:"No"},
+                            {value:"1",name:"Normal"},
+                            {value:"2",name:"Advanced"},
+                        ],
+                        type:"select"
+                    },
+                    "lights":{
+                        options:[
+                            {value:"0",name:"No"},
+                            {value:"1",name:"Normal"},
+                            {value:"2",name:"Advanced"},
+                        ],
+                        type:"select"
+                    },
+                    "post_proccess":{
+                        options:[
+                            {value:"0",name:"No"},
+                            {value:"1",name:"Normal"},
+                            {value:"2",name:"Advanced"},
+                        ],
+                        type:"select"
+                    },
+                },
+            }
+        }
+        submenus_html:Record<string,Record<string,HTMLDivElement>>={
+            "settings":{
+                "graphics":document.querySelector("#settings-sm-graphics") as HTMLDivElement
+            }
+        }
         content={
             menuD:document.querySelector("#menu") as HTMLDivElement,
             gameD:document.querySelector("#game") as HTMLDivElement,
@@ -41,10 +89,6 @@
             select_region:document.body.querySelector("#select-region") as HTMLButtonElement,
 
             settings:{
-                graphics_textures:document.body.querySelector("#settings-graphics-texture") as HTMLSelectElement,
-                graphics_particles:document.body.querySelector("#settings-graphics-particles") as HTMLSelectElement,
-                graphics_lights:document.body.querySelector("#settings-graphics-lights") as HTMLSelectElement,
-                graphics_post_proccess:document.body.querySelector("#settings-graphics-post-proccess") as HTMLSelectElement,
                 graphics_climate:document.body.querySelector("#settings-graphics-climate") as HTMLInputElement,
 
                 game_friendly_fire:document.body.querySelector("#settings-game-friendly-fire") as HTMLInputElement,
@@ -277,23 +321,51 @@
 
             this.setupTabButtons()
 
+            for (const sm of Object.keys(this.submenus_options)) {
+                for (const ssm of Object.keys(this.submenus_options[sm])) {
+                    const menu = this.submenus_html[sm][ssm];
+                    for (const opt of Object.keys(this.submenus_options[sm][ssm])) {
+                        const div = document.createElement("div");
+                        const id = `${sm}-${ssm}-${opt}`;
+                        let tags = "";
+            
+                        switch (this.submenus_options[sm][ssm][opt].type) {
+                            case "select": {
+                                tags += `<select class="select-blue" id="${id}">`;
+                                for (const s of this.submenus_options[sm][ssm][opt].options) {
+                                    tags += `<option value="${s.value}">${s.name}</option>`;
+                                }
+                                tags += `</select>`;
+                                break;
+                            }
+            
+                        }
+            
+                        div.innerHTML = `
+                            <span>${opt}</span>
+                            ${tags}
+                        `;
+            
+                        menu.appendChild(div);
+            
+                        queueMicrotask(() => {
+                            const el = menu.querySelector(`#${id}`) as HTMLSelectElement;
+                            if (!el) return;
+            
+                            const saved = this.save.get_variable(`cv_${ssm}_${opt}`);
+            
+                            if (saved !== undefined && saved !== null) {
+                                el.value = saved;
+                            }
+                            el.addEventListener("change",()=>{
+                                this.save.set_variable(`cv_${ssm}_${opt}`,el.value)
+                            })
+                        });
+                    }
+                }
+            }
+
             //Graphics
-            this.content.settings.graphics_textures.value=this.save.get_variable("cv_graphics_resolution")
-            this.content.settings.graphics_textures.addEventListener("change",()=>{
-                this.save.set_variable("cv_graphics_resolution",this.content.settings.graphics_textures.value)
-            })
-            this.content.settings.graphics_particles.value=this.save.get_variable("cv_graphics_particles")
-            this.content.settings.graphics_particles.addEventListener("change",()=>{
-                this.save.set_variable("cv_graphics_particles",this.content.settings.graphics_particles.value)
-            })
-            this.content.settings.graphics_lights.value=this.save.get_variable("cv_graphics_lights")
-            this.content.settings.graphics_lights.addEventListener("change",()=>{
-                this.save.set_variable("cv_graphics_lights",this.content.settings.graphics_lights.value)
-            })
-            this.content.settings.graphics_post_proccess.value=this.save.get_variable("cv_graphics_post_proccess")
-            this.content.settings.graphics_post_proccess.addEventListener("change",()=>{
-                this.save.set_variable("cv_graphics_post_proccess",this.content.settings.graphics_post_proccess.value)
-            })
             this.content.settings.graphics_climate.checked=this.save.get_variable("cv_graphics_climate")
             this.content.settings.graphics_climate.addEventListener("click",()=>{
                 this.save.set_variable("cv_graphics_climate",this.content.settings.graphics_climate.checked)
@@ -323,7 +395,7 @@
             })
             this.content.settings.sounds_master_volume.value=this.save.get_variable("cv_sounds_master_volume")
             this.sounds.masterVolume=this.save.get_variable("cv_sounds_master_volume")/100
-
+            
             /*
             HideElement(this.content.settings_tabs)
             HideElement(this.content.section_tabs)*/

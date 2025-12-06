@@ -68,6 +68,10 @@ export const Casters = Object.freeze({
         };
     },
 });
+export type SettingInputConfig=({
+    type:"select"
+    options:{value:string,name:string}[]
+})
 export interface GameConsoleFile{
     settings:Record<string,any>
     actions:Record<string,InputAction>
