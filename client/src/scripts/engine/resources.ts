@@ -9,14 +9,13 @@ interface FrameData {
     h: number
     file?:string
 }
-export const DefaultTexCoords=[
+export const DefaultTexCoords = [
     0.0, 1.0,
     1.0, 1.0,
     0.0, 0.0,
-    0.0, 0.0,
-    1.0, 1.0,
     1.0, 0.0
-]
+];
+
 export interface SpritesheetJSON {
     meta: { image: string,scale:number,size:{w:number,h:number} }
     frames: Record<string, FrameData>
@@ -159,12 +158,10 @@ export class ResourcesManager{
 
             this.ctx.restore()
             const ret=new Frame(new Image(),this.gl,src,[
-                0.0, 1.0,
-                1.0, 1.0,
-                0.0, 0.0,
-                0.0, 0.0,
-                1.0, 1.0,
-                1.0, 0.0
+                0.0, 1.0, // top-left
+                1.0, 1.0, // top-right
+                0.0, 0.0, // bottom-left
+                1.0, 0.0  // bottom-right
             ]);
             ret.source.addEventListener("load",()=>{
                 const sp=ret as Frame
@@ -215,13 +212,11 @@ export class ResourcesManager{
             };
             const sprite = new Frame(image, this.gl, frame.file??"",
                 [
-                    rect.x1,rect.y2,
-                    rect.x2,rect.y2,
-                    rect.x1,rect.y1,
-                    rect.x1,rect.y1,
-                    rect.x2,rect.y2,
-                    rect.x2,rect.y1
-                ]
+                    rect.x1, rect.y2, // top-left
+                    rect.x2, rect.y2, // top-right
+                    rect.x1, rect.y1, // bottom-left
+                    rect.x2, rect.y1  // bottom-right
+                ]                
             );
             sprite.texture = tex;
             sprite.group=group

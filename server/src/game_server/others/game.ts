@@ -140,7 +140,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
         this.new_list=false
 
         //Gamemode
-        this.gamemode=Gamemodes.snow
+        this.gamemode=Gamemodes.normal
         this.map=new GameMap(this)
         this.modeManager=config.team_size>1?new TeamsGamemodeManager(config.team_size,this):new SoloGamemodeManager(this)
         this.modeManager.generate_map(false)

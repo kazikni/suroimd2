@@ -646,42 +646,41 @@ export class WebglRenderer extends Renderer {
         material.draw(material,matrix,model,position,scale)
     }
 
-    draw_image2D(image: Frame,position: Vec2,model:Float32Array,matrix:Matrix,tint:Color=ColorM.default.white): void {
-        const program=this.tex_program
-
-        const vertexBuffer = this.gl.createBuffer()
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer)
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, model, this.gl.STATIC_DRAW)
-
-        const textureCoordBuffer = this.gl.createBuffer()
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, textureCoordBuffer)
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, image.texture_coordinates, this.gl.STATIC_DRAW)
-
-        this.gl.useProgram(program);
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexBuffer)
-        this.gl.enableVertexAttribArray(this.factorys2D_consts["texture_ADV"]["position"] as number)
-        this.gl.vertexAttribPointer(this.factorys2D_consts["texture_ADV"]["position"] as number, 2, this.gl.FLOAT, false, 0, 0)
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, textureCoordBuffer)
-        this.gl.enableVertexAttribArray(this.factorys2D_consts["texture_ADV"]["coord"] as number);
-        this.gl.vertexAttribPointer(this.factorys2D_consts["texture_ADV"]["coord"] as number, 2, this.gl.FLOAT, false, 0, 0)
-
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, image.texture);
-        this.gl.uniform1i(this.factorys2D_consts["texture_ADV"]["texture"] as WebGLUniformLocation, 0)
-
-        this.gl.uniformMatrix4fv(this.factorys2D_consts["texture_ADV"]["proj"], false, matrix);
-
-        this.gl.uniform2f(this.factorys2D_consts["texture_ADV"]["translation"],position.x,position.y)
-
-        this.gl.uniform4f(this.factorys2D_consts["texture_ADV"]["tint"],tint.r,tint.g,tint.b,tint.a)
-
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, model.length / 2)
-
-        /*this.gl.deleteBuffer(textureCoordBuffer)
-        this.gl.deleteBuffer(vertexBuffer)*/
-    }
+    draw_image2D(image: Frame, position: Vec2, model: Float32Array, matrix: Matrix, tint: Color = ColorM.default.white) {
+        const gl = this.gl;
+        const program = this.tex_program;
+    
+        // Position buffer
+        const vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, model, gl.STATIC_DRAW);
+    
+        // UV buffer
+        const tbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, tbo);
+        gl.bufferData(gl.ARRAY_BUFFER, image.texture_coordinates, gl.STATIC_DRAW);
+    
+        gl.useProgram(program);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+        gl.enableVertexAttribArray(this.factorys2D_consts["texture_ADV"]["position"] as number)
+        gl.vertexAttribPointer(this.factorys2D_consts["texture_ADV"]["position"] as number, 2, gl.FLOAT, false, 0, 0)
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, tbo);
+        gl.enableVertexAttribArray(this.factorys2D_consts["texture_ADV"]["coord"] as number)
+        gl.vertexAttribPointer(this.factorys2D_consts["texture_ADV"]["coord"]as number, 2, gl.FLOAT, false, 0, 0);
+    
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, image.texture);
+        gl.uniform1i(this.factorys2D_consts.texture_ADV.texture, 0);
+    
+        gl.uniformMatrix4fv(this.factorys2D_consts.texture_ADV.proj, false, matrix);
+        gl.uniform2f(this.factorys2D_consts.texture_ADV.translation, position.x, position.y);
+        gl.uniform4f(this.factorys2D_consts.texture_ADV.tint, tint.r, tint.g, tint.b, tint.a);
+    
+        // DRAW
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }    
 
     clear() {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
