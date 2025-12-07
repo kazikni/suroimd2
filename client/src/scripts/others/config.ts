@@ -139,7 +139,7 @@ export const ConfigDefaultActions={
     },
     "debug_menu":{
         buttons:[GamepadButtonID.R3],
-        keys:[Key.Delete]
+        keys:[Key.Delete,Key.Backspace]
     }
 }
 export const Debug={

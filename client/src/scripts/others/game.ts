@@ -39,6 +39,7 @@ import { TranslationManager } from "common/scripts/engine/definitions.ts";
 import { GeneralUpdate, GeneralUpdatePacket } from "common/scripts/packets/general_update.ts";
 import { AmbientManager } from "../managers/ambientManager.ts";
 import { Building } from "../gameObjects/building.ts";
+import { MessageTabApp } from "../apps/message.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -241,9 +242,7 @@ export class Game extends ClientGame2D<GameObject>{
       this.scene.objects.add_layer(i)
     }
     this.language=translation
-
-    this.renderer.background=ColorM.hex("#000");
-
+    this.renderer.background=ColorM.hex("#000")
     this.menuManager=menu
 
     this.cam3=new Camera3D(this.renderer)
@@ -276,6 +275,8 @@ export class Game extends ClientGame2D<GameObject>{
 
     this.ambient=new AmbientManager(this)
     this.hitbox_view=Debug.hitbox
+
+    this.tab.add_app(new MessageTabApp(this.tab))
   }
   add_damageSplash(d:DamageSplash){
     this.scene.objects.add_object(new DamageSplashOBJ(),7,undefined,d)

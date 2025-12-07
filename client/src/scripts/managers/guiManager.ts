@@ -600,6 +600,8 @@ export class GuiManager{
         this.game.addTimeout(()=>{
             elem.remove()
         },4)
+
+      this.game.signals.emit("killfeed_message",{obj:msg,text:elem.innerHTML})
     }
     crosshair=false
     enableCrosshair() {
