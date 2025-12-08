@@ -138,43 +138,40 @@
     };
 }
 
-#bottom-center-container{
+#bottom-left-container{
     position: absolute;
     left: 5px;
     background-color: #0002;
+    border-radius: 10px;
     bottom: 60px;
-    width: 200px;
-    height: 80px;
+    width: 330px;
+    height: 60px;
     span{
         transform: translate(-50%,-50%);
         position: absolute;
         left: 50%;
         top: 50%;
         font-family: "Russo-One";
-        font-size: 50px;
+        font-size: 36px;
+    }
+    img{
+        position: absolute;
+        width: 30px;
+        height: auto;
+        right: 5px;
+        bottom: 5px;
     }
     #action-info{
         position: absolute;
         top: -30px;
         left: 50%;
     }
-    #current-item-slot{
-        position: absolute;
-        right: 103%;
-        background-color: #0002;
-        height: 80px;
-        width: 80px;
-        img{
-            width: 70px;
-            height: 70px;
-        }
-    }
     @media screen and (max-width: palette.$screen_medium) {
         bottom: 45px;
-        width: 100px;
-        height: 40px;
+        width: 130px;
+        height: 33px;
         span{
-            font-size: 20px;
+            font-size: 15px;
         }
     }
 }

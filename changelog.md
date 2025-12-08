@@ -7,6 +7,9 @@ __                                                                              
 __                                                                                                      __
 ### Menu
 * Renderer Selection
+* Now The Weapons On Inventory Have The Color Of The Rarity/Quality
+* Change Hand Info Design
+* Add A Current Ammo Sprite
 __                                                                                                      __
 ### Items
 
@@ -26,5 +29,7 @@ __                                                                              
 
 __                                                                                                      __
 # Play The Game
-https://suroimd.io
+[Web Version](https://suroimd.io)
+[Windows Version](https://suroimd.io/files/windows-build-lasted.zip)
+[Linux Version](https://suroimd.io/files/linux-build-lasted.zip)
 If You Found A Bug, Glitch Or Issue Report To Me Or in #❌issues

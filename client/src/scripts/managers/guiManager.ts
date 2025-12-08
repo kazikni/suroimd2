@@ -1,5 +1,5 @@
 import { Game } from "../others/game.ts";
-import { DamageReason, InventoryItemData, InventoryItemType } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemData, InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
 import { Angle, Numeric, random, v2, Vec2 } from "common/scripts/engine/mod.ts";
 import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
@@ -44,7 +44,7 @@ export class GuiManager{
         _bar_amount:document.querySelector("#boost-bar-amount") as HTMLSpanElement,
 
         hand_info_count:document.querySelector("#hand-info-count") as HTMLSpanElement,
-        current_item_image:document.querySelector("#current-item-image") as HTMLImageElement,
+        hand_info_cunsume_type:document.querySelector("#hand-info-consume-type")as HTMLImageElement,
 
         action_info_delay:document.querySelector("#action-info-delay") as HTMLSpanElement,
         action_info:document.querySelector("#action-info") as HTMLDivElement,
@@ -633,6 +633,7 @@ export class GuiManager{
         }
 
         if(priv.dirty.weapons){
+            let div=this.content.weapon1
             let name=this.weapons_content.weapon1_name
             let img=this.weapons_content.weapon1_image
             if(priv.weapons.melee){
@@ -641,9 +642,12 @@ export class GuiManager{
                 img.src=src
                 this.weapons[0]=priv.weapons.melee
                 img.style.display="block"
+                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.melee.quality].color1}42,${ItemQualitySettings[priv.weapons.melee.quality].color2}42)`
             }else{
                 name.innerText=""
+                div.style.background=""
             }
+            div=this.content.weapon2
             name=this.weapons_content.weapon2_name
             img=this.weapons_content.weapon2_image
             if(priv.weapons.gun1){
@@ -652,10 +656,13 @@ export class GuiManager{
                 img.src=src
                 this.weapons[1]=priv.weapons.gun1
                 img.style.display="block"
+                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.gun1.quality].color1}42,${ItemQualitySettings[priv.weapons.gun1.quality].color2}42)`
             }else{
                 name.innerText=""
                 img.style.display="none"
+                div.style.background=""
             }
+            div=this.content.weapon3
             name=this.weapons_content.weapon3_name
             img=this.weapons_content.weapon3_image
             if(priv.weapons.gun2){
@@ -664,13 +671,18 @@ export class GuiManager{
                 img.src=src
                 this.weapons[2]=priv.weapons.gun2
                 img.style.display="block"
+                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.gun2.quality].color1}42,${ItemQualitySettings[priv.weapons.gun2.quality].color2}42)`
             }else{
                 name.innerText=""
                 img.style.display="none"
+                div.style.background=""
             }
         }
         if(priv.dirty.current_weapon&&priv.current_weapon){
-            if(this.currentWeapon)this.currentWeapon.classList.remove("weapon-slot-selected")
+            if(this.currentWeapon){
+                this.currentWeapon.classList.remove("weapon-slot-selected")
+                this.currentWeapon.style.border=""
+            }
             const wp=this.weapons[priv.current_weapon.slot as keyof typeof this.weapons]
             switch(priv.current_weapon.slot){
                 case 1:
@@ -686,10 +698,20 @@ export class GuiManager{
                     this.currentWeaponIDX=0
             }
 
+            const def=this.weapons[priv.current_weapon.slot as 0|1|2]
             if(priv.current_weapon.slot===0){
                 //
             }else if(wp&&(wp as GunDef).reload){
                 this.content.hand_info_count.innerText=`${priv.current_weapon.ammo}/${(wp as GunDef).reload?.capacity}`
+            }
+            if(def&&def.item_type===InventoryItemType.gun){
+                this.content.hand_info_cunsume_type.src=this.game.resources.get_sprite(def.ammoType).src
+                this.content.hand_info_cunsume_type.style.display=""
+            }else{
+                this.content.hand_info_cunsume_type.style.display="none"
+            }
+            if(def){
+                this.currentWeapon.style.border=`3px solid ${ItemQualitySettings[def.quality].color2}`
             }
             this.currentWeapon.classList.add("weapon-slot-selected")
         }
