@@ -158,17 +158,17 @@ export class AmbientManager{
             this.game.renderer.canvas.style.filter="none"
         }
     }
-    /*musics:string[]=[
+    musics:string[]=[
         "game_normal_music_1",
         "game_normal_music_2",
         "game_normal_music_3",
         "game_normal_music_4",
         "game_normal_music_5",
-    ]*/
-   musics:string[]=[
+    ]
+    /*musics:string[]=[
         "game_snow_music_1",
         "game_snow_music_2",
-    ]
+    ]*/
     ending_music:string[]=[
         "game_campaing_ending_1",
         "game_campaing_ending_2"

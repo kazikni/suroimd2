@@ -1,6 +1,6 @@
 import { Definitions,Definition, v2 } from "../../engine/mod.ts"
-import { DefaultFistRig, FistRig, ItemQuality, WeaponFrames, WeaponRig } from "../../others/item.ts";
-import { InventoryItemType } from "../utils.ts";
+import { DefaultFistRig, FistRig, ItemQuality, WeaponAssets, WeaponRig } from "../../others/item.ts"
+import { InventoryItemType } from "../utils.ts"
 
 export type ProjectileDef={
     explosion?:string
@@ -32,7 +32,7 @@ export type ProjectileDef={
 
     arms?:FistRig
     image?:WeaponRig
-    frame:WeaponFrames
+    assets?:WeaponAssets
 
     quality:ItemQuality
     item_type?:InventoryItemType.projectile

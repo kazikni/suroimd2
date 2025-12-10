@@ -231,7 +231,7 @@ export class Player extends GameObject{
             this.sprites.weapon.hotspot=def.image.hotspot??v2.new(.5,.5)
             if((def as GunDef).dual_from&&(def as unknown as GameItem).item_type===InventoryItemType.gun){
                 const df=Guns.getFromString((def as GunDef).dual_from!)
-                const world_frame=def.frames?.world??`${df.idString}_world`
+                const world_frame=def.assets?.world??`${df.idString}_world`
                 this.sprites.weapon2.visible=true
                 this.sprites.weapon2.scale=v2.new(1*(def.image.scale??1),1)
                 this.sprites.weapon2.position=v2.duplicate(def.image.position)
@@ -251,17 +251,17 @@ export class Player extends GameObject{
                 this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
                 this.sprites.weapon2.frame=this.game.resources.get_sprite(world_frame)
                 
-                if(def.frames?.world_tint){
-                    const col=ColorM.number(def.frames?.world_tint)
+                if(def.assets?.world_tint){
+                    const col=ColorM.number(def.assets?.world_tint)
                     this.sprites.weapon.tint=col
                     this.sprites.weapon2.tint=col
                 }else{
                     this.sprites.weapon.tint=ColorM.number(0xffffff)
                 }
             }else{
-            const world_frame=def.frames?.world??((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
+            const world_frame=def.assets?.world??((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
                 this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
-                if(def.frames?.world_tint)this.sprites.weapon.tint=ColorM.number(def.frames?.world_tint)
+                if(def.assets?.world_tint)this.sprites.weapon.tint=ColorM.number(def.assets?.world_tint)
                 else this.sprites.weapon.tint=ColorM.number(0xffffff)
             }
         }else{

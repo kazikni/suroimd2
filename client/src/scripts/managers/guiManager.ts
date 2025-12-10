@@ -638,7 +638,7 @@ export class GuiManager{
             let img=this.weapons_content.weapon1_image
             if(priv.weapons.melee){
                 name.innerText=priv.weapons.melee.idString
-                const src=this.game.resources.get_sprite(priv.weapons.melee.idString).src
+                const src=this.game.resources.get_sprite(priv.weapons.melee.assets?.item??priv.weapons.melee.idString).src
                 img.src=src
                 this.weapons[0]=priv.weapons.melee
                 img.style.display="block"
@@ -652,7 +652,7 @@ export class GuiManager{
             img=this.weapons_content.weapon2_image
             if(priv.weapons.gun1){
                 name.innerText=priv.weapons.gun1.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun1.idString).src
+                const src=this.game.resources.get_sprite(priv.weapons.gun1.assets?.item??priv.weapons.gun1.idString).src
                 img.src=src
                 this.weapons[1]=priv.weapons.gun1
                 img.style.display="block"
@@ -667,7 +667,7 @@ export class GuiManager{
             img=this.weapons_content.weapon3_image
             if(priv.weapons.gun2){
                 name.innerText=priv.weapons.gun2.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun2.idString).src
+                const src=this.game.resources.get_sprite(priv.weapons.gun2.assets?.item??priv.weapons.gun2.idString).src
                 img.src=src
                 this.weapons[2]=priv.weapons.gun2
                 img.style.display="block"

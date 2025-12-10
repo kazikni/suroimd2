@@ -1,8 +1,8 @@
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { Definitions,Definition, DeepPartial } from "../../engine/mod.ts";
-import { mergeDeep } from "../../engine/utils.ts";
-import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponFrames } from "../../others/item.ts";
-import { type BulletDef, BulletReflection, InventoryItemType } from "../utils.ts";
+import { cloneDeep, mergeDeep } from "../../engine/utils.ts";
+import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponAssets } from "../../others/item.ts";
+import { type BulletDef, BulletReflection, InventoryItemType, ItemQualitySettings } from "../utils.ts";
 export enum FireMode{
     Auto,
     Single,
@@ -87,7 +87,7 @@ export type GunDef={
     }
     arms?:FistRig
     image?:WeaponRig
-    frames?:WeaponFrames
+    assets?:WeaponAssets
     caseParticle?:{
         position:Vec2
         at_begin?:boolean
@@ -111,6 +111,32 @@ export const Guns=new Definitions<GunDef,{}>((g)=>{
         Guns.insert(dd)
     }
 })
+export const GunsConstructors={
+    extends(gun:GunDef,variant:DeepPartial<GunDef>):GunDef{
+        return mergeDeep({}as GunDef,gun,variant)as GunDef
+    },
+    create_variant(gun:GunDef,quality:ItemQuality,params:{
+        damage_increment?:number
+        capacity_increment?:number
+    }):GunDef{
+        const ret=cloneDeep(gun)
+        ret.idString=ItemQualitySettings[quality].name+"_"+ret.idString
+        ret.quality=quality
+        if(!ret.assets){
+            ret.assets={}
+        }
+        ret.assets.item=gun.assets?.item??gun.idString
+        ret.assets.item_tint=gun.assets?.item_tint
+        ret.assets.item=gun.assets?.world??gun.idString+"_world"
+        ret.assets.world_tint=gun.assets?.world_tint
+        if(ret.bullet){
+            if(params.damage_increment){
+                ret.bullet.def.damage+=params.damage_increment
+            }
+        }
+        return ret
+    }
+}
 
 export const GasParticles={
     shotgun:{
@@ -200,7 +226,7 @@ Guns.insert(
         },
         speed_mod:0.98,
         arms:WeaponsArmRig[3],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0xaaaaaa
         },
@@ -252,7 +278,7 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         image:WeaponsRig[0],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0xaaaaaa
         },
@@ -375,7 +401,7 @@ Guns.insert(
         speed_mod:0.95,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[0],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x12111f
         },
@@ -421,7 +447,7 @@ Guns.insert(
         speed_mod:0.95,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[0],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x12111f
         },
@@ -501,7 +527,7 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         arms:WeaponsArmRig[2],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x3f3a2f
         },
@@ -541,7 +567,7 @@ Guns.insert(
         speed_mod:1,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[2],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0x12111f
         },
@@ -811,7 +837,7 @@ Guns.insert(
         speed_mod:1,
         gasParticles:GasParticles.shotgun,
         arms:WeaponsArmRig[0],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x12111f
         },
@@ -975,3 +1001,8 @@ Guns.insert(
         speed_mod:0.97,
     },*/
 )
+/*Guns.insert(
+    GunsConstructors.create_variant(Guns.getFromString("ak47"),ItemQuality.Uncommon,{
+        damage_increment:-0.5
+    })
+)*/
