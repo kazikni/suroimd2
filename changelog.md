@@ -22,10 +22,10 @@ __                                                                              
 ## Changes
 __                                                                                                      __
 ### Items
-
+* Shield Particle Changed To Square
 __                                                                                                      __
 ### Others
-
+* Redesign Bushes
 __                                                                                                      __
 ## Fixes
 

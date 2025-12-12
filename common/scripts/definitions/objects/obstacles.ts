@@ -262,13 +262,13 @@ Obstacles.insert(
     {
         idString:"bush",
         health:70,
-        hitbox:new CircleHitbox2D(v2.new(0,0),0.7),
+        hitbox:new CircleHitbox2D(v2.new(0,0),0.8),
         no_collision:true,
         scale:{
             destroy:0.8
         },
         frame_transform:{
-            scale:2
+            scale:1.9
         },
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles3,
