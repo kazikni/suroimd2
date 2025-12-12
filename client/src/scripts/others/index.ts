@@ -3,7 +3,6 @@ import { Game} from "./game.ts"
 import { ConfigCasters, ConfigDefaultActions, ConfigDefaultValues } from "./config.ts";
 import "../../scss/main.scss"
 import { GuiManager } from "../managers/guiManager.ts";
-import "../news/new.ts"
 import { SoundManager } from "../engine/sounds.ts";
 import { OfflineGameServer } from "./offline.ts";
 import { BasicSocket, Client, IPLocation } from "common/scripts/engine/mod.ts";

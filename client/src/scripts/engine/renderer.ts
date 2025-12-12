@@ -128,7 +128,7 @@ export type Material3D=GLMaterial3D
 export abstract class Renderer {
     canvas: HTMLCanvasElement
     background: Color = ColorM.default.white;
-    constructor(canvas: HTMLCanvasElement, meter_size: number = 100) {
+    constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas
     }
     abstract draw_image2D(image: Frame,position: Vec2,model:Float32Array,matrix:Matrix,tint?:Color): void
@@ -179,6 +179,7 @@ export interface GLMaterial2DFactory<MaterialArgs>{
 }
 export type GLMaterial2DFactoryCall<MaterialArgs>={vertex:string,frag:string,create:(gl:WebglRenderer,fac:GLMaterial2DFactory<MaterialArgs>)=>(arg:MaterialArgs)=>GLMaterial2D<Material2D>}
 
+// deno-lint-ignore no-explicit-any
 export type GLMaterial3D<MaterialArgs=any>={
     factory:GLMaterial3DFactory<MaterialArgs>
     draw:(mat:GLMaterial3D<MaterialArgs>,matrix:Matrix,model:Model3D,position:Vec3,scale:Vec3)=>void
@@ -353,6 +354,7 @@ export class WebglRenderer extends Renderer {
                 : canvas.getContext("webgl", { antialias: true })
         
         if (!gl) throw new Error(`Failed to initialize WebGL${version}`)
+        // deno-lint-ignore no-explicit-any
         this.gl = gl as any
         this.isWebGL2 = version === 2
 

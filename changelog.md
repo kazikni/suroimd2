@@ -10,6 +10,7 @@ __                                                                              
 * Now The Weapons On Inventory Have The Color Of The Rarity/Quality
 * Change Hand Info Design
 * Add A Current Ammo Sprite
+* News Now Is Defined By The Api
 __                                                                                                      __
 ### Items
 

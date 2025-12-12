@@ -2,34 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Forum</title>
-  <link rel="stylesheet" href="src/scss/main.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game News</title>
+  <link rel="stylesheet" href="/src/styles/news.css">
 </head>
 <body>
-  <div id="app">
-    <div class="forum">
-      <aside class="sidebar">
-        <a href="/"><button id="btn-menu" class="btn-blue" style="font-size: 20px; margin-bottom: 5px;">Back To Main Menu</button></a>
-        <button id="new-post-btn" class="btn-blue">New Post</button>
-        <div id="posts-list"></div>
-      </aside>
-      <main class="content">
-        <div id="post-view">
-          <p>Select a post</p>
-        </div>
-
-        <section id="create-post-section" class="hidden">
-          <h2 class="text">New Post</h2>
-          <input class="text-input" id="post-title" placeholder="Title" />
-          <textarea id="post-body" class="text-input" placeholder="Write here (mini markdown)"></textarea>
-          <button class="btn-green" id="create-post">Create</button>
-          <button id="cancel-create-post" class="btn-red">Cancel</button>
-        </section>
-      </main>
-    </div>
+  <div class="news-container">
+    <aside class="sidebar">
+      <a href="/"><button class="btn-blue back-btn">← Back</button></a>
+      <h2>Game News</h2>
+      <div id="news-list">Loading...</div>
+    </aside>
+    <main class="content">
+      <h1>Latest Updates</h1>
+      <div id="news-preview"></div>
+    </main>
   </div>
-
-  <script src="src/scripts/main.ts" type="module"></script>
+  <script type="module" src="./news_main.js"></script>
 </body>
 </html>

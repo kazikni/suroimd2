@@ -4,7 +4,10 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -17,6 +20,10 @@ type ApiServer struct {
 	shopSkins   map[int]int
 	mu          sync.Mutex
 	Config      *Config
+	News        struct {
+		Data            []NewsData
+		ExpandedContent map[string]string
+	}
 }
 
 func (s *ApiServer) corsMiddleware(next http.Handler) http.Handler {
@@ -49,6 +56,7 @@ func NewApiServer(dbFile string, cfg *Config) (*ApiServer, error) {
 		Config:      cfg,
 	}
 	err = server.DBInit()
+	server.load_news()
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +127,43 @@ func (s *ApiServer) corsHeaders(w http.ResponseWriter, origin string) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 }
+
+func (s *ApiServer) load_news() {
+	basePath := s.Config.API.Files.News
+	if basePath == "" {
+		panic("news path is empty")
+	}
+	mainFile := filepath.Join(basePath, "main.json")
+	f, err := os.ReadFile(mainFile)
+	if err != nil {
+		panic("failed to read news main.json: " + err.Error())
+	}
+	var news map[string]any = make(map[string]any)
+	err = json.Unmarshal(f, &news)
+	if err != nil {
+		panic("failed to parse news main.json: " + err.Error())
+	}
+	order := news["order"].([]any)
+	s.News.ExpandedContent = make(map[string]string)
+	for _, v := range order {
+		entry := v.(map[string]any)
+
+		content, err := os.ReadFile(filepath.Join(basePath, "content", entry["id"].(string)+".md"))
+		if err != nil {
+			panic("failed to read news content file: " + err.Error())
+		}
+		s.News.Data = append(s.News.Data, NewsData{
+			Title:   entry["title"].(string),
+			Id:      entry["id"].(string),
+			Content: string(content),
+		})
+
+		content, err = os.ReadFile(filepath.Join(basePath, "expanded", entry["id"].(string)+".md"))
+		if err == nil {
+			s.News.ExpandedContent[entry["id"].(string)] = string(content)
+		}
+	}
+}
 func (apiServer *ApiServer) HandleFunctions() {
 	r := mux.NewRouter()
 
@@ -132,6 +177,10 @@ func (apiServer *ApiServer) HandleFunctions() {
 	api_r.HandleFunc("/internal/update-user", apiServer.handleUpdateUser)
 	api_r.HandleFunc("/buy-skin/{id}", apiServer.handleBuySkin)
 	api_r.HandleFunc("/leaderboard", apiServer.handleLeaderboard)
+
+	news_r := r.PathPrefix("/news").Subrouter()
+	news_r.HandleFunc("/get", apiServer.handleGetNewsDefs)
+	news_r.HandleFunc("/expanded/{id}", apiServer.handleGetNewsExpanded)
 
 	forum_r := r.PathPrefix("/forum").Subrouter()
 	forum_r.HandleFunc("/create-post", apiServer.handleCreatePost)

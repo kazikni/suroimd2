@@ -164,19 +164,19 @@ func (s *ApiServer) handleGetYourStatus(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var user struct {
-		Name      string `json:"name"`
-		Coins     int    `json:"coins"`
-		XP        int    `json:"xp"`
-		Score     int    `json:"score"`
-		Wins int `json:"wins"`
-		SpecialWins int `json:"special_wins"`
-		GamesTotal int `json:"games_total"`
-		Kills int `json:"kills"`
-		Inventory string `json:"inventory"`
+		Name        string `json:"name"`
+		Coins       int    `json:"coins"`
+		XP          int    `json:"xp"`
+		Score       int    `json:"score"`
+		Wins        int    `json:"wins"`
+		SpecialWins int    `json:"special_wins"`
+		GamesTotal  int    `json:"games_total"`
+		Kills       int    `json:"kills"`
+		Inventory   string `json:"inventory"`
 	}
 
 	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, wins, special_wins, games_total, kills, inventory FROM players WHERE name = ?", username).
-		Scan(&user.Name, &user.Coins, &user.XP, &user.Score,&user.Wins,&user.SpecialWins,&user.GamesTotal, &user.Kills, &user.Inventory)
+		Scan(&user.Name, &user.Coins, &user.XP, &user.Score, &user.Wins, &user.SpecialWins, &user.GamesTotal, &user.Kills, &user.Inventory)
 	if err != nil {
 		http.Error(w, "{\"user\":null}", 404)
 		return
@@ -204,19 +204,19 @@ func (s *ApiServer) handleGetStatus(w http.ResponseWriter, r *http.Request) {
 	s.corsHeaders(w, origin)
 
 	var user struct {
-		Name      string `json:"username"`
-		Coins     int    `json:"coins"`
-		XP        int    `json:"xp"`
-		Score     int    `json:"score"`
-		Wins int `json:"wins"`
-		SpecialWins int `json:"special_wins"`
-		GamesTotal int `json:"games_total"`
-		Kills int `json:"kills"`
-		Inventory string `json:"inventory"`
+		Name        string `json:"username"`
+		Coins       int    `json:"coins"`
+		XP          int    `json:"xp"`
+		Score       int    `json:"score"`
+		Wins        int    `json:"wins"`
+		SpecialWins int    `json:"special_wins"`
+		GamesTotal  int    `json:"games_total"`
+		Kills       int    `json:"kills"`
+		Inventory   string `json:"inventory"`
 	}
 
 	err := s.accounts_db.QueryRow("SELECT name, coins, xp, score, wins, special_wins, games_total, kills, inventory FROM players WHERE name = ?", username).
-		Scan(&user.Name, &user.Coins, &user.XP, &user.Score,&user.Wins,&user.SpecialWins,&user.GamesTotal, &user.Kills, &user.Inventory)
+		Scan(&user.Name, &user.Coins, &user.XP, &user.Score, &user.Wins, &user.SpecialWins, &user.GamesTotal, &user.Kills, &user.Inventory)
 	if err != nil {
 		http.Error(w, "User not found", 404)
 		return
@@ -247,14 +247,14 @@ func (s *ApiServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var data struct {
-		Username  string `json:"username"`
-		Coins int    `json:"coins"`
-		XP    int    `json:"xp"`
-		Score int    `json:"score"`
-		Wins int `json:"wins"`
-		SpecialWins int `json:"special_wins"`
-		GamesTotal int `json:"games_total"`
-		Kills int `json:"kills"`
+		Username    string `json:"username"`
+		Coins       int    `json:"coins"`
+		XP          int    `json:"xp"`
+		Score       int    `json:"score"`
+		Wins        int    `json:"wins"`
+		SpecialWins int    `json:"special_wins"`
+		GamesTotal  int    `json:"games_total"`
+		Kills       int    `json:"kills"`
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
 		http.Error(w, "Invalid JSON", 400)
@@ -301,7 +301,7 @@ func (s *ApiServer) handleBuySkin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// URL esperado: /buy-skin/{skinId}
+	// URL Expected: /buy-skin/{skinId}
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 3 {
 		http.Error(w, "Missing skin ID", 400)

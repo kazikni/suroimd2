@@ -1,4 +1,3 @@
-import { KillFeedMessage } from "common/scripts/packets/killfeed_packet.ts";
 import { TabApp, TabManager } from "../managers/tabManager.ts";
 
 export interface Message {
