@@ -7,6 +7,7 @@ import { ApiSettingsS } from "common/scripts/config/config.ts";
 import { ShowTab } from "../engine/mod.ts";
 import { SoundManager } from "../engine/sounds.ts";
 import { AccountManager } from "./accountManager.ts";
+import { PlayArgs } from "../others/constants.ts";
 
 export class MenuManager{
     save:GameConsole
@@ -14,7 +15,8 @@ export class MenuManager{
     account:AccountManager=new AccountManager()
     tabButtons:Record<string,Record<string,string[]>> = {
         play: {
-            campaign: ["campaign", "play"]
+            campaign: ["campaign", "play"],
+            team: ["team", "play"],
         },
         settings: {
             graphics: ["graphics", "settings"],
@@ -120,6 +122,7 @@ export class MenuManager{
             ],
             buttons:{
                 campaign:document.body.querySelector("#btn-play-campaign") as HTMLButtonElement,
+                team:document.body.querySelector("#btn-play-team") as HTMLButtonElement,
 
                 graphics:document.body.querySelector("#btn-settings-graphics") as HTMLButtonElement,
                 game:document.body.querySelector("#btn-settings-game") as HTMLButtonElement,
@@ -134,11 +137,16 @@ export class MenuManager{
                 rules:document.body.querySelector("#btn-about-rules") as HTMLButtonElement,
                 credits:document.body.querySelector("#btn-about-credits") as HTMLButtonElement,
             } as Record<string,HTMLButtonElement>
-        }
+        },
+        campaing_levels:document.body.querySelector("#campaign-levels") as HTMLDivElement,
+        //team_options_div:document.body.querySelector("#menu-play-teams") as HTMLSelectElement,
+        play_buttons:document.body.querySelector("#menu-play-buttons") as HTMLDivElement,
     }
     resources:ResourcesManager
     submenu_param:boolean
     sounds:SoundManager
+
+    play_callback?:(play_args:PlayArgs)=>void
     constructor(save:GameConsole,resources:ResourcesManager,sounds:SoundManager){
         this.save=save
         const params = new URLSearchParams(self.location.search)
@@ -147,7 +155,8 @@ export class MenuManager{
         this.resources=resources
         this.menu_tabs["play"]={
             "campaign":document.body.querySelector("#campaign-levels") as HTMLElement,
-            "gamemode":document.body.querySelector("#gamemode-image") as HTMLElement,
+            "gamemode":document.body.querySelector("#gamemode-view") as HTMLElement,
+            "team":document.body.querySelector("#gamemode-team") as HTMLElement,
         }
         this.menu_tabs["settings"]={
             "graphics":document.body.querySelector("#settings-sm-graphics") as HTMLElement,
@@ -171,7 +180,6 @@ export class MenuManager{
         this.api_settings={
             modes:[
                 {
-                    enabled:true,
                     gamemode:"normal",
                     team_size:[1]
                 },
@@ -233,7 +241,7 @@ export class MenuManager{
             switch(submenu){
                 case "play":
                     ShowElement(this.content.submenus.play,true)
-                    ShowTab("gamemode",this.menu_tabs["play"])
+                    ShowTab("campaign",this.menu_tabs["play"])
                     break
                 case "loadout":
                     ShowElement(this.content.submenus.loadout,true)
@@ -311,7 +319,44 @@ export class MenuManager{
             d.innerHTML+=`<a href="/pages/news/?id=${n.id}"><h3>See More</h3></a>`
             newsS.appendChild(d)
         }
+
+        this.update_modes()
     }
+    update_modes(){
+        this.content.play_buttons.innerHTML="<span class=\"span\">Online</span>"
+        this.api_settings.modes.forEach((mode)=>{
+            const btn=document.createElement("button")
+            btn.className="btn-green"
+            btn.innerText=mode.gamemode
+            btn.onclick=()=>{
+                ShowTab("gamemode",this.menu_tabs["play"])
+                const gm_view=this.menu_tabs["play"]["gamemode"]
+                gm_view.innerHTML=`
+<div class="play-select-item background-menu">
+    <h1>${mode.gamemode}</h1>
+    <div class="gamemode-image" style="background-image: url('/img/menu/modes/${mode.gamemode}.gif');"></div>
+    <button id="btn-join-${mode.gamemode}" class="btn-green">Play</button>
+</div>`
+                const join_btn=gm_view.querySelector(`#btn-join-${mode.gamemode}`) as HTMLButtonElement
+                join_btn.onclick=()=>{
+                    console.log(`${mode.gamemode}...`)
+                    if(this.play_callback)this.play_callback({type:"online",mode:mode.gamemode,team_size:mode.team_size[0]})
+                }
+            }
+            this.content.play_buttons.appendChild(btn)
+        })
+        //this.update_team(true,undefined)
+    }
+    /*update_team(enabled:boolean,connected?:TeamSetting){
+        HideElement(this.content.team_options_div)
+        if(enabled){
+            if(connected){
+                //
+            }else{
+                ShowElement(this.content.team_options_div)
+            }
+        }
+    }*/
     setupTabButtons() {
         for (const submenu in this.tabButtons) {
             for (const btnName in this.tabButtons[submenu]) {
@@ -321,7 +366,7 @@ export class MenuManager{
             }
         }
     }
-    start(){
+    async start(){
         this.content.insert_name.value=this.save.get_variable("cv_loadout_name")
         this.content.insert_name.addEventListener("change",()=>{
             this.save.set_variable("cv_loadout_name",this.content.insert_name.value)
@@ -406,6 +451,8 @@ export class MenuManager{
         })
         this.content.settings.sounds_master_volume.value=this.save.get_variable("cv_sounds_master_volume")
         this.sounds.masterVolume=this.save.get_variable("cv_sounds_master_volume")/100
+
+        await this.load_campaign_levels()
         
         /*
         HideElement(this.content.settings_tabs)
@@ -456,5 +503,24 @@ export class MenuManager{
     game_end(){
         ShowElement(this.content.menuD)
         HideElement(this.content.gameD)
+    }
+    load_campaign_levels():Promise<void>{
+        return new Promise<void>((resolve) => {
+            this.content.campaing_levels.innerHTML = ""
+            for (let i = 0; i < 1; i++) {
+                const level = document.createElement("div")
+                level.className="play-select-item background-menu"
+                level.innerHTML = `
+<h1>Level ${i + 1}</h1>
+<p>Welcome To The Island</p>
+<button id="start-level-${i}" class="btn-green">Start Level</button>`
+                this.content.campaing_levels.appendChild(level)
+                const start_btn = level.querySelector(`#start-level-${i}`) as HTMLButtonElement
+                start_btn.onclick = () => {
+                    if(this.play_callback)this.play_callback({type:"campaign",level:i+1,dificulty:2})
+                }
+            }
+            resolve()
+        })
     }
 }

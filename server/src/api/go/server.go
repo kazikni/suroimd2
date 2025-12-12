@@ -11,8 +11,13 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
 
 type ApiServer struct {
 	accounts_db *sql.DB
@@ -24,6 +29,7 @@ type ApiServer struct {
 		Data            []NewsData
 		ExpandedContent map[string]string
 	}
+	Teams map[string]*Team
 }
 
 func (s *ApiServer) corsMiddleware(next http.Handler) http.Handler {
@@ -164,36 +170,40 @@ func (s *ApiServer) load_news() {
 		}
 	}
 }
-func (apiServer *ApiServer) HandleFunctions() {
+func (s *ApiServer) HandleFunctions() {
 	r := mux.NewRouter()
 
 	api_r := r.PathPrefix("/").Subrouter()
-	api_r.HandleFunc("/get-settings", apiServer.handleGetSettings)
-	api_r.HandleFunc("/register", apiServer.handleRegister)
-	api_r.HandleFunc("/login", apiServer.handleLogin)
-	api_r.HandleFunc("/logout", apiServer.handleLogout)
-	api_r.HandleFunc("/get-your-status", apiServer.handleGetYourStatus)
-	api_r.HandleFunc("/get-status/{id}", apiServer.handleGetStatus)
-	api_r.HandleFunc("/internal/update-user", apiServer.handleUpdateUser)
-	api_r.HandleFunc("/buy-skin/{id}", apiServer.handleBuySkin)
-	api_r.HandleFunc("/leaderboard", apiServer.handleLeaderboard)
+	api_r.HandleFunc("/get-settings", s.handleGetSettings)
+	api_r.HandleFunc("/register", s.handleRegister)
+	api_r.HandleFunc("/login", s.handleLogin)
+	api_r.HandleFunc("/logout", s.handleLogout)
+	api_r.HandleFunc("/get-your-status", s.handleGetYourStatus)
+	api_r.HandleFunc("/get-status/{id}", s.handleGetStatus)
+	api_r.HandleFunc("/internal/update-user", s.handleUpdateUser)
+	api_r.HandleFunc("/buy-skin/{id}", s.handleBuySkin)
+	api_r.HandleFunc("/leaderboard", s.handleLeaderboard)
 
 	news_r := r.PathPrefix("/news").Subrouter()
-	news_r.HandleFunc("/get", apiServer.handleGetNewsDefs)
-	news_r.HandleFunc("/expanded/{id}", apiServer.handleGetNewsExpanded)
+	news_r.HandleFunc("/get", s.handleGetNewsDefs)
+	news_r.HandleFunc("/expanded/{id}", s.handleGetNewsExpanded)
+
+	team_r := r.PathPrefix("/team").Subrouter()
+	team_r.HandleFunc("/connect", s.handleTeamConnect).Methods("POST")
+	team_r.HandleFunc("/ws/{id}/{player}", s.handleTeamWS).Methods("POST")
 
 	forum_r := r.PathPrefix("/forum").Subrouter()
-	forum_r.HandleFunc("/create-post", apiServer.handleCreatePost)
-	forum_r.HandleFunc("/posts", apiServer.handleListPosts)
-	forum_r.HandleFunc("/post/{id}", apiServer.handlePost)
-	forum_r.HandleFunc("/delete-post/{id}", apiServer.handleDeletePost)
-	forum_r.HandleFunc("/delete-comment/{id}", apiServer.handleDeleteComment)
+	forum_r.HandleFunc("/create-post", s.handleCreatePost)
+	forum_r.HandleFunc("/posts", s.handleListPosts)
+	forum_r.HandleFunc("/post/{id}", s.handlePost)
+	forum_r.HandleFunc("/delete-post/{id}", s.handleDeletePost)
+	forum_r.HandleFunc("/delete-comment/{id}", s.handleDeleteComment)
 
 	var handler http.Handler = r
-	handler = apiServer.rateLimitMiddleware(handler)
-	handler = apiServer.limitBodySizeMiddleware(handler)
+	handler = s.rateLimitMiddleware(handler)
+	handler = s.limitBodySizeMiddleware(handler)
 	handler = logURLMiddleware(handler)
-	handler = apiServer.corsMiddleware(handler)
+	handler = s.corsMiddleware(handler)
 
 	http.Handle("/", handler)
 }

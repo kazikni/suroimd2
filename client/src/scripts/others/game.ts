@@ -40,6 +40,7 @@ import { GeneralUpdate, GeneralUpdatePacket } from "common/scripts/packets/gener
 import { AmbientManager } from "../managers/ambientManager.ts";
 import { Building } from "../gameObjects/building.ts";
 import { MessageTabApp } from "../apps/message.ts";
+import { TeamManager } from "../managers/teamManager.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -100,6 +101,8 @@ export class Game extends ClientGame2D<GameObject>{
   living_count:number[]=[2]
 
   cam3:Camera3D
+
+  team:TeamManager=new TeamManager(this)
 
   listners_init(){
     this.input_manager.add_axis("movement",

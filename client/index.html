@@ -161,26 +161,29 @@
       <kl-md-submenu id="menu-play-submenu" class ="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button id="btn-play-normal" class="btn-green" play-sound="button_click">Normal</button>
-              <button id="btn-play-campaign" class="btn-green" play-sound="button_click">Campaign</button>
-              <p></p>
-              <select id="select-region" class="select-blue">
-              </select>
-              <select id="select-match-mode" class="select-blue">
-                  <option>Ranked</option>
-                  <option>Casual</option>
-              </select>
-              <select id="select-team-size" class="select-blue">
-                  <option>Solo</option>
-                  <option>Duo</option>
-                  <option>Squad</option>
-              </select>
+              <div>
+                <span class="span">Campaign</span>
+                <button id="btn-play-campaign" class="btn-green" play-sound="button_click">Level Selector</button>
+              </div>
+              <div id="menu-play-buttons">
+              </div>
+              <button id="btn-play-team" class="btn-green" play-sound="button_click">Team</button>
+              <div>
+                <span class="span">Region</span>
+                <select id="select-region" class="select-blue"></select>
+              </div>
             </kl-md-menu-options>
             <kl-md-extra>
-              <div id="gamemode-image"></div>
-              <div id="campaign-levels">
-                <button class="btn-blue">1</button>
+              <div id="gamemode-view" class="background-menu-md background-menu-ss background-menu"></div>
+              <div id="gamemode-team" class="background-menu-md background-menu-ss background-menu">
+                <div id="gamemode-team-connect" class="play-select-item background-menu">
+                  <h1>Teams</h1>
+                  <input class="input-green" placeholder="Team Code" id="insert-team-code"></input>
+                  <button class="btn-green" id="btn-team-create-team" play-sound="button_click">Connect</button>
+                  <button class="btn-green" id="btn-team-create-team" play-sound="button_click">Join</button>
+                </div>
               </div>
+              <div id="campaign-levels" class="background-menu-md background-menu-ss background-menu"></div>
             </kl-md-extra>
             <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>

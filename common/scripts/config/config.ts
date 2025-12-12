@@ -11,7 +11,6 @@ export interface GameConfig{
 export interface GamemodeConfig{
     team_size:number[]
     gamemode:string
-    enabled:boolean
 }
 export interface GameDebugOptions{
     deenable_lobby?:boolean

@@ -11,6 +11,7 @@ __                                                                              
 * Change Hand Info Design
 * Add A Current Ammo Sprite
 * News Now Is Defined By The Api
+* Change Play Menu
 __                                                                                                      __
 ### Items
 
