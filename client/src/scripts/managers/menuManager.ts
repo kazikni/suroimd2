@@ -8,6 +8,7 @@ import { ShowTab } from "../engine/mod.ts";
 import { SoundManager } from "../engine/sounds.ts";
 import { AccountManager } from "./accountManager.ts";
 import { PlayArgs } from "../others/constants.ts";
+import { random } from "common/scripts/engine/random.ts";
 
 export class MenuManager{
     save:GameConsole
@@ -212,10 +213,6 @@ export class MenuManager{
             btn.addEventListener("click",this.open_button_func.bind(this))
         }
         const music=this.sounds.get_manipulative_si("music")??this.sounds.add_manipulative_si("music")
-        const menu_music=this.resources.get_audio("menu_music")
-        this.sounds.signals.on("load",()=>{
-            music?.set(menu_music)
-        })
         this.load_resources(["main"])
         this.update_api()
     }
@@ -271,7 +268,6 @@ export class MenuManager{
         this.loaded=false
         this.resources.clear([
             "button_click",
-            "menu_music",
             "essentials",
             ...textures
         ])

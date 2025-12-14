@@ -1,6 +1,6 @@
 import { ClientGame2D, ResourcesManager, Renderer, ColorM, InputManager} from "../engine/mod.ts"
 import { LayersL, zIndexes } from "common/scripts/others/constants.ts";
-import { Client, DefaultSignals, KDate, Numeric, Vec2, model2d, v2 } from "common/scripts/engine/mod.ts";
+import { Client, DefaultSignals, Numeric, Vec2, model2d, v2 } from "common/scripts/engine/mod.ts";
 import { JoinPacket } from "common/scripts/packets/join_packet.ts";
 import { Player } from "../gameObjects/player.ts";
 import { Loot } from "../gameObjects/loot.ts";

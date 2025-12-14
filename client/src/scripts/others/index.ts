@@ -5,7 +5,7 @@ import "../../scss/main.scss"
 import { GuiManager } from "../managers/guiManager.ts";
 import { SoundManager } from "../engine/sounds.ts";
 import { OfflineGameServer } from "./offline.ts";
-import { BasicSocket, Client, IPLocation } from "common/scripts/engine/mod.ts";
+import { BasicSocket, Client, IPLocation, random } from "common/scripts/engine/mod.ts";
 import { GameConsole } from "../engine/console.ts";
 import { MenuManager } from "../managers/menuManager.ts";
 import { InputManager } from "../engine/keys.ts"
@@ -42,13 +42,10 @@ import { PlayArgs } from "./constants.ts";
     const renderer=new WebglRenderer(canvas,undefined,GameSave.get_variable("cv_graphics_renderer")==="webgl1"?1:2)
 
     const resources=new ResourcesManager(renderer.gl,sounds)
-    await resources.load_audio("menu_music",{src:"/sounds/musics/menu_music.mp3",volume:1},"essentials")
+    await resources.load_audio("menu_music",{src:`/sounds/musics/menu_music_${random.int(1,2)}.mp3`,volume:1},"essentials")
+    //await resources.load_audio("menu_music_2",{src:"/sounds/musics/menu_music_2.mp3",volume:1},"essentials")
     await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1},"essentials")
-
     sounds.init_html_sound_bindings("ui",resources)
-
-    
-
     const menu_manager=new MenuManager(GameSave,resources,sounds)
     menu_manager.start()
 

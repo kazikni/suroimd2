@@ -12,9 +12,10 @@ __                                                                              
 * Add A Current Ammo Sprite
 * News Now Is Defined By The Api
 * Change Play Menu
+* New Alternative Menu Music
 __                                                                                                      __
 ### Items
-
+* Some Weapons World Version
 __                                                                                                      __
 ### Others
 

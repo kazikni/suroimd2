@@ -120,6 +120,11 @@ export class AmbientManager{
 
         this.music=this.game.sounds.get_manipulative_si("music")??game.sounds.add_manipulative_si("music")
         this.ambience=game.sounds.add_manipulative_si("ambience")
+        
+        const menu_music=this.game.resources.get_audio(`menu_music`)
+        this.game.sounds.signals.on("load",()=>{
+            this.music.set(menu_music)
+        })
     }
     reset(){
         this.end_game=false
