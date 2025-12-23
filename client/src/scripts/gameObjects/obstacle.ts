@@ -10,6 +10,7 @@ import { GameObject } from "../others/gameObject.ts";
 import { model2d } from "common/scripts/engine/models.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { Color } from "../engine/renderer.ts";
+import { type Player } from "./player.ts";
 export function GetObstacleBaseFrame(def:ObstacleDef,variation:number,skin:number):string{
     let spr=(def.frame&&def.frame.base)?def.frame.base:def.idString
     if(skin>0&&def.biome_skins){
@@ -42,6 +43,8 @@ export class Obstacle extends GameObject{
         dead:"",
         base:""
     }
+
+    interacted:boolean=false
 
     door_status?:ObstacleDoorStatus
 
@@ -236,6 +239,22 @@ export class Obstacle extends GameObject{
             switch(this.def.expanded_behavior.type){
                 case 0:
                     //this.doors_hitboxes=CalculateDoorHitbox(this.def.hitbox!.to_rect(),this.side,this.def.expanded_behavior as ObstacleBehaviorDoor)
+            }
+        }
+    }
+    on_interact(player:Player){
+        if(this.def.expanded_behavior){
+            if(this.def.expanded_behavior.type==1){
+                if(this.interacted)return
+                this.interacted=true
+                this.game.sounds.play(this.game.resources.get_audio(this.def.expanded_behavior.click_sound),{
+                    position:this.m_position,
+                })
+                this.game.addTimeout(()=>{
+                    this.game.sounds.play(this.game.resources.get_audio("menu_music"),{
+                        position:this.m_position,
+                    })
+                },this.def.expanded_behavior.delay)
             }
         }
     }

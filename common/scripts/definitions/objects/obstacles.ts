@@ -14,12 +14,20 @@ export interface ObstacleDoorStatus{
     open:-1|0|1
     locked:boolean
 }
+export interface ObstacleBehaviorPlaySound{
+    type:1
+    duration:number
+    click_sound:string
+    delay:number
+}
 export interface ObstacleDef extends Definition{
     health:number
     hitbox?:Hitbox2D
     spawnHitbox?:Hitbox2D
     no_collision?:boolean
     no_bullet_collision?:boolean
+    imortal?:boolean
+    resistence?:number
     invisibleOnMap?:boolean
     scale?:{
         min?:number
@@ -58,7 +66,7 @@ export interface ObstacleDef extends Definition{
     }
 
     expanded_behavior?:(
-        ObstacleBehaviorDoor
+        ObstacleBehaviorDoor|ObstacleBehaviorPlaySound
     )
 }
 export interface MaterialDef{
@@ -319,6 +327,33 @@ Obstacles.insert(
         material:"tree",
         frame:{
             particle:"oak_tree_particle"
+        },
+        spawnMode:Spawn.grass
+    },
+    {
+        idString:"recorded_tape",
+        health:1,
+        imortal:true,
+        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.26,0.48)),
+        frame_transform:{
+            hotspot:v2.new(0,0),
+            scale:1.5,
+        },
+        rotationMode:RotationMode.null,
+        zIndex:zIndexes.Obstacles3,
+        material:"iron",
+        reflect_bullets:true,
+        expanded_behavior:{
+            type:1,
+            duration:40,
+            click_sound:"click_play",
+            delay:1.2
+        },
+        frame:{
+            particle:"metal_particle"
+        },
+        particles:{
+            tint:0x656877
         },
         spawnMode:Spawn.grass
     },

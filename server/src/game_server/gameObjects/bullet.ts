@@ -103,20 +103,22 @@ export class Bullet extends ServerGameObject{
                         const main_col:OverlapCollision2D[]=[...col1]
                         //const col2 = (obj as Obstacle).hb.overlapLine(this.old_position,this.position)!
                         if(main_col.length===0)continue
-                        const od=(obj as Obstacle).health;
-                        (obj as Obstacle).damage({amount:(this.damage*(this.defs.obstacleMult??1)),owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
                         let reflected=false
                         if(((obj as Obstacle).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
                             this.reflect(main_col[0].dir)
                             reflected=true
                         }
-                        this.on_hit()
-                        if((obj as Obstacle).dead&&!reflected){
-                            this.damage-=od*(this.defs.obstacleMult??1)
-                            if(this.damage>0){
-                                this.game.add_bullet(this.position,this.angle,this.defs,this.owner,this.ammo,this.source)
+                        if(!(obj as Obstacle).def.imortal){
+                            const od=(obj as Obstacle).health;
+                            (obj as Obstacle).damage({amount:(this.damage*(this.defs.obstacleMult??1)),owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
+                            if((obj as Obstacle).dead&&!reflected){
+                                this.damage-=od*(this.defs.obstacleMult??1)
+                                if(this.damage>0){
+                                    this.game.add_bullet(this.position,this.angle,this.defs,this.owner,this.ammo,this.source)
+                                }
                             }
                         }
+                        this.on_hit()
                     }
                     break
                 case "building":

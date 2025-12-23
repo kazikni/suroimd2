@@ -142,6 +142,7 @@ export class Game extends ClientGame2D<GameObject>{
           break
         case "interact":
           this.action.interact=true
+          this.interact()
           break
         case "swamp_guns":
           this.action.swamp_guns=true
@@ -304,6 +305,13 @@ export class Game extends ClientGame2D<GameObject>{
     //this.minimap.draw()
   }
   override on_run(): void {
+  }
+  interact(){
+    if(this.activePlayer&&this.guiManager.current_interaction){
+      if(this.guiManager.current_interaction instanceof Obstacle){
+        this.guiManager.current_interaction.on_interact(this.activePlayer)
+      }
+    }
   }
   override on_update(dt:number): void {
     super.on_update(dt)

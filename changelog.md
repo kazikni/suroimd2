@@ -18,7 +18,9 @@ __                                                                              
 * Some Weapons World Version
 __                                                                                                      __
 ### Others
-
+* Obstacles Resistence
+* Melees Resistence Damage
+* Recorded Tape When Play The Menu Music
 __                                                                                                      __
 ## Changes
 __                                                                                                      __

@@ -865,9 +865,11 @@ export class GuiManager{
             const objs=this.game.scene.objects.cells.get_objects(player.hb,player.layer)
             for(const o of objs){
                 if(player.hb.collidingWith(o.hb)){
+                    if(old_inter===o){
+                        this.current_interaction=old_inter
+                    }
                     switch(o.stringType){
                         case "loot":{
-                            if(old_inter===o)return
                             if(!(o as Loot).item)continue
                             this.state.information_box_message=this.game.language.get("interact-loot",{
                                 source:this.game.language.get((o as Loot).item.idString),
@@ -879,12 +881,25 @@ export class GuiManager{
                             return
                         }
                         case "obstacle":{
+                            if(old_inter===o)return
                             if((o as Obstacle).def.interactDestroy&&!(o as Obstacle).dead){
-                                if(old_inter===o)return
                                 this.state.interact=true
                                 this.state.information_box_message=this.game.language.get("interact-obstacle-break",{})
                                 this.current_interaction=o as Obstacle
                                 this.update_hint()
+                            }
+                            if((o as Obstacle).def.expanded_behavior?.type!==undefined){
+                                switch((o as Obstacle).def.expanded_behavior!.type){
+                                    case 0:
+                                        break
+                                    case 1:
+                                        if(!(o as Obstacle).interacted){
+                                            this.state.interact=true
+                                            this.state.information_box_message=this.game.language.get("interact-obstacle-playaudio-"+o,{})
+                                            this.current_interaction=o as Obstacle
+                                            this.update_hint();
+                                        }
+                                }
                             }
                             return
                         }

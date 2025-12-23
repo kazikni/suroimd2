@@ -228,6 +228,7 @@ export const NormalMap:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:630}, //90% of 700
+                    {id:"recorded_tape",count:1},
                 ]
             ],
             terrain:{

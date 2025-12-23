@@ -21,6 +21,8 @@ export interface MeleeDef extends Definition{
     image?:WeaponRig
     animation?:AKeyFrame[]
     assets?:WeaponAssets
+
+    resistence_damage?:number
 }
 export function AnimationSwing(time:number):AKeyFrame[]{
     const r=Angle.deg2rad(90)
@@ -199,6 +201,7 @@ Melees.insert(
         attack_delay:0.5,
         switchDelay:0.5,
         damage_delays:[0.4],
+        resistence_damage:1,
         arms:{
             right:{
                 position:DefaultFistRig.right!.position,
@@ -229,6 +232,7 @@ Melees.insert(
         attack_delay:0.8,
         switchDelay:0.5,
         damage_delays:[0.6],
+        resistence_damage:2,
         arms:{
             right:{ 
                 position:DefaultFistRig.right!.position,
