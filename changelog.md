@@ -2,9 +2,9 @@
 ## News
 __                                                                                                      __
 ### Mains
+* **Mobile Port!!!**
 * Webgl2 Suport
 * QuadCoord Render
-* Mobile Port
 __                                                                                                      __
 ### Menu
 * Renderer Selection
@@ -17,6 +17,7 @@ __                                                                              
 __                                                                                                      __
 ### Items
 * Some Weapons World Version
+* Guns Cycle Sounds
 __                                                                                                      __
 ### Others
 * Obstacles Resistence

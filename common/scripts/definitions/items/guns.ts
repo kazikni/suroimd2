@@ -621,7 +621,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"awp",
@@ -665,7 +668,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"awms",
@@ -708,7 +714,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"m870",
@@ -753,6 +762,9 @@ Guns.insert(
         caseParticle:{
             position:v2.new(0.8,0.3)
         },
+        assets:{
+            cycle_sound:true,
+        },
         muzzleFlash:MuzzleFlash.normal
     },
     {
@@ -767,7 +779,6 @@ Guns.insert(
         quality:ItemQuality.Epic,
         size:4.5,
         fireMode:FireMode.Single,
-        muzzleFlash:MuzzleFlash.normal,
         bullet:{
             def:{
                 damage:6.5,
@@ -798,7 +809,11 @@ Guns.insert(
         },
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
+        muzzleFlash:MuzzleFlash.normal,
     },
     {
         idString:"hp18",
@@ -837,14 +852,16 @@ Guns.insert(
         speed_mod:1,
         gasParticles:GasParticles.shotgun,
         arms:WeaponsArmRig[0],
-        assets:{
-            world:"weapon_medium_world",
-            world_tint:0x12111f
-        },
         image:{
             position:v2.new(0.45,0.0),
             rotation:0
         },
+        assets:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f,
+            cycle_sound:true,
+        },
+        muzzleFlash:MuzzleFlash.normal,
     },
     {
         idString:"rpg7",

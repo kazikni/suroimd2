@@ -26,6 +26,7 @@ export interface WeaponAssets{
     item_tint?:number
     world?:string
     world_tint?:number
+    cycle_sound?:string|boolean
 }
 export interface WeaponRig{
     position:Vec2

@@ -21,6 +21,7 @@ import { Container2D } from "../engine/container_2d.ts";
 import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
+import { type Sound } from "../engine/resources.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -76,8 +77,13 @@ export class Player extends GameObject{
 
     current_weapon?:WeaponDef
     dead:boolean=true
-    
+
     shield:boolean=false
+
+    assets:{
+        weapon_cycle_sound?:Sound
+        weapon_fire_sound?:Sound
+    }={}
 
     on_hitted(position:Vec2,critical:boolean=false){
         if(Math.random()<=0.1){
@@ -282,6 +288,15 @@ export class Player extends GameObject{
                 },"players")
             }
             this.attacking=false
+            // deno-lint-ignore ban-ts-comment
+            //@ts-ignore
+            const sdd=def.dual_from??def.idString
+            this.assets.weapon_fire_sound=this.game.resources.get_audio(`${sdd}_fire`)
+            this.assets.weapon_cycle_sound=this.game.resources.get_audio(
+                (def.assets?.cycle_sound===true)?
+                (`${sdd}_switch`):
+                (def.assets?.cycle_sound as string)
+            )
         }
         this.container.updateZIndex()
     }
@@ -611,6 +626,20 @@ export class Player extends GameObject{
         this.game.addTimeout(()=>{
             this.attacking=false
         },d.fireDelay)
+        this.game.addTimeout(()=>{
+            //Cycle Sound
+            if(this.assets.weapon_cycle_sound){
+                this.sound_animation.weapon.switch?.stop()
+                this.sound_animation.weapon.switch=this.game.sounds.play(this.assets.weapon_cycle_sound,{
+                    on_complete:()=>{
+                        this.sound_animation.weapon.switch=undefined
+                    },
+                    volume:0.4,
+                    position:this.position,
+                    max_distance:10
+                },"players")
+            }
+        },d.fireDelay*0.25)
         if(this.game.save.get_variable("cv_graphics_particles")>=GraphicsDConfig.Advanced){
             if(d.caseParticle&&!d.caseParticle.at_begin){
                 const p=new ABParticle2D({
@@ -660,9 +689,8 @@ export class Player extends GameObject{
                 }
             }
         }
-        const sound=this.game.resources.get_audio(`${d.dual_from??d.idString}_fire`)
-        if(sound){
-            this.game.sounds.play(sound,{
+        if(this.assets.weapon_fire_sound){
+            this.game.sounds.play(this.assets.weapon_fire_sound,{
                 volume:0.4,
                 position:this.position,
                 max_distance:30
