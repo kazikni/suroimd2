@@ -27,6 +27,20 @@ __                                                                              
 __                                                                                                      __
 ### Items
 * Shield Particle Changed To Square
+* AK47 Fire Delay: 0.15s -> 0.1s
+* AK47 Damage: 10 -> 9
+* AR15 Fire Delay: 0.1s -> 0.07s
+* AR15 Damage: 10 -> 9
+* MP5 Fire Delay: 0.14s -> 0.1s
+* MP5 Damage: 9 -> 8
+* Kar98K Damage: 45 -> 40
+* AWP Damage: 52 -> 48
+* AWMS Damage: 90 -> 99
+* M870 Jitter Radius: 0.5m -> 0.45m
+* M870 Damage: 9 -> 8
+* M870 Bullet Count: 9 -> 10
+* Spas12 Damage: 7 -> 6.5
+* Spas12 Bullet Count: 9 -> 10
 __                                                                                                      __
 ### Others
 * Redesign Bushes

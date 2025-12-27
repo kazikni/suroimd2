@@ -10,6 +10,7 @@ import { Explosions } from "common/scripts/definitions/objects/explosions.ts";
 import { SideEffectType } from "common/scripts/definitions/player/effects.ts";
 import { Building } from "./building.ts";
 
+const SubSteps=3
 export class Bullet extends ServerGameObject{
     velocity:Vec2
     dir:Vec2
@@ -59,81 +60,88 @@ export class Bullet extends ServerGameObject{
         this.old_position=v2.duplicate(this.position)
         this.tticks+=dt
         const disT=v2.distance(this.initialPosition,this.position)/this.maxDistance
-        v2m.add_component(this.position,this.velocity.x*dt,this.velocity.y*dt)
-        this.manager.cells.updateObject(this)
-        const objs=this.manager.cells.get_objects(this.hb,this.layer)
-        for(const obj of objs){
-            if(this.destroyed)break
-            switch(obj.stringType){
-                case "player":{
-                    if((obj as Player).hb&&!(obj as Player).dead&&(!this.owner||((obj as Player).id===this.owner.id&&this.reflectionCount>0)||(obj as Player).id!==this.owner.id)&&(this.hb.collidingWith(obj.hb)||obj.hb.colliding_with_line(this.old_position,this.position))&&!(obj as Player).parachute){
-                        const dmg:number=this.damage
-                        *(this.defs.falloff?Numeric.lerp(1,this.defs.falloff,disT):1)
-                        *(this.critical?(this.defs.criticalMult??1.25):1);
-                        (obj as Player).damage({amount:dmg,owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
-                        this.on_hit()
-                        if(this.defs.effect){
-                            for(const e of this.defs.effect){
-                                (obj as Player).side_effect({
-                                    type:SideEffectType.AddEffect,
-                                    duration:e.time,
-                                    effect:e.id
-                                })
-                            }
-                        }
-                        break
-                    }
-                    break
-                }
-                case "creature":{
-                    if((obj as Creature).hb&&!(obj as Creature).dead&&(this.hb.collidingWith(obj.hb)||obj.hb.colliding_with_line(this.old_position,this.position))){
-                        const dmg:number=this.damage
-                        *(this.defs.falloff?Numeric.lerp(1,this.defs.falloff,disT):1)
-                        *(this.critical?(this.defs.criticalMult??1.25):1);
-                        (obj as Player).damage({amount:dmg,owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
-                        this.on_hit()
-                        break
-                    }
-                    break
-                }
-                case "obstacle":
-                    if((obj as Obstacle).def.no_bullet_collision)break
-                    if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
-                        const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
-                        const main_col:OverlapCollision2D[]=[...col1]
-                        //const col2 = (obj as Obstacle).hb.overlapLine(this.old_position,this.position)!
-                        if(main_col.length===0)continue
-                        let reflected=false
-                        if(((obj as Obstacle).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
-                            this.reflect(main_col[0].dir)
-                            reflected=true
-                        }
-                        if(!(obj as Obstacle).def.imortal){
-                            const od=(obj as Obstacle).health;
-                            (obj as Obstacle).damage({amount:(this.damage*(this.defs.obstacleMult??1)),owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
-                            if((obj as Obstacle).dead&&!reflected){
-                                this.damage-=od*(this.defs.obstacleMult??1)
-                                if(this.damage>0){
-                                    this.game.add_bullet(this.position,this.angle,this.defs,this.owner,this.ammo,this.source)
+        dt/=SubSteps
+        for(let s=0;s<SubSteps;s++){
+            v2m.add_component(this.position,this.velocity.x*dt,this.velocity.y*dt)
+            this.manager.cells.updateObject(this)
+            const objs=this.manager.cells.get_objects(this.hb,this.layer)
+            for(const obj of objs){
+                if(this.destroyed)break
+                switch(obj.stringType){
+                    case "player":{
+                        if((obj as Player).hb&&!(obj as Player).dead&&(!this.owner||((obj as Player).id===this.owner.id&&this.reflectionCount>0)||(obj as Player).id!==this.owner.id)&&(this.hb.collidingWith(obj.hb)||obj.hb.colliding_with_line(this.old_position,this.position))&&!(obj as Player).parachute){
+                            const dmg:number=this.damage
+                            *(this.defs.falloff?Numeric.lerp(1,this.defs.falloff,disT):1)
+                            *(this.critical?(this.defs.criticalMult??1.25):1);
+                            (obj as Player).damage({amount:dmg,owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
+                            this.on_hit()
+                            s=SubSteps
+                            if(this.defs.effect){
+                                for(const e of this.defs.effect){
+                                    (obj as Player).side_effect({
+                                        type:SideEffectType.AddEffect,
+                                        duration:e.time,
+                                        effect:e.id
+                                    })
                                 }
                             }
+                            break
                         }
-                        this.on_hit()
+                        break
                     }
-                    break
-                case "building":
-                    if((obj as Building).def.no_bullet_collision)break
-                    if(obj.hb){
-                        const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
-                        //const col2 = (obj as Obstacle).hb.overlapLine(this.initialPosition,this.position)
-                        const main_col:OverlapCollision2D[]=[...col1]
-                        if(main_col.length===0)continue
-                        if(((obj as Building).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
-                            this.reflect(main_col[0].dir)
+                    case "creature":{
+                        if((obj as Creature).hb&&!(obj as Creature).dead&&(this.hb.collidingWith(obj.hb)||obj.hb.colliding_with_line(this.old_position,this.position))){
+                            const dmg:number=this.damage
+                            *(this.defs.falloff?Numeric.lerp(1,this.defs.falloff,disT):1)
+                            *(this.critical?(this.defs.criticalMult??1.25):1);
+                            (obj as Player).damage({amount:dmg,owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
+                            this.on_hit()
+                            s=SubSteps
+                            break
                         }
-                        this.on_hit()
+                        break
                     }
-                    break
+                    case "obstacle":
+                        if((obj as Obstacle).def.no_bullet_collision)break
+                        if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
+                            const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
+                            const main_col:OverlapCollision2D[]=[...col1]
+                            //const col2 = (obj as Obstacle).hb.overlapLine(this.old_position,this.position)!
+                            if(main_col.length===0)continue
+                            let reflected=false
+                            if(((obj as Obstacle).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
+                                this.reflect(main_col[0].dir)
+                                reflected=true
+                            }
+                            if(!(obj as Obstacle).def.imortal){
+                                const od=(obj as Obstacle).health;
+                                (obj as Obstacle).damage({amount:(this.damage*(this.defs.obstacleMult??1)),owner:this.owner,reason:DamageReason.Player,position:v2.duplicate(this.position),critical:this.critical,source:this.source as unknown as DamageSourceDef})
+                                if((obj as Obstacle).dead&&!reflected){
+                                    this.damage-=od*(this.defs.obstacleMult??1)
+                                    if(this.damage>0){
+                                        this.game.add_bullet(this.position,this.angle,this.defs,this.owner,this.ammo,this.source)
+                                    }
+                                }
+                            }
+                            this.on_hit()
+                            s=SubSteps
+                        }
+                        break
+                    case "building":
+                        if((obj as Building).def.no_bullet_collision)break
+                        if(obj.hb){
+                            const col1=(obj as Obstacle).hb.overlapCollision(this.hb)
+                            //const col2 = (obj as Obstacle).hb.overlapLine(this.initialPosition,this.position)
+                            const main_col:OverlapCollision2D[]=[...col1]
+                            if(main_col.length===0)continue
+                            if(((obj as Building).def.reflect_bullets||BulletReflection.All===this.defs.reflection)&&this.defs.reflection!==BulletReflection.None&&this.reflectionCount<3&&!this.defs.on_hit_explosion){
+                                this.reflect(main_col[0].dir)
+                            }
+                            this.on_hit()
+                            s=SubSteps
+                        }
+                        break
+                }
             }
         }
     }

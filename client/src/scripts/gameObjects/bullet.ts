@@ -14,6 +14,7 @@ const images=[
 const particles=[
     "gas_smoke_particle"
 ]
+const SubSteps=3
 export class Bullet extends GameObject{
     stringType:string="bullet"
     numberType: number=3
@@ -45,8 +46,6 @@ export class Bullet extends GameObject{
 
     dying:boolean=false
 
-    dts:Vec2=v2.new(0,0)
-
     particles=0
     par_time=0
 
@@ -54,7 +53,6 @@ export class Bullet extends GameObject{
 
     private tticks:number=0
     update(dt:number): void {
-        this.dts=v2.scale(this.velocity,dt)
         if(this.dying||v2.distance(this.initialPosition,this.position)>this.maxDistance){
             this.dying=true
             this.tticks-=dt
@@ -64,39 +62,47 @@ export class Bullet extends GameObject{
             }
         }else{
             if(this.sprite_trail.scale.x<this.maxLength)this.tticks+=dt
+            const dst=v2.scale(this.velocity,dt/SubSteps)
             this.old_position=v2.duplicate(this.position)
-            this.manager.cells.updateObject(this)
-            v2m.add(this.hb.position,this.hb.position,this.dts)
 
-            const objs=this.manager.cells.get_objects(this.hb,this.layer)
-            for(const obj of objs){
-                if(this.dying)break
-                switch((obj as BaseGameObject2D).stringType){
-                    case "player":
-                        if((obj as Player).hb&&!(obj as Player).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)&&!(obj as Player).parachute){
-                            (obj as Player).on_hitted(this.position,this.critical)
-                            this.dying=true
-                        }
-                        break
-                    case "creature":
-                        if((obj as Creature).hb&&!(obj as Creature).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
-                            this.dying=true
-                        }
-                        break
-                    case "obstacle":
-                        if((obj as Obstacle).def.no_bullet_collision||(obj as Obstacle).dead)break
-                        if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
-                            (obj as Obstacle).on_hitted(this.position)
-                            this.dying=true
-                        }
-                        break
-                    case "building":
-                        if((obj as Building).def.no_bullet_collision)break
-                        if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
-                            (obj as Building).on_hitted(this.position)
-                            this.dying=true
-                        }
-                        break
+            for(let s=0;s<SubSteps;s++){
+                v2m.add(this.hb.position,this.hb.position,dst)
+                this.manager.cells.updateObject(this)
+
+                const objs=this.manager.cells.get_objects(this.hb,this.layer)
+                for(const obj of objs){
+                    if(this.dying)break
+                    switch((obj as BaseGameObject2D).stringType){
+                        case "player":
+                            if((obj as Player).hb&&!(obj as Player).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)&&!(obj as Player).parachute){
+                                (obj as Player).on_hitted(this.position,this.critical)
+                                this.dying=true
+                                s=SubSteps
+                            }
+                            break
+                        case "creature":
+                            if((obj as Creature).hb&&!(obj as Creature).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                                this.dying=true
+                                s=SubSteps
+                            }
+                            break
+                        case "obstacle":
+                            if((obj as Obstacle).def.no_bullet_collision||(obj as Obstacle).dead)break
+                            if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                                (obj as Obstacle).on_hitted(this.position)
+                                this.dying=true
+                                s=SubSteps
+                            }
+                            break
+                        case "building":
+                            if((obj as Building).def.no_bullet_collision)break
+                            if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                                (obj as Building).on_hitted(this.position)
+                                this.dying=true
+                                s=SubSteps
+                            }
+                            break
+                    }
                 }
             }
 
