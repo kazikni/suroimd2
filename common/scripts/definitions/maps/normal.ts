@@ -220,6 +220,7 @@ export const NormalMap:MapDef={
                 [
                     {id:"container_1",count:25},
                     {id:"container_2",count:25},
+                    {id:"sillo",count:10},
                     {id:"oak_tree",count:2700}, //90% of 3000
                     {id:"stone",count:1800}, //90% of 2000
                     {id:"bush",count:1350}, //90% of 1500

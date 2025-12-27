@@ -150,6 +150,27 @@ Obstacles.insert(
         spawnMode:Spawn.grass
     },
     {
+        idString:"sillo",
+        health:1,
+        imortal:true,
+        hitbox:new CircleHitbox2D(v2.new(0,0),2.8),
+        rotationMode:RotationMode.full,
+        zIndex:zIndexes.Obstacles1,
+        onDestroyExplosion:"barrel_explosion",
+        material:"metal",
+        reflect_bullets:true,
+        frame:{
+            particle:"metal_particle"
+        },
+        frame_transform:{
+            scale:2,
+        },
+        particles:{
+            tint:0x484848
+        },
+        spawnMode:Spawn.grass
+    },
+    {
         idString:"oak_tree",
         health:120,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.4),

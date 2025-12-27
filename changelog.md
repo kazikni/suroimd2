@@ -5,6 +5,7 @@ __                                                                              
 * **Mobile Port!!!**
 * Webgl2 Suport
 * QuadCoord Render
+* Sillo
 __                                                                                                      __
 ### Menu
 * Renderer Selection
@@ -20,6 +21,7 @@ __                                                                              
 * Guns Cycle Sounds
 __                                                                                                      __
 ### Others
+* Bullets Supsteps
 * Obstacles Resistence
 * Melees Resistence Damage
 * Recorded Tape When Play The Menu Music
@@ -49,6 +51,7 @@ __                                                                              
 ## Fixes
 * Medium Screen
 * Fire Animation(Again)
+* Fix Circle To Rect
 __                                                                                                      __
 # Play The Game
 [Web Version](https://suroimd.io)

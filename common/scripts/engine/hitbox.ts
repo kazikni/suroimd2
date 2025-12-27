@@ -228,12 +228,10 @@ export class CircleHitbox2D extends BaseHitbox2D{
         return v2.new(this.position.x+(Math.cos(angle)*length),this.position.y+(Math.sin(angle)*length))
     }
     override to_rect():Rect{
-        const pos=v2.duplicate(this.position)
-        const size=v2.new(this.radius*2,this.radius*2)
-        v2m.add(size,pos,size)
+        const size=v2.new(this.radius,this.radius)
         return {
-            min:pos,
-            max:size
+            min:v2.sub(this.position,size),
+            max:v2.add(this.position,size)
         }
     }
     override transform(position?:Vec2,scale?:number,orientation:Orientation=0):CircleHitbox2D{
