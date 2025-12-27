@@ -262,6 +262,7 @@ export class MenuManager{
     }
     loaded=false
     loaded_textures:string[]=[]
+
     async load_resources(textures:string[]=["main"]){
         if(!this.resources||(this.loaded_textures.length==textures.length&&textures==this.loaded_textures))return
         ShowElement(this.content.loading_screen,true)
@@ -277,8 +278,8 @@ export class MenuManager{
                 await this.resources.load_spritesheet("",s,undefined,tt)
             }
         }
-        await this.resources.load_group("/sounds/game/main.json","main")
 
+        await this.resources.load_group("/sounds/game/main.json","main")
         await this.resources.load_audio("rain_ambience",{src:"/sounds/ambience/rain_ambience.mp3",volume:1},"essentials")
         await this.resources.load_audio("storm_ambience",{src:"/sounds/ambience/storm_ambience.mp3",volume:1},"essentials")
         await this.resources.load_audio("snowstorm_ambience",{src:"/sounds/ambience/snowstorm_ambience.mp3",volume:1},"essentials")

@@ -63,6 +63,10 @@
     font-size: 20px;
     font-family: "Russo-One", serif;
     
+    @media screen and (max-width: palette.$screen_large) {
+        width: 190px;
+        font-size: 11px;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         width: 130px;
         font-size: 10px;
@@ -104,8 +108,11 @@
         transform: translateY(-50%);
 
     }
+    @media screen and (max-width: palette.$screen_large) {
+        height: 25px;
+    };
     @media screen and (max-width: palette.$screen_medium) {
-        height: 20px;
+        height: 15px;
     };
 }
 #boost-bar-container {
@@ -132,9 +139,13 @@
         left: 103%;
         transform: translateY(-50%);
     }
+    @media screen and (max-width: palette.$screen_large) {
+        bottom: 34px;
+        height: 8px;
+    };
     @media screen and (max-width: palette.$screen_medium) {
-        height: 10px;
-        bottom: 30px;
+        bottom: 24px;
+        height: 7px;
     };
 }
 
@@ -166,12 +177,32 @@
         top: -30px;
         left: 50%;
     }
-    @media screen and (max-width: palette.$screen_medium) {
+    @media screen and (max-width: palette.$screen_large) {
         bottom: 45px;
-        width: 130px;
-        height: 33px;
+        width: 190px;
+        height: 20px;
+        border-radius: 7px;
+        #action-info{
+            top:-15px;
+        }
         span{
             font-size: 15px;
+        }
+        img{
+            width: 15px;
+            bottom: 2px;
+        }
+    }
+    @media screen and (max-width: palette.$screen_medium) {
+        bottom: 30px;
+        width: 115px;
+        height: 30px;
+        border-radius: 5px;
+        span{
+            font-size: 15px;
+        }
+        img{
+            width: 20px;
         }
     }
 }
@@ -261,42 +292,6 @@
         }
     }
 }
-#gui-weapons{
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: max-content;
-
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-
-    width: 32%;
-
-    .weapon-slot{
-        width: 100%;
-        display: block;
-        position: relative;
-    }
-    @media screen and (max-width: palette.$screen_medium) {
-        .weapon-slot{
-            height: 50px;
-            font-size: 7px;
-            .weapon-slot-image{
-                width: 30px;
-            }
-            .weapon-slot-number{
-                left:86%;
-            }
-            .weapon-slot-name{
-                bottom: 3px;
-                right: 3px;
-            }
-        }
-        
-    }
-}
 #killfeed-container{
     position: absolute;
     right: 300px;
@@ -316,6 +311,11 @@
         width: 18px;
         margin-bottom: -3px;
         margin-left: 3px;
+    }
+    @media screen and (max-width: palette.$screen_large) {
+        .killfeed-message{
+            font-size: 12px;
+        }
     }
     @media screen and (max-width: palette.$screen_medium) {
         .killfeed-message{
@@ -377,6 +377,15 @@
     top: 140px;
     right: 5px;
     padding: 15px;
+    @media screen and (max-width: palette.$screen_large) {
+        font-size: 10px;
+        top: 5px;
+        right: 5px;
+        #killeader-container-icon{
+            width: 15px;
+            height: 15px;
+        }
+    }
     @media screen and (max-width: palette.$screen_medium) {
         font-size: 5px;
         top: 5px;
@@ -384,35 +393,6 @@
         #killeader-container-icon{
             width: 10px;
             height: 10px;
-        }
-    }
-}
-#gui-items{
-    position: absolute;
-    bottom: 105px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: max-content;
-
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    @media screen and (max-width: palette.$screen_medium) {
-        bottom: 65px;
-        gap: 2px;
-        .inventory-item-slot{
-            width: 23px;
-            height: 23px;
-            .slot-count{
-                font-size: 6px;
-            }
-            .slot-number{
-                font-size: 4px;
-            }
-            .slot-image {
-                width: 20px;
-                height: 20px;
-            }
         }
     }
 }

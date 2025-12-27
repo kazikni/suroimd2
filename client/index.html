@@ -11,6 +11,19 @@
       property="og:image"
       content="img/menu/logos/embed.png"
     />
+
+    <meta
+    name="viewport"
+    content="
+      width=device-width,
+      height=device-height,
+      initial-scale=1,
+      maximum-scale=1,
+      minimum-scale=1,
+      user-scalable=no,
+      viewport-fit=cover
+    "/>
+
   
     <title>Suroimd.io 2</title>
 
@@ -20,6 +33,15 @@
     <link rel="stylesheet" href="/scripts/extra_elements.css">
   </head>
   <body>
+    <div id="both-ui">
+      <div id="loading-screen">
+        <div id="loading-screen-logo"></div>
+        <p id="loading-screen-span" class="span">Loading...</p>
+        <div id="loading-hint">
+          <p id="loading-hint-span" class="span">Barrels Explode</p>
+        </div>
+      </div>
+    </div>
     <div id="game" style="display: none;">
       <div>
         <div id="game-gui">
@@ -54,7 +76,7 @@
           <div id="bottom-left-container">
             <div>
               <img id="hand-info-consume-type"></img>
-              <span id="hand-info-count">5/5</span>
+              <span id="hand-info-count"></span>
             </div>
             <div id="action-info">
               <span id="action-info-delay">1s</span>
@@ -422,15 +444,6 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
             <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
       </kl-md-submenu>
-    </div>
-    <div id="both-ui">
-      <div id="loading-screen">
-        <div id="loading-screen-logo"></div>
-        <p id="loading-screen-span" class="span">Loading...</p>
-        <div id="loading-hint">
-          <p id="loading-hint-span" class="span">Barrels Explode</p>
-        </div>
-      </div>
     </div>
     <script type="module" src="./src/scripts/others/index.ts" async></script>
   </body>

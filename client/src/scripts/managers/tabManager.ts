@@ -1,6 +1,9 @@
 import { KDate } from "common/scripts/engine/definitions.ts";
 import { type Game } from "../others/game.ts";
 import { HideElement, ShowElement } from "../engine/utils.ts";
+import { isMobile } from "../engine/game.ts";
+import { config } from "node:process";
+import { Debug } from "../others/config.ts";
 
 
 export abstract class TabApp {
@@ -63,6 +66,7 @@ export class TabManager {
 
     full_tab: boolean = false
     visible_tab: boolean = false
+    enabled:boolean = true
     apps: TabApp[] = []
 
     state:TabState=TabState.InitialPage
@@ -113,17 +117,26 @@ export class TabManager {
         this.tab.onmouseout=(_e)=>{
             if(this.full_tab)this.game.input_manager.focus=true
         }
+        if(!this.enabled){
+            if(this.visible_tab)this.toggle_tab_visibility()
+        }
     }
 
     toggle_tab_full() {
-        this.full_tab = !this.full_tab
-        this.tab.className = this.full_tab ? "tab-view-full" : "tab-view-minimized"
+        if(this.enabled){
+            this.full_tab = !this.full_tab
+            this.tab.className = this.full_tab ? "tab-view-full" : "tab-view-minimized"
+        }
     }
     toggle_tab_visibility(){
-        this.visible_tab = !this.visible_tab
-        if(this.full_tab)this.toggle_tab_full()
-        if(this.visible_tab){
-            this.game.guiManager.content.game_gui.appendChild(this.tab)
+        if(this.enabled){
+            this.visible_tab = !this.visible_tab
+            if(this.full_tab)this.toggle_tab_full()
+            if(this.visible_tab){
+                this.game.guiManager.content.game_gui.appendChild(this.tab)
+            }else{
+                this.tab.remove()
+            }
         }else{
             this.tab.remove()
         }
@@ -149,6 +162,11 @@ export class TabManager {
 
         if (style.wallpaper) {
             this.set_wallpaper(style.wallpaper)
+        }
+    }
+    game_start(){
+        if(!this.enabled){
+            if(this.visible_tab)this.toggle_tab_visibility()
         }
     }
 

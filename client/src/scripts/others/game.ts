@@ -403,6 +403,8 @@ export class Game extends ClientGame2D<GameObject>{
       this.guiManager.start()
       this.guiManager.process_joined_packet(jp)
       this.ambient.date=jp.date
+
+      this.tab.game_start()      
     })
     this.client.on("map",async(mp:MapPacket)=>{
       await this.terrain.process_map(mp.map)

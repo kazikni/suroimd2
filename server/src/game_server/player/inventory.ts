@@ -157,7 +157,7 @@ export class GunItem extends LItem{
         user.privateDirtys.current_weapon=true
     }
     update(user:Player){
-        if(this.use_delay>0)this.use_delay-=1/user.game.tps
+        if(this.use_delay>0)this.use_delay-=user.game.dt
         if(user.inventory.currentWeapon===this&&!user.actions.current_action){
             if((this.ammo<=0||this.reloading)&&this.def.reload&&!this.attacking()){
                 this.reloading=true

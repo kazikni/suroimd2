@@ -14,7 +14,31 @@ import { WorkerSocket } from "common/scripts/engine/server_offline/worker_socket
 import { NewMDLanguageManager } from "./languages.ts";
 import { PacketManager } from "common/scripts/packets/packet_manager.ts";
 import { PlayArgs } from "./constants.ts";
+import { isMobile } from "../engine/game.ts";
 (async() => {
+    async function requestImmersive() {
+        const el = document.documentElement;
+        if (!document.fullscreenElement) {
+            if (el.requestFullscreen) {
+                await el.requestFullscreen({ navigationUI: "hide" });
+            } else if ((el as any).webkitRequestFullscreen) {
+                await (el as any).webkitRequestFullscreen();
+            }
+        }
+        if ((window as any).Capacitor?.Plugins?.StatusBar) {
+            try {
+                await (window as any).Capacitor.Plugins.StatusBar.hide();
+            } catch {}
+        }
+    }
+    
+    document.addEventListener("touchstart", requestImmersive);
+    document.addEventListener("visibilitychange", async () => {
+        if ((!document.hidden)&&isMobile) {
+            await requestImmersive();
+        }
+    })
+
     const canvas=document.querySelector("#game-canvas") as HTMLCanvasElement
 
     const inputs=new InputManager(100)
@@ -45,7 +69,6 @@ import { PlayArgs } from "./constants.ts";
     await resources.load_audio("menu_music",{src:`/sounds/musics/menu_music_${random.int(1,2)}.mp3`,volume:1},"essentials")
     //await resources.load_audio("menu_music_2",{src:"/sounds/musics/menu_music_2.mp3",volume:1},"essentials")
     await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1},"essentials")
-    sounds.init_html_sound_bindings("ui",resources)
     const menu_manager=new MenuManager(GameSave,resources,sounds)
     menu_manager.start()
 

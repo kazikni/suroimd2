@@ -202,7 +202,6 @@ class KLJoystick extends HTMLElement {
     }
 }
 
-
 customElements.define("kl-joystick", KLJoystick);
 customElements.define('tabs-container', TabsContainer)
 customElements.define("kl-menu", Menu)

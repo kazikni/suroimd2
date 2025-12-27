@@ -4,6 +4,7 @@ __                                                                              
 ### Mains
 * Webgl2 Suport
 * QuadCoord Render
+* Mobile Port
 __                                                                                                      __
 ### Menu
 * Renderer Selection
@@ -31,7 +32,8 @@ __                                                                              
 * Redesign Bushes
 __                                                                                                      __
 ## Fixes
-
+* Medium Screen
+* Fire Animation(Again)
 __                                                                                                      __
 # Play The Game
 [Web Version](https://suroimd.io)

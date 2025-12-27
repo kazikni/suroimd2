@@ -1,0 +1,17 @@
+{
+    "appId": "io.suroimd2.game",
+    "appName": "Suroimd.io 2",
+    "webDir": "dist",
+    "bundledWebRuntime": false,
+    "server": {
+        "androidScheme": "https",
+        "cleartext": true
+    },
+    "android": {
+        "backgroundColor": "#000000",
+        "allowMixedContent": true,
+        "webContentsDebuggingEnabled": false,
+        "captureInput": true,
+        "immersive": true
+    }
+}

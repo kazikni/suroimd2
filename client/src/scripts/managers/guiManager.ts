@@ -12,7 +12,7 @@ import { KillFeedMessage, KillFeedMessageKillleader, KillFeedMessageType } from 
 import { JoinedPacket } from "common/scripts/packets/joined_packet.ts";
 import { isMobile } from "../engine/game.ts";
 import { Debug, GraphicsDConfig } from "../others/config.ts";
-import { HideElement, ShowElement } from "../engine/utils.ts";
+import { disableContextMenuPrevent, enableContextMenuPrevent, HideElement, ShowElement } from "../engine/utils.ts";
 import { JoystickEvent } from "../engine/keys.ts";
 import { PrivateUpdate } from "common/scripts/packets/update_packet.ts";
 import { Badges } from "common/scripts/definitions/loadout/badges.ts";
@@ -212,7 +212,6 @@ export class GuiManager{
         this.content.weapon3.addEventListener("touchstart",selecW(2))
 
         this.update_ammos({})
-        document.addEventListener("contextmenu", e => e.preventDefault());
         HideElement(this.content.emote_wheel.main)
         HideElement(this.content.information_killbox)
 
@@ -332,6 +331,7 @@ export class GuiManager{
 
         this.content.killeader_span.innerText=this.game.language.get("killleader-wait",{})
         this.enableCrosshair()
+        enableContextMenuPrevent()
     }
     handle_slot_click(e:MouseEvent){
         const t=e.currentTarget as HTMLDivElement
@@ -488,6 +488,7 @@ export class GuiManager{
         this.content.gui_items.innerHTML=""
         this.slotElements.length=0
         this.items={}
+        disableContextMenuPrevent()
     }
     information_killbox_messages:string[]=[]
     information_killbox_time:number=0

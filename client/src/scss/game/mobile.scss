@@ -3,30 +3,68 @@
 #left-joystick{
     position: absolute;
     right: 0px;
-    top: 35vh;
-    width: 100px;
-    height: 100px;
+    top: 54vh;
+    width: 300px;
+    height: 300px;
     .knob{
         width: 30%;
         height: 30%;
         background-color: #555e;
     }
     background-color: #0003;
+    @media screen and (max-width: palette.$screen_large) {
+        width: 130px;
+        height: 130px;
+        top: 55vh;
+    }
+    @media screen and (max-width: palette.$screen_medium) {
+        top: 35vh;
+        width: 100px;
+        height: 100px;
+    }
 }
 #left-joystick{
-    left: 16%;
+    left: 10%;
+    @media screen and (max-width: palette.$screen_large) {
+        left:10%;
+    }
+    @media screen and (max-width: palette.$screen_medium) {
+        left:16%;
+    }
 }
 #right-joystick{
-    left: 60%;
+    left: 54%;
+    @media screen and (max-width: palette.$screen_large) {
+        left:58%;
+    }
+    @media screen and (max-width: palette.$screen_medium) {
+        left:58%;
+    }
 }
 #mobile-action-buttons{
     position: absolute;
     display: flex;
     flex-direction: row;
     right: 30%;
-    top: 30%;
+    top: 20%;
     gap: 5px;
     button{
-        padding: 10px;
+        padding: 30px;
+    }
+    @media screen and (max-width: palette.$screen_large) {
+        right: 33%;
+        top: 30%;
+        gap: 5px;
+        button{
+            padding: 15px;
+        }
+    }
+    @media screen and (max-width: palette.$screen_medium) {
+        right: 30%;
+        top: 30%;
+        gap: 5px;
+        button{
+            padding: 10px;
+        }
     }
 }
