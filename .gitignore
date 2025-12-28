@@ -57,3 +57,6 @@ app/src/main/res
 app/src/main/res/*
 !app/src/main/res/values
 !app/src/main/res/xml/file_paths.xml
+
+__pycache__
+__pycache__/*
