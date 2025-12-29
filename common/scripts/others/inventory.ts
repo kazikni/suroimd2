@@ -135,7 +135,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
         this.dirty("hand")
     }
     set_weapon_index(idx:number){
-        if(this.weapon_idx===idx||!this.weapons[idx as keyof typeof this.weapons])return
+        if(this.weapon_idx===idx||!this.weapons[idx])return
         const val=this.weapons[idx as keyof typeof this.weapons]
         this.weapon_idx=idx
         if(this.hand_item){
@@ -152,10 +152,13 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
         }else{
             this.weapons[slot]=undefined
         }
-        if(slot===this.weapon_idx){
+        if(slot==this.weapon_idx){
             this.weapon_idx=-1;
-            if(wep)this.set_weapon_index(slot)
-            else this.set_weapon_index(0)
+            if(wep){
+                this.set_weapon_index(slot)
+            }else{
+                this.set_weapon_index(0)
+            }
         }
         if(oid!==wep?.idString)this.dirty("weapons")
     }

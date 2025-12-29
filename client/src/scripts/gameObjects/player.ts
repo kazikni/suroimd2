@@ -727,14 +727,14 @@ export class Player extends GameObject{
     }
     set_backpack(backpack:number){
         if(this.backpack&&backpack===this.backpack.idNumber!)return
-        /*if(this.game.activePlayer===this){
-            this.game.inventoryManager.inventory.set_backpack(this.backpack)
-        }*/
         this.backpack=Backpacks.getFromNumber(backpack)
         if(this.backpack.no_world_image){
             this.sprites.backpack.frame=undefined
         }else{
             this.sprites!.backpack.frame=this.game.resources.get_sprite(this.backpack.idString+"_world")
+        }
+        if(this.game.activePlayer===this){
+            this.game.inventoryManager.inventory.set_backpack(this.backpack)
         }
     }
     broke_shield(){

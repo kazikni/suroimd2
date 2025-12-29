@@ -1,5 +1,8 @@
 @use "../palette.scss";
 @use "../fonts.scss";
+.item-maximized{
+    color:#fe0 
+}
 #gui-items{
     position: absolute;
     bottom: 125px;
@@ -74,7 +77,6 @@
         right: 4px;
         font-size: 14px;
         font-weight: bold;
-        color: #fff;
         text-shadow: 0 0 2px #000;
     }
 
@@ -142,7 +144,6 @@
         transform: translateY(-50%);
     }
 }
-
 .weapon-slot-selected{
     border: 3px solid #eee;
 }
@@ -258,7 +259,3 @@
         left: 3px;
     }
 }
-
-.item-maximized{
-    color:#fe0 
-}  

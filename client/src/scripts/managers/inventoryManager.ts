@@ -111,7 +111,7 @@ export class InventoryManager{
     inventory_dirty(i:string){
         switch(i){
             case "backpack":
-                //this.update_oitems()
+                this.update_oitems()
                 break
         }
     }    
@@ -135,36 +135,55 @@ export class InventoryManager{
             }
         }
     }
-    oitems_cache:Map<string,HTMLDivElement>=new Map()
-    update_oitems(){
-        const ak=Object.keys(this.inventory.oitems)
-        const ack=Array.from(this.oitems_cache.entries())
-        if(ack.length===ak.length&&ack.length>0){
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${this.inventory.oitems[a]}${def.liquid?"l":""}`
-                const c1=this.oitems_cache.get(a)!.querySelector(".count") as HTMLSpanElement
-                c1.innerText=`${c}`
-            }
-        }else{
-            this.content.oitems.innerHTML=""
-            this.oitems_cache.clear()
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${this.inventory.oitems[a]}${def.liquid?"l":""}`
-                const htm=`<div class="oitem-slot" id="ammo-${a}">
-                    <image class="icon" src="img/game/main/items/ammos/${a}.svg"></image>
-                    <span class="count">${c}</span>
-                </div>`
-
-                this.content.oitems.insertAdjacentHTML("beforeend", htm);
-                const ele=this.content.oitems.querySelector(`#ammo-${a}`) as HTMLDivElement
-                this.oitems_cache.set(a,ele)
-                ele.dataset.drop_kind="2"
-                ele.dataset.drop=def.idNumber!.toString()
-                ele.addEventListener("mousedown",this.handle_slot_click)
+    oitems_cache: Map<string, HTMLDivElement> = new Map()
+    update_oitems(force = false) {
+        const keys = Object.keys(this.inventory.oitems)
+        for (const k of this.oitems_cache.keys()) {
+            if (!keys.includes(k)) {
+                this.oitems_cache.get(k)!.remove()
+                this.oitems_cache.delete(k)
             }
         }
+        if (!force && keys.length === this.oitems_cache.size) {
+            for (const k of keys) {
+                if (!this.oitems_cache.has(k)) continue
+                this.update_oitem(k)
+            }
+            return
+        }
+        this.content.oitems.innerHTML = ""
+        this.oitems_cache.clear()
+        for (const k of keys) {
+            this.create_oitem_entry(k)
+        }
+    }
+    private create_oitem_entry(key: string) {
+        const def = Ammos.getFromString(key)
+        const el = document.createElement("div")
+        el.className = "oitem-slot"
+        el.id = `ammo-${key}`
+        el.innerHTML = `
+            <image class="icon" src="img/game/main/items/ammos/${key}.svg"></image>
+            <span class="count"></span>
+        `
+        el.dataset.drop_kind = "2"
+        el.dataset.drop = def.idNumber!.toString()
+        el.addEventListener("mousedown", this.handle_slot_click)
+        this.content.oitems.appendChild(el)
+        this.oitems_cache.set(key, el)
+        this.update_oitem(key)
+    }
+    private update_oitem(key: string) {
+        const el = this.oitems_cache.get(key)
+        if (!el) return
+        const def = Ammos.getFromString(key)
+        const count = this.inventory.oitems[key]
+        const span = el.querySelector(".count") as HTMLSpanElement
+        span.innerText = `${count}${def.liquid ? "l" : ""}`
+        span.classList.toggle(
+            "item-maximized",
+            count >= this.inventory.item_limit(def)
+        )
     }
     items_cache: HTMLDivElement[] = []
     items_map: Record<string, number> = {}
@@ -189,7 +208,7 @@ export class InventoryManager{
             el.appendChild(img)
     
             el.dataset.drop_kind = "3"
-            el.addEventListener("mousedown", this.handle_slot_click.bind(this))
+            el.addEventListener("mousedown", this.handle_slot_click)
     
             this.items_cache.push(el)
             container.appendChild(el)
@@ -206,7 +225,6 @@ export class InventoryManager{
             const img = el.children[2] as HTMLImageElement
     
             number.textContent = `${i + 4}`
-    
             el.dataset.slot = i.toString()
     
             if (s.count > 0) {
@@ -217,6 +235,10 @@ export class InventoryManager{
                 img.style.display = "block"
     
                 el.classList.remove("slot-empty")
+                count.classList.toggle(
+                    "item-maximized",
+                    s.count>=this.inventory.item_limit(def)
+                )
     
                 this.items_map[def.idString] =
                     (this.items_map[def.idString] ?? 0) + s.count
@@ -224,9 +246,11 @@ export class InventoryManager{
                 count.textContent = ""
                 img.style.display = "none"
                 el.classList.add("slot-empty")
+                el.classList.remove("item-maximized")
             }
         }
-    }    
+    }
+    
     clear() {
         this.items_cache.length = 0
         this.items_map = {}

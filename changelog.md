@@ -17,6 +17,7 @@ __                                                                              
 * Change Play Menu
 * New Alternative Menu Music
 * Mobile Gui Improvements
+* Maximized Items Become Yellow
 __                                                                                                      __
 ### Items
 * Some Weapons World Version
