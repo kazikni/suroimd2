@@ -368,6 +368,7 @@ export class GInventory extends GInventoryBase<LItem>{
         this.owner.input.swicthed=true
     }
     override dirty(it: string): void {
+        if(!this.owner)return
         switch(it){
             case "oitems":
                 this.owner.privateDirtys.oitems=true

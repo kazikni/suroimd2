@@ -358,7 +358,7 @@
         gap:100px;
     }
     kl-md-menu-options{
-        *{
+        button,select{
             border-radius: 0px;
             font-size: 20px;
             width: 300px;
@@ -371,15 +371,14 @@
             gap:75px;
         }
         kl-md-menu-options{
-            *{
+            button,select{
                 font-size: 15px;
                 width: 200px;
-                height: 30px;
             }
         }
         .close-btn{
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             font-size: 10px;
         }
     }
@@ -388,10 +387,9 @@
             gap:50px;
         }
         kl-md-menu-options{
-            *{
+            button,select{
                 font-size: 10px;
                 width: 150px;
-                height: 25px;
             }
         }
         .close-btn{

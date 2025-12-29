@@ -57,8 +57,6 @@ export class GuiManager{
         gameOver_score:document.querySelector("#gameover-score") as HTMLDivElement,
         gameOver_menu_btn:document.querySelector("#gameover-menu-btn") as HTMLButtonElement,
 
-        ammos:document.querySelector("#ammos-inventory") as HTMLDivElement,
-
         killfeed:document.querySelector("#killfeed-container") as HTMLDivElement,
         
         information_killbox:document.querySelector("#information-killbox") as HTMLDivElement,
@@ -159,8 +157,6 @@ export class GuiManager{
                 count:parseInt(this.content.debug.input_item_count.value)
             })
         })
-
-        this.update_ammos({})
         HideElement(this.content.emote_wheel.main)
         HideElement(this.content.information_killbox)
 
@@ -299,39 +295,7 @@ export class GuiManager{
             }
         }
     }
-    ammos_cache:Map<string,HTMLDivElement>=new Map()
-    update_ammos(ammos:Record<string,number>){
-        const ak=Object.keys(ammos)
-        const ack=Array.from(this.ammos_cache.entries())
-        if(ack.length===ak.length&&ack.length>0){
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${ammos[a]}${def.liquid?"l":""}`
-                const c1=this.ammos_cache.get(a)!.querySelector(".count") as HTMLSpanElement
-                c1.innerText=`${c}`
-            }
-        }else{
-            this.content.ammos.innerHTML=""
-            this.ammos_cache.clear()
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${ammos[a]}${def.liquid?"l":""}`
-                const htm=`<div class="ammo-slot" id="ammo-${a}">
-                    <image class="icon" src="img/game/main/items/ammos/${a}.svg"></image>
-                    <span class="count">${c}</span>
-                </div>`
-
-                this.content.ammos.insertAdjacentHTML("beforeend", htm);
-                const ele=this.content.ammos.querySelector(`#ammo-${a}`) as HTMLDivElement
-                this.ammos_cache.set(a,ele)
-                ele.dataset.drop_kind="2"
-                ele.dataset.drop=def.idNumber!.toString()
-                ele.addEventListener("mousedown",this.handle_slot_click)
-            }
-        }
-    }
     items?: Record<string, number>
-    oitems: Record<string, number>={}
     private slotElements: HTMLDivElement[] = []
 
     update_gui_items(slots: InventoryItemData[]) {
@@ -623,13 +587,11 @@ export class GuiManager{
             }
         }
         if(priv.dirty.oitems){
-            const aa:Record<string,number>={}
             for(const a of Object.keys(priv.oitems)){
                 const def=Ammos.getFromNumber(a as unknown as number)
-                aa[def.idString]=priv.oitems[a as unknown as number]
-                this.oitems[def.idString]=priv.oitems[a as unknown as number]
+                this.game.inventoryManager.inventory.oitems[def.idString]=priv.oitems[a as unknown as number]
             }
-            this.update_ammos(aa)
+            this.game.inventoryManager.update_oitems()
         }
         if (this.emote_wheel.active) {
             const angle = Angle.rad2deg(

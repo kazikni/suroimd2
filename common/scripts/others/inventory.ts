@@ -124,6 +124,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
         while(this.slots.length<backpack.slots){
             this.slots.push(new Slot<IT>())
         }
+        this.dirty("items")
         this.dirty("backpack")
     }
     dirty(it:string){}

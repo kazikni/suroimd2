@@ -4,6 +4,7 @@ import { GInventory, GunItem, LItem, MeleeItem } from "../others/inventory.ts";
 import { InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { GunDef } from "common/scripts/definitions/items/guns.ts";
+import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 
 export class InventoryManager{
     inventory:GInventory
@@ -20,6 +21,7 @@ export class InventoryManager{
     }
     content={
         weapons:document.querySelector("#gui-weapons") as HTMLDivElement,
+        oitems:document.querySelector("#gui-oitems") as HTMLDivElement,
         hand_info:{
             count:document.querySelector("#hand-info-count") as HTMLSpanElement,
             consume_type:document.querySelector("#hand-info-consume-type")as HTMLImageElement,
@@ -119,5 +121,50 @@ export class InventoryManager{
     }
     gun_free():boolean{
         return this.inventory.weapon_is_free(1)||this.inventory.weapon_is_free(2)
+    }
+    handle_slot_click(e:MouseEvent){
+        const t=e.currentTarget as HTMLDivElement
+        if(e.button==2){
+            if(t.dataset.drop_kind==="2"){
+                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.drop!),drop_kind:2})
+            }else if(t.dataset.drop_kind==="3"){
+                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.slot!),drop_kind:3})
+            }
+        }else if(e.button===0){
+            if(t.dataset.drop_kind==="3"){
+                this.game.action.actions.push({type:InputActionType.use_item,slot:parseInt(t.dataset.slot!)})
+            }
+        }
+    }
+    oitems_cache:Map<string,HTMLDivElement>=new Map()
+    update_oitems(){
+        const ak=Object.keys(this.inventory.oitems)
+        const ack=Array.from(this.oitems_cache.entries())
+        if(ack.length===ak.length&&ack.length>0){
+            for(const a of ak){
+                const def=Ammos.getFromString(a)
+                const c=`${this.inventory.oitems[a]}${def.liquid?"l":""}`
+                const c1=this.oitems_cache.get(a)!.querySelector(".count") as HTMLSpanElement
+                c1.innerText=`${c}`
+            }
+        }else{
+            this.content.oitems.innerHTML=""
+            this.oitems_cache.clear()
+            for(const a of ak){
+                const def=Ammos.getFromString(a)
+                const c=`${this.inventory.oitems[a]}${def.liquid?"l":""}`
+                const htm=`<div class="oitem-slot" id="ammo-${a}">
+                    <image class="icon" src="img/game/main/items/ammos/${a}.svg"></image>
+                    <span class="count">${c}</span>
+                </div>`
+
+                this.content.oitems.insertAdjacentHTML("beforeend", htm);
+                const ele=this.content.oitems.querySelector(`#ammo-${a}`) as HTMLDivElement
+                this.oitems_cache.set(a,ele)
+                ele.dataset.drop_kind="2"
+                ele.dataset.drop=def.idNumber!.toString()
+                ele.addEventListener("mousedown",this.handle_slot_click.bind(this))
+            }
+        }
     }
 }

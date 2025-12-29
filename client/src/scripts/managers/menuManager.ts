@@ -212,7 +212,6 @@ export class MenuManager{
         for(const btn of this.content.submenus.open_buttons){
             btn.addEventListener("click",this.open_button_func.bind(this))
         }
-        const music=this.sounds.get_manipulative_si("music")??this.sounds.add_manipulative_si("music")
         this.load_resources(["main"])
         this.update_api()
     }
@@ -326,7 +325,7 @@ export class MenuManager{
         this.update_modes()
     }
     update_modes(){
-        this.content.play_buttons.innerHTML="<span class=\"span\">Online</span>"
+        this.content.play_buttons.innerHTML="<p class=\"span\">Online</p>"
         this.api_settings.modes.forEach((mode)=>{
             const btn=document.createElement("button")
             btn.className="btn-green"
