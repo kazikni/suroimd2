@@ -1,7 +1,7 @@
-import { Action } from "common/scripts/engine/inventory.ts";
+import { Action, Slot } from "common/scripts/engine/inventory.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { InventoryItemType } from "common/scripts/definitions/utils.ts";
-import { type ConsumibleItem, type GunItem } from "./inventory.ts";
+import { type LItem, type ConsumibleItem, type GunItem } from "./inventory.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
 
 export class ReloadAction extends Action<Player>{
@@ -19,7 +19,7 @@ export class ReloadAction extends Action<Player>{
         this.item=item
     }
     on_execute(user:Player){
-        if(this.item.itemType!=InventoryItemType.gun)return
+        if(this.item.item_type!=InventoryItemType.gun)return
         const def=this.item.def
         const cap=this.item.def.reload!.capacity
         //user.inventory.consumeTagRemains(`ammo_${this.def.ammoType}`,this.reload_count);
@@ -43,7 +43,7 @@ export class ReloadAction extends Action<Player>{
         if(consumed>user.inventory.oitems[def.ammoType]){
             consumed=user.inventory.oitems[def.ammoType]
         }
-        this.item.ammo+=user.inventory.consume_ammo(def.ammoType,consumed)
+        this.item.ammo+=user.inventory.consume_oitem(def.ammoType,consumed)
         user.privateDirtys.current_weapon=true
         user.privateDirtys.inventory=true
         user.current_animation=undefined
@@ -54,10 +54,12 @@ export class ConsumingAction extends Action<Player>{
     delay:number
     item:ConsumibleItem
     type: number=ActionsType.Consuming
-    constructor(item:ConsumibleItem){
+    slot:Slot<LItem>
+    constructor(item:ConsumibleItem,slot:Slot<LItem>){
         super()
         this.item=item
         this.delay=item.def.use_delay
+        this.slot=slot
     }
     on_execute(user:Player){
         const def=this.item.def
@@ -66,7 +68,7 @@ export class ConsumingAction extends Action<Player>{
         }
         user.current_animation=undefined
         user.dirty=true
-        this.item.inventory.consume(this.item,1)
+        this.slot.remove(1)
         user.privateDirtys.inventory=true
     }
 }

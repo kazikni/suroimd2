@@ -328,7 +328,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
             }
             this.update_data()
         }
-        p.inventory.set_current_weapon_index(0)
+        p.inventory.set_weapon_index(0)
         return p
     }
     override on_run(): void {

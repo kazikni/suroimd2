@@ -268,7 +268,7 @@ export class Obstacle extends GameObject{
         )
     }
     override can_interact(player: Player): boolean {
-        return this.hb.collidingWith(player.hb)&&this.def.interactDestroy===true
+        return !this.dead&&this.hb.collidingWith(player.hb)&&this.def.interactDestroy===true
     }
     override auto_interact(player: Player): boolean {
         return (this.def.interactDestroy===true)

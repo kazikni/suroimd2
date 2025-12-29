@@ -6,6 +6,7 @@ __                                                                              
 * Webgl2 Suport
 * QuadCoord Render
 * Sillo
+- Mobile Auto Interaction
 __                                                                                                      __
 ### Menu
 * Renderer Selection
@@ -23,6 +24,7 @@ __                                                                              
 * Pickup Sound System Refactor
 __                                                                                                      __
 ### Others
+* Refactor Inventory System!!
 * Bullets Supsteps
 * Obstacles Resistence
 * Melees Resistence Damage

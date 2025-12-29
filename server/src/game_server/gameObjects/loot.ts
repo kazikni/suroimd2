@@ -39,7 +39,7 @@ export class Loot extends ServerGameObject{
     interact(user: Player): void {
         switch(this.item.item_type!){
             case InventoryItemType.gun:{
-                const r=user.inventory.give_gun(this.item as GunDef)
+                const r=user.inventory.add_gun(this.item as GunDef)
                 if(r)this.reduce_count(1)
                 break
             }
