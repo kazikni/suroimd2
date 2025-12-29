@@ -65,7 +65,7 @@ export class Loot extends GameObject{
         switch(this.item.item_type!){
             case InventoryItemType.gun:
                 if(!(
-                    (this.game.guiManager.weapons[1]===undefined||this.game.guiManager.weapons[2]===undefined)
+                    this.game.inventoryManager.gun_free()
                     ||(player.current_weapon&&player.current_weapon.item_type===InventoryItemType.gun)
                 ))return
                 break
@@ -84,7 +84,7 @@ export class Loot extends GameObject{
             case InventoryItemType.projectile:
             case InventoryItemType.melee:
                 if(!(
-                    (this.game.guiManager.weapons[0]===undefined||this.game.guiManager.weapons[0]===player.default_melee)
+                    (this.game.inventoryManager.melee_free())
                     ||(player.current_weapon&&player.current_weapon.item_type===InventoryItemType.melee)
                 ))return
                 break
@@ -97,9 +97,9 @@ export class Loot extends GameObject{
     override auto_interact(player: Player): boolean {
         switch(this.item.item_type!){
             case InventoryItemType.melee:
-                return this.game.guiManager.weapons[0]===undefined||this.game.guiManager.weapons[0]===player.default_melee
+                return this.game.inventoryManager.melee_free()
             case InventoryItemType.gun:
-                return this.game.guiManager.weapons[1]===undefined||this.game.guiManager.weapons[2]===undefined
+                return this.game.inventoryManager.gun_free()
             case InventoryItemType.ammo:
                 return (this.game.guiManager.oitems[this.item.idString]??0)<(player.backpack?.max[this.item.idString]??9999)
             case InventoryItemType.consumible:{

@@ -41,6 +41,7 @@ import { AmbientManager } from "../managers/ambientManager.ts";
 import { Building } from "../gameObjects/building.ts";
 import { MessageTabApp } from "../apps/message.ts";
 import { TeamManager } from "../managers/teamManager.ts";
+import { InventoryManager } from "../managers/inventoryManager.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -49,6 +50,7 @@ export class Game extends ClientGame2D<GameObject>{
 
   action:ActionPacket=new ActionPacket()
   guiManager!:GuiManager
+  inventoryManager:InventoryManager
   menuManager!:MenuManager
 
   can_act:boolean=true
@@ -183,10 +185,10 @@ export class Game extends ClientGame2D<GameObject>{
           this.action.actions.push({type:InputActionType.use_item,slot:6})
           break
         case "previour_weapon":
-          this.action.actions.push({type:InputActionType.set_hand,hand:this.guiManager.currentWeaponIDX-1})
+          this.action.actions.push({type:InputActionType.set_hand,hand:this.inventoryManager.current_weapon-1})
           break
         case "next_weapon":
-          this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.guiManager.currentWeaponIDX+1,-1,3)})
+          this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.inventoryManager.current_weapon+1,-1,3)})
           break
         case "debug_menu":
           if((!this.menuManager.api_settings.debug.debug_menu)&&!this.offline)break
@@ -280,6 +282,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.hitbox_view=Debug.hitbox
 
     this.tab.add_app(new MessageTabApp(this.tab))
+    this.inventoryManager=new InventoryManager(this)
   }
   add_damageSplash(d:DamageSplash){
     this.scene.objects.add_object(new DamageSplashOBJ(),7,undefined,d)

@@ -1,12 +1,10 @@
 import { Game } from "../others/game.ts";
-import { DamageReason, InventoryItemData, InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemData, InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
 import { Angle, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts";
 import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
-import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 import { BoostType,Boosts } from "common/scripts/definitions/player/boosts.ts";
-import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { KillFeedMessage, KillFeedMessageKillleader, KillFeedMessageType } from "common/scripts/packets/killfeed_packet.ts";
 import { JoinedPacket } from "common/scripts/packets/joined_packet.ts";
@@ -41,9 +39,6 @@ export class GuiManager{
         _bar_interior:document.querySelector("#boost-bar") as HTMLDivElement,
         _bar_amount:document.querySelector("#boost-bar-amount") as HTMLSpanElement,
 
-        hand_info_count:document.querySelector("#hand-info-count") as HTMLSpanElement,
-        hand_info_cunsume_type:document.querySelector("#hand-info-consume-type")as HTMLImageElement,
-
         action_info_delay:document.querySelector("#action-info-delay") as HTMLSpanElement,
         action_info:document.querySelector("#action-info") as HTMLDivElement,
 
@@ -61,10 +56,6 @@ export class GuiManager{
         gameOver_damaged:document.querySelector("#gameover-damaged") as HTMLDivElement,
         gameOver_score:document.querySelector("#gameover-score") as HTMLDivElement,
         gameOver_menu_btn:document.querySelector("#gameover-menu-btn") as HTMLButtonElement,
-
-        weapon1:document.querySelector("#game-weapon-slot-00") as HTMLDivElement,
-        weapon2:document.querySelector("#game-weapon-slot-01") as HTMLDivElement,
-        weapon3:document.querySelector("#game-weapon-slot-02") as HTMLDivElement,
 
         ammos:document.querySelector("#ammos-inventory") as HTMLDivElement,
 
@@ -113,27 +104,8 @@ export class GuiManager{
         btn_reload:document.querySelector("#btn-mobile-reload") as HTMLButtonElement,
     }
 
-    weapons:{
-        0?:MeleeDef,
-        1?:GunDef,
-        2?:GunDef
-    }={
-        0:undefined,
-        1:undefined,
-        2:undefined
-    }
-    weapons_content={
-        weapon1_name:this.content.weapon1.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon1_image:this.content.weapon1.querySelector(".weapon-slot-image") as HTMLImageElement,
-        weapon2_name:this.content.weapon2.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon2_image:this.content.weapon2.querySelector(".weapon-slot-image") as HTMLImageElement,
-        weapon3_name:this.content.weapon3.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon3_image:this.content.weapon3.querySelector(".weapon-slot-image") as HTMLImageElement,
-    }
     action?:{delay:number,start:number,type:ActionsType}
 
-    currentWeapon?:HTMLDivElement
-    currentWeaponIDX:number=0
     killleader?:{
         id:number
         kills:number
@@ -187,26 +159,6 @@ export class GuiManager{
                 count:parseInt(this.content.debug.input_item_count.value)
             })
         })
-
-        const dropW=(w:number)=>{
-            return (e:MouseEvent)=>{
-                if(e.button==2){
-                    this.game.action.actions.push({type:InputActionType.drop,drop:w,drop_kind:1})
-                }
-            }
-        }
-        const selecW=(w:number)=>{
-            return ()=>{
-                this.game.action.actions.push({type:InputActionType.set_hand,hand:w})
-            }
-        }
-        this.content.weapon1.addEventListener("mousedown",dropW(0))
-        this.content.weapon2.addEventListener("mousedown",dropW(1))
-        this.content.weapon3.addEventListener("mousedown",dropW(2))
-
-        this.content.weapon1.addEventListener("touchstart",selecW(0))
-        this.content.weapon2.addEventListener("touchstart",selecW(1))
-        this.content.weapon3.addEventListener("touchstart",selecW(2))
 
         this.update_ammos({})
         HideElement(this.content.emote_wheel.main)
@@ -646,87 +598,14 @@ export class GuiManager{
         }
 
         if(priv.dirty.weapons){
-            let div=this.content.weapon1
-            let name=this.weapons_content.weapon1_name
-            let img=this.weapons_content.weapon1_image
-            if(priv.weapons.melee){
-                name.innerText=priv.weapons.melee.idString
-                const src=this.game.resources.get_sprite(priv.weapons.melee.assets?.item??priv.weapons.melee.idString).src
-                img.src=src
-                this.weapons[0]=priv.weapons.melee
-                img.style.display="block"
-                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.melee.quality].color1}42,${ItemQualitySettings[priv.weapons.melee.quality].color2}42)`
-            }else{
-                name.innerText=""
-                div.style.background=""
-            }
-            div=this.content.weapon2
-            name=this.weapons_content.weapon2_name
-            img=this.weapons_content.weapon2_image
-            if(priv.weapons.gun1){
-                name.innerText=priv.weapons.gun1.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun1.assets?.item??priv.weapons.gun1.idString).src
-                img.src=src
-                this.weapons[1]=priv.weapons.gun1
-                img.style.display="block"
-                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.gun1.quality].color1}42,${ItemQualitySettings[priv.weapons.gun1.quality].color2}42)`
-            }else{
-                name.innerText=""
-                img.style.display="none"
-                div.style.background=""
-            }
-            div=this.content.weapon3
-            name=this.weapons_content.weapon3_name
-            img=this.weapons_content.weapon3_image
-            if(priv.weapons.gun2){
-                name.innerText=priv.weapons.gun2.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun2.assets?.item??priv.weapons.gun2.idString).src
-                img.src=src
-                this.weapons[2]=priv.weapons.gun2
-                img.style.display="block"
-                div.style.background=`linear-gradient(to right,${ItemQualitySettings[priv.weapons.gun2.quality].color1}42,${ItemQualitySettings[priv.weapons.gun2.quality].color2}42)`
-            }else{
-                name.innerText=""
-                img.style.display="none"
-                div.style.background=""
-            }
+            this.game.inventoryManager.inventory.set_weapon(0,priv.weapons.melee)
+            this.game.inventoryManager.inventory.set_weapon(1,priv.weapons.gun1)
+            this.game.inventoryManager.inventory.set_weapon(2,priv.weapons.gun2)
+            this.game.inventoryManager.update_weapons()
         }
         if(priv.dirty.current_weapon&&priv.current_weapon){
-            if(this.currentWeapon){
-                this.currentWeapon.classList.remove("weapon-slot-selected")
-                this.currentWeapon.style.border=""
-            }
-            const wp=this.weapons[priv.current_weapon.slot as keyof typeof this.weapons]
-            switch(priv.current_weapon.slot){
-                case 1:
-                    this.currentWeapon=this.content.weapon2
-                    this.currentWeaponIDX=1
-                    break
-                case 2:
-                    this.currentWeapon=this.content.weapon3
-                    this.currentWeaponIDX=2
-                    break
-                default:
-                    this.currentWeapon=this.content.weapon1
-                    this.currentWeaponIDX=0
-            }
-
-            const def=this.weapons[priv.current_weapon.slot as 0|1|2]
-            if(priv.current_weapon.slot===0){
-                //
-            }else if(wp&&(wp as GunDef).reload){
-                this.content.hand_info_count.innerText=`${priv.current_weapon.ammo}/${(wp as GunDef).reload?.capacity}`
-            }
-            if(def&&def.item_type===InventoryItemType.gun){
-                this.content.hand_info_cunsume_type.src=this.game.resources.get_sprite(def.ammoType).src
-                this.content.hand_info_cunsume_type.style.display=""
-            }else{
-                this.content.hand_info_cunsume_type.style.display="none"
-            }
-            if(def){
-                this.currentWeapon.style.border=`3px solid ${ItemQualitySettings[def.quality].color2}`
-            }
-            this.currentWeapon.classList.add("weapon-slot-selected")
+            this.game.inventoryManager.inventory.set_weapon_index(priv.current_weapon.slot)
+            this.game.inventoryManager.update_hand(priv.current_weapon)
         }
 
         if(priv.dirty.inventory&&priv.inventory){

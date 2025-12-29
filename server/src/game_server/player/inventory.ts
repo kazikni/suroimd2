@@ -404,7 +404,7 @@ export class GInventory extends GInventoryBase<LItem>{
             }
         }
         for(const w of Object.keys(this.weapons)){
-            if(!this.weapons[w as unknown as number]&&this.weapons_kind[w as unknown as number]==GunItem){
+            if(this.weapon_is_free(w as unknown as number)&&this.weapons_kind[w as unknown as number]==GunItem){
                 this.set_weapon(w as unknown as number,dd)
                 return true
             }
@@ -416,10 +416,10 @@ export class GInventory extends GInventoryBase<LItem>{
         return false
     }
     drop_weapon(slot=0){
-        if(!this.weapons[slot]||this.weapons[slot].def==this.weapons_defaults[slot])return
-        const loots:Loot[]=this.weapons[slot].drop()
+        if(this.weapon_is_free(slot))return
+        const loots:Loot[]=this.weapons[slot]!.drop()
         for(const l of loots){
-            l.velocity.x+=1.5
+            l.velocity.x-=1.5
         }
         this.owner.actions.cancel()
         super.set_weapon(slot,undefined)

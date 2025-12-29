@@ -143,6 +143,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
         this.set_hand_item(val!)
     }
     set_weapon(slot:number,wep?:GameItem){
+        const oid=this.weapons[slot]?.def.idString
         if(wep||this.weapons_defaults[slot]){
             const item=new(this.weapons_kind[slot])(wep??this.weapons_defaults[slot])
             item.inventory=this
@@ -150,8 +151,15 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
         }else{
             this.weapons[slot]=undefined
         }
-        if(slot===this.weapon_idx){this.weapon_idx=-1;this.set_weapon_index(slot)}
-        this.dirty("weapons")
+        if(slot===this.weapon_idx){
+            this.weapon_idx=-1;
+            if(wep)this.set_weapon_index(slot)
+            else this.set_weapon_index(0)
+        }
+        if(oid!==wep?.idString)this.dirty("weapons")
+    }
+    weapon_is_free(slot:number):boolean{
+        return !this.weapons[slot]||this.weapons[slot].def==this.weapons_defaults[slot]
     }
     clear_weapons(){
         this.weapons={}
