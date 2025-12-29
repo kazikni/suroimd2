@@ -8,6 +8,10 @@ import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { ease } from "common/scripts/engine/utils.ts";
 import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
 import { v2m, τ } from "common/scripts/engine/geometry.ts";
+import { type Player } from "./player.ts";
+import { type HelmetDef, type VestDef } from "common/scripts/definitions/items/equipaments.ts";
+import { type BackpackDef } from "common/scripts/definitions/items/backpacks.ts";
+import { ConsumibleDef } from "common/scripts/definitions/items/consumibles.ts";
 export class Loot extends GameObject{
     stringType:string="loot"
     numberType: number=2
@@ -52,6 +56,49 @@ export class Loot extends GameObject{
     override render(_camera: Camera2D, _renderer: Renderer, _dt: number): void {
         
     }
+    override can_interact(player: Player): boolean {
+        if ((!this.item)||this.count <= 0) return false
+        return player.hb.collidingWith(this.hb)
+    }
+
+    override interact(player: Player): void {
+        switch(this.item.item_type!){
+            case InventoryItemType.gun:
+                if(!(
+                    (this.game.guiManager.weapons[1]===undefined||this.game.guiManager.weapons[2]===undefined)
+                    ||(player.current_weapon&&player.current_weapon.item_type===InventoryItemType.gun)
+                ))return
+                break
+            case InventoryItemType.ammo:
+            case InventoryItemType.consumible:
+            case InventoryItemType.helmet:
+                if(player.helmet&&player.helmet.level>=(this.item as HelmetDef).level)return
+                break
+            case InventoryItemType.vest:
+                if(player.vest&&player.vest.level>=(this.item as VestDef).level)return
+                break
+            case InventoryItemType.backpack:
+                if(player.backpack&&player.backpack.level>=(this.item as BackpackDef).level)return
+                break
+            case InventoryItemType.projectile:
+            case InventoryItemType.melee:
+                if(!(
+                    (this.game.guiManager.weapons[0]===undefined||this.game.guiManager.weapons[0]===player.default_melee)
+                    ||(player.current_weapon&&player.current_weapon.item_type===InventoryItemType.melee)
+                ))return
+                break
+            case InventoryItemType.accessorie:
+            case InventoryItemType.skin:
+            case InventoryItemType.scope:
+        }
+        if(this.pickup_sound)this.game.sounds.play(this.pickup_sound,undefined,"players")
+    }
+    override get_interact_hint(player: Player) {
+        return player.game.language.get("interact-loot", {
+            source: player.game.language.get(this.item.idString),
+            count: this.count > 1 ? `(${this.count})` : ""
+        })
+    }
     dest_pos?:Vec2
     override decode(stream: NetStream, full: boolean): void {
         if(this.game.save.get_variable("cv_game_interpolation")&&!full){
@@ -76,7 +123,7 @@ export class Loot extends GameObject{
                 case InventoryItemType.ammo:
                     this.sprite_main.frame=this.game.resources.get_sprite(this.item.idString)
                     this.sprite_main.visible=true;
-                    this.sprite_main.scale=v2.new(2,2);
+                    this.sprite_main.scale=v2.new(2,2)
                     this.sprite_outline.scale=v2.new(1.5,1.5);
                     (this.hb as CircleHitbox2D).radius=GameConstants.loot.radius.ammo
                     this.pickup_sound=this.game.resources.get_audio("ammo_pickup")
@@ -86,10 +133,10 @@ export class Loot extends GameObject{
                     this.sprite_main.visible=true
                     this.sprite_outline.frame=this.game.resources.get_sprite(`null_outline`)
                     this.sprite_outline.visible=true;
-                    this.sprite_main.scale=v2.new(1.5,1.5);
+                    this.sprite_main.scale=v2.new(1.5,1.5)
                     this.sprite_outline.scale=v2.new(0.9,0.9);
                     (this.hb as CircleHitbox2D).radius=GameConstants.loot.radius.consumible
-                    this.pickup_sound=this.game.resources.get_audio(`${this.item.idString}_pickup`)
+                    this.pickup_sound=this.game.resources.get_audio((this.item as ConsumibleDef).assets?.pickup_sound??`${this.item.idString}_pickup`)
                     break
                 case InventoryItemType.backpack:
                     this.sprite_main.frame=this.game.resources.get_sprite(this.item.idString)

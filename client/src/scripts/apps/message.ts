@@ -102,7 +102,6 @@ export class MessageTabApp extends TabApp{
         });
 
         this.tab.game.signals.on("killfeed_message",(msg:{text:string})=>{
-            console.log(msg.text)
             this.addMessageTo("killfeed","received",msg.text)
         })
     }

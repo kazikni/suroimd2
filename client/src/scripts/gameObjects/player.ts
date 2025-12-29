@@ -18,7 +18,7 @@ import { ParticlesEmitter2D} from "common/scripts/engine/particles.ts";
 import { Boosts } from "common/scripts/definitions/player/boosts.ts";
 import { ease, Numeric } from "common/scripts/engine/utils.ts";
 import { Container2D } from "../engine/container_2d.ts";
-import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
+import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { type Sound } from "../engine/resources.ts";
@@ -84,6 +84,8 @@ export class Player extends GameObject{
         weapon_cycle_sound?:Sound
         weapon_fire_sound?:Sound
     }={}
+
+    default_melee=Melees.getFromString("survival_knife")
 
     on_hitted(position:Vec2,critical:boolean=false){
         if(Math.random()<=0.1){
@@ -532,7 +534,7 @@ export class Player extends GameObject{
             }
             case PlayerAnimationType.Consuming:{
                 const def=Consumibles.getFromNumber(this.current_animation.item)
-                const sound=this.game.resources.get_audio((def.sounds?.using)??`using_${def.idString}`)
+                const sound=this.game.resources.get_audio((def.assets?.using_sound)??`using_${def.idString}`)
                 if(sound){
                     if(def.drink){
                         this.sprites.mounth.frames=undefined
@@ -547,8 +549,8 @@ export class Player extends GameObject{
                         }
                     },"players")
                 }
-                if(def.frame?.using_particle){
-                    this.anims.consumible_particle=def.frame.using_particle
+                if(def.assets?.using_particle){
+                    this.anims.consumible_particle=def.assets.using_particle
                 }if(def.boost_type){
                     this.anims.consumible_particle=`boost_${Boosts[def.boost_type].name}_particle`
                 }else{

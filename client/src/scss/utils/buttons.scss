@@ -49,6 +49,11 @@
         box-shadow: 0 0 20px rgba(0, 170, 119, 0.2);
     }
 }
+.btn-dark-green {
+    @extend .btn-green;
+    background: linear-gradient(135deg, rgba(0, 0, 10, 0.1) 0%, rgba(0, 0, 10, 0.2) 100%);
+    border: none;
+}
 .btn-red {
     @extend .btn-blue;
     background: linear-gradient(135deg, #b01c4166 0%, #75042b66 100%);

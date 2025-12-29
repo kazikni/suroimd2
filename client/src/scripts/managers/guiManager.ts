@@ -1,7 +1,7 @@
 import { Game } from "../others/game.ts";
 import { DamageReason, InventoryItemData, InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
-import { Angle, Numeric, random, v2, Vec2 } from "common/scripts/engine/mod.ts";
+import { Angle, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts";
 import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
@@ -17,16 +17,14 @@ import { JoystickEvent } from "../engine/keys.ts";
 import { PrivateUpdate } from "common/scripts/packets/update_packet.ts";
 import { Badges } from "common/scripts/definitions/loadout/badges.ts";
 import { EmoteDef, Emotes} from "common/scripts/definitions/loadout/emotes.ts";
-import { type Loot } from "../gameObjects/loot.ts";
-import { type Obstacle } from "../gameObjects/obstacle.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
 import { CrosshairManager } from "./crosshairManager.ts";
 import { DefaultCrosshair } from "../defs/crosshair.ts";
+import { GameObject } from "../others/gameObject.ts";
 export interface HelpGuiState{
     driving:boolean
     gun:boolean
-    loot:boolean
     interact:boolean
     information_box_message:string
 }
@@ -112,7 +110,6 @@ export class GuiManager{
         right_joystick:document.querySelector("#right-joystick") as HTMLDivElement,
 
         btn_interact:document.querySelector("#btn-mobile-interact") as HTMLButtonElement,
-        btn_inventory:document.querySelector("#btn-mobile-inventory") as HTMLButtonElement,
         btn_reload:document.querySelector("#btn-mobile-reload") as HTMLButtonElement,
     }
 
@@ -298,13 +295,16 @@ export class GuiManager{
             })
         }
     }
+    mobile_enabled:boolean=false
     mobile_close(){
         HideElement(this.mobile_content.gui)
         ShowElement(this.content.help_gui)
+        this.mobile_enabled=false
     }
     mobile_open(){
         ShowElement(this.mobile_content.gui)
         HideElement(this.content.help_gui)
+        this.mobile_enabled=true
     }
     init(game:Game){
         this.game=game
@@ -451,9 +451,8 @@ export class GuiManager{
     }
     state:HelpGuiState={
         driving:false,
-        gun:false,
-        loot:false,
         interact:false,
+        gun:false,
         information_box_message:""
     }
     update_hint(){
@@ -468,6 +467,11 @@ export class GuiManager{
                 ShowElement(this.content.information_interact)
                 this.content.information_interact.innerHTML=state.information_box_message
             }
+        }
+        if(this.current_interaction&&this.mobile_enabled){
+            ShowElement(this.mobile_content.btn_interact)
+        }else{
+            HideElement(this.mobile_content.btn_interact)
         }
     }
     clear(){
@@ -783,6 +787,7 @@ export class GuiManager{
                 }
             }
         }
+
         this.update_crosshair()
     }
     show_game_over(g:GameOverPacket){
@@ -831,6 +836,7 @@ export class GuiManager{
         }*/
     }
     update(){
+        this.update_active_player(this.game.activePlayer)
         if(this.action){
             const w=(Date.now()-this.action.start)/1000
             if(w<this.action.delay){
@@ -842,7 +848,6 @@ export class GuiManager{
         }else{
             HideElement(this.content.action_info)
         }
-        this.update_hint()
         if(this.information_killbox_messages.length>0){
             if(this.information_killbox_time<=0){
                 ShowElement(this.content.information_killbox)
@@ -856,64 +861,29 @@ export class GuiManager{
             }
         }
         this.content.debug_show.innerText=`FPS: ${this.game.fps}`
-        this.update_active_player(this.game.activePlayer)
     }
-    current_interaction?:Loot|Obstacle
-    update_active_player(player?:Player){
-        const old_inter=this.current_interaction
-        this.current_interaction=undefined
-        if(player){
-            const objs=this.game.scene.objects.cells.get_objects(player.hb,player.layer)
-            for(const o of objs){
-                if(player.hb.collidingWith(o.hb)){
-                    if(old_inter===o){
-                        this.current_interaction=old_inter
-                    }
-                    switch(o.stringType){
-                        case "loot":{
-                            if(!(o as Loot).item)continue
-                            this.state.information_box_message=this.game.language.get("interact-loot",{
-                                source:this.game.language.get((o as Loot).item.idString),
-                                count:(o as Loot).count>1?`(${(o as Loot).count})`:""
-                            })
-                            this.current_interaction=o as Loot
-                            this.state.loot=true
-                            this.update_hint()
-                            return
-                        }
-                        case "obstacle":{
-                            if(old_inter===o)return
-                            if((o as Obstacle).def.interactDestroy&&!(o as Obstacle).dead){
-                                this.state.interact=true
-                                this.state.information_box_message=this.game.language.get("interact-obstacle-break",{})
-                                this.current_interaction=o as Obstacle
-                                this.update_hint()
-                            }
-                            if((o as Obstacle).def.expanded_behavior?.type!==undefined){
-                                switch((o as Obstacle).def.expanded_behavior!.type){
-                                    case 0:
-                                        break
-                                    case 1:
-                                        if(!(o as Obstacle).interacted){
-                                            this.state.interact=true
-                                            this.state.information_box_message=this.game.language.get("interact-obstacle-playaudio-"+o,{})
-                                            this.current_interaction=o as Obstacle
-                                            this.update_hint();
-                                        }
-                                }
-                            }
-                            return
-                        }
-                    }
-                }
-            }
+    current_interaction?: GameObject
+    update_active_player(player?: Player) {
+        this.current_interaction = undefined
+        this.state.interact = false
+        this.state.information_box_message = ""
+        if (!player) {
+            this.update_hint()
+            return
         }
-        this.game.guiManager.state.information_box_message=""
-        this.state.interact=false
-        this.state.loot=false
+        const objs = this.game.scene.objects.cells.get_objects(player.hb, player.layer)
+        for (const o of objs) {
+            if (!o.can_interact(player)) continue
+            this.current_interaction = o
+            const hint = o.get_interact_hint(player)
+            if (hint) {
+                this.state.information_box_message = hint
+                this.update_hint()
+            }
+            break
+        }
         this.update_hint()
     }
-
     health:number=-1
     boost:number=-1
     boost_type:BoostType=BoostType.Null
