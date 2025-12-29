@@ -38,11 +38,14 @@ export const ConfigCasters=Object.freeze({
     cv_graphics_post_proccess:Casters.toInt,
     cv_graphics_climate:Casters.toBoolean,
 
+
     cv_game_region:Casters.toString,
     cv_game_friendly_fire:Casters.toBoolean,
     cv_game_interpolation:Casters.toBoolean,
     cv_game_client_rot:Casters.toBoolean,
     cv_game_ping:Casters.toInt,
+
+    cv_mobile_auto_pickup:Casters.toBoolean,
 
     cv_sounds_master_volume:Casters.toInt,
 })
@@ -62,6 +65,8 @@ export const ConfigDefaultValues={
     cv_game_interpolation:true,
     cv_game_client_rot:true,
     cv_game_ping:5,
+
+    cv_mobile_auto_pickup:(Debug.force_mobile||isMobile),
 
     cv_sounds_master_volume:100,
     

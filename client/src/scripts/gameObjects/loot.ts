@@ -10,7 +10,7 @@ import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
 import { v2m, τ } from "common/scripts/engine/geometry.ts";
 import { type Player } from "./player.ts";
 import { type HelmetDef, type VestDef } from "common/scripts/definitions/items/equipaments.ts";
-import { type BackpackDef } from "common/scripts/definitions/items/backpacks.ts";
+import { Backpacks, type BackpackDef } from "common/scripts/definitions/items/backpacks.ts";
 import { ConsumibleDef } from "common/scripts/definitions/items/consumibles.ts";
 export class Loot extends GameObject{
     stringType:string="loot"
@@ -71,6 +71,7 @@ export class Loot extends GameObject{
                 break
             case InventoryItemType.ammo:
             case InventoryItemType.consumible:
+                break
             case InventoryItemType.helmet:
                 if(player.helmet&&player.helmet.level>=(this.item as HelmetDef).level)return
                 break
@@ -92,6 +93,27 @@ export class Loot extends GameObject{
             case InventoryItemType.scope:
         }
         if(this.pickup_sound)this.game.sounds.play(this.pickup_sound,undefined,"players")
+    }
+    override auto_interact(player: Player): boolean {
+        switch(this.item.item_type!){
+            case InventoryItemType.melee:
+                return this.game.guiManager.weapons[0]===undefined||this.game.guiManager.weapons[0]===player.default_melee
+            case InventoryItemType.gun:
+                return this.game.guiManager.weapons[1]===undefined||this.game.guiManager.weapons[2]===undefined
+            case InventoryItemType.ammo:
+                return (this.game.guiManager.oitems[this.item.idString]??0)<(player.backpack?.max[this.item.idString]??9999)
+            case InventoryItemType.consumible:{
+                const limit_per_slot=player.backpack?.max[this.item.idString]??Backpacks.getFromNumber(0).max[this.item.idString]??15
+                return (this.game.guiManager.items![this.item.idString]??0)<limit_per_slot
+            }
+            case InventoryItemType.helmet:
+                return !player.helmet||player.helmet.level<(this.item as HelmetDef).level
+            case InventoryItemType.vest:
+                return !player.vest||player.vest.level<(this.item as VestDef).level
+            case InventoryItemType.backpack:
+                return !player.backpack||player.backpack.level<(this.item as BackpackDef).level
+        }
+        return false
     }
     override get_interact_hint(player: Player) {
         return player.game.language.get("interact-loot", {

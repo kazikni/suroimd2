@@ -293,7 +293,13 @@ export class MenuManager{
     async update_api(){
         this.content.select_region.innerHTML=""
         if(api){
-            this.api_settings=await(await fetch(`${API_BASE}/get-settings`)).json()
+            let js=this.api_settings
+            try{
+                js=await(await fetch(`${API_BASE}/get-settings`)).json()
+            }catch(e){
+                console.log(e)
+            }
+            this.api_settings=js
         }
         for(const region of Object.keys(this.api_settings.regions)){
             this.content.select_region.insertAdjacentHTML("beforeend",`<option value=${region}>${region}</option>`)

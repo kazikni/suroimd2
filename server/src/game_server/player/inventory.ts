@@ -530,12 +530,16 @@ export class GInventory extends Inventory<LItem>{
                 this.owner.privateDirtys.oitems=true
                 const max=this.backpack.max[def.idString]??0
                 const ac=this.oitems[def.idString]??0
-                const dp=Math.max((ac+count)-max,0)
-                this.oitems[def.idString]=Numeric.max(ac+count,max)
-                if(drop_n&&dp){
-                  this.owner.game.add_loot(this.owner.position,def,dp)
+                if(ac>=max){
+                    if(drop_n)this.owner.game.add_loot(this.owner.position,def,count)
+                    return count
                 }
-                return dp
+                const drop=Math.max((ac+count)-max,0)
+                this.oitems[def.idString]=Numeric.max(ac+count,max)
+                if(drop_n&&drop>0){
+                    this.owner.game.add_loot(this.owner.position,def,drop)
+                }
+                return drop
             }
             case InventoryItemType.consumible:{
                 const item=new ConsumibleItem(def as unknown as ConsumibleDef,undefined,this)

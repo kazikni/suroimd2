@@ -379,6 +379,7 @@ export class GuiManager{
         }
     }
     items?: Record<string, number>
+    oitems: Record<string, number>={}
     private slotElements: HTMLDivElement[] = []
 
     update_gui_items(slots: InventoryItemData[]) {
@@ -747,10 +748,10 @@ export class GuiManager{
             for(const a of Object.keys(priv.oitems)){
                 const def=Ammos.getFromNumber(a as unknown as number)
                 aa[def.idString]=priv.oitems[a as unknown as number]
+                this.oitems[def.idString]=priv.oitems[a as unknown as number]
             }
             this.update_ammos(aa)
         }
-
         if (this.emote_wheel.active) {
             const angle = Angle.rad2deg(
                 v2.lookTo(this.emote_wheel.positon, this.game.input_manager.mouse.position)
@@ -871,21 +872,25 @@ export class GuiManager{
     }
     current_interaction?: GameObject
     update_active_player(player?: Player) {
+        const old_inter=this.current_interaction
         this.current_interaction = undefined
         this.state.interact = false
         this.state.information_box_message = ""
         if (!player) {
-            this.update_hint()
             return
         }
         const objs = this.game.scene.objects.cells.get_objects(player.hb, player.layer)
         for (const o of objs) {
-            if (!o.can_interact(player)) continue
+            if(!o.can_interact(player)) continue
             this.current_interaction = o
             const hint = o.get_interact_hint(player)
-            if (hint) {
+            if(hint) {
                 this.state.information_box_message = hint
-                this.update_hint()
+            }
+            if(this.current_interaction!==old_inter){
+                if(this.game.save.get_variable("cv_mobile_auto_pickup")&&this.current_interaction.auto_interact(player)){
+                    this.game.input_manager.emit("actiondown",{action:"interact"})
+                }
             }
             break
         }

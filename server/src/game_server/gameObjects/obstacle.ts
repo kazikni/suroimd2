@@ -64,6 +64,9 @@ export class Obstacle extends ServerGameObject{
             this.dirtyPart=true
         }
     }
+    override can_interact(user: Player): boolean {
+        return user.hb.collidingWith(this.hb)&&(this.def.interactDestroy||this.def.expanded_behavior) as boolean&&!this.destroyed
+    }
 
     door_change_hb(){
         

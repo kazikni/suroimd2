@@ -306,6 +306,7 @@ export class Game extends ClientGame2D<GameObject>{
   override on_run(): void {
   }
   interact(){
+    if(this.action.interact)return
     this.action.interact=true
     this.guiManager.update_active_player(this.activePlayer)
     if(this.activePlayer&&this.guiManager.current_interaction){

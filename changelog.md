@@ -15,10 +15,12 @@ __                                                                              
 * News Now Is Defined By The Api
 * Change Play Menu
 * New Alternative Menu Music
+* Mobile Gui Improvements
 __                                                                                                      __
 ### Items
 * Some Weapons World Version
 * Guns Cycle Sounds
+* Pickup Sound System Refactor
 __                                                                                                      __
 ### Others
 * Bullets Supsteps

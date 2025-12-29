@@ -7,4 +7,5 @@ export abstract class GameObject extends ClientGameObject2D{
     can_interact(player:Player):boolean{return false}
     interact(player:Player):void{}
     get_interact_hint(player: Player): string{return ""}
+    auto_interact(player:Player):boolean{return false}
 }

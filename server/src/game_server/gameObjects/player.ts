@@ -414,9 +414,9 @@ export class Player extends ServerGameObject{
         }
         if(!v2.is(this.position,this.oldPosition)){
             this.oldPosition=v2.duplicate(this.position)
-            this.manager.cells.updateObject(this)
             this.game.map.clamp_hitbox(this.hb)
             this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
+            this.manager.cells.updateObject(this)
         }
 
         
@@ -462,7 +462,7 @@ export class Player extends ServerGameObject{
                     case "obstacle":
                         if((obj as Obstacle).def.no_collision)break
                         if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
-                            if(can_interact&&this.input.interaction&&(obj as Obstacle).hb.collidingWith(this.hb)){
+                            if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                                 (obj as Loot).interact(this)
                                 can_interact=false
                             }
@@ -482,7 +482,7 @@ export class Player extends ServerGameObject{
                         }
                         break
                     case "loot":
-                        if(can_interact&&this.input.interaction&&this.hb.collidingWith((obj as Loot).hb)){
+                        if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                             (obj as Loot).interact(this)
                             can_interact=false
                         }
