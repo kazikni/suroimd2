@@ -172,7 +172,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
     consume_oitem(a:string,val:number):number{
         if(this.oitems[a]){
             const con=Numeric.max(val,this.oitems[a])
-            this.oitems[a]=Numeric.max(this.oitems[a],this.oitems[a]-val)
+            this.oitems[a]-=con
             if(this.oitems[a]===0){
                 delete this.oitems[a]
             }
@@ -188,5 +188,8 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
           s.clear()
         }
         this.clear_weapons()
+    }
+    item_limit(item:GameItem):number{
+        return this.backpack.max[item.idString]??this.default_backpack.max[item.idString]??15
     }
 }

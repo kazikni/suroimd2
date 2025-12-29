@@ -42,8 +42,6 @@ export class GuiManager{
         action_info_delay:document.querySelector("#action-info-delay") as HTMLSpanElement,
         action_info:document.querySelector("#action-info") as HTMLDivElement,
 
-        inventory:document.querySelector("#inventory") as HTMLDivElement,
-
         helmet_slot:document.querySelector("#helmet-slot") as HTMLImageElement,
         vest_slot:document.querySelector("#vest-slot") as HTMLImageElement,
 
@@ -63,8 +61,6 @@ export class GuiManager{
         information_interact:document.querySelector("#information-interaction") as HTMLDivElement,
 
         killeader_span:document.querySelector("#killeader-text") as HTMLSpanElement,
-
-        gui_items:document.querySelector("#gui-items") as HTMLSpanElement,
 
         help_gui:document.querySelector("#help-gui") as HTMLDivElement,
 
@@ -159,8 +155,6 @@ export class GuiManager{
         })
         HideElement(this.content.emote_wheel.main)
         HideElement(this.content.information_killbox)
-
-        this.handle_slot_click=this.handle_slot_click.bind(this)
     }
     mobile_init(){
         this.mobile_open()
@@ -281,76 +275,6 @@ export class GuiManager{
         this.enableCrosshair()
         enableContextMenuPrevent()
     }
-    handle_slot_click(e:MouseEvent){
-        const t=e.currentTarget as HTMLDivElement
-        if(e.button==2){
-            if(t.dataset.drop_kind==="2"){
-                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.drop!),drop_kind:2})
-            }else if(t.dataset.drop_kind==="3"){
-                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.slot!),drop_kind:3})
-            }
-        }else if(e.button===0){
-            if(t.dataset.drop_kind==="3"){
-                this.game.action.actions.push({type:InputActionType.use_item,slot:parseInt(t.dataset.slot!)})
-            }
-        }
-    }
-    items?: Record<string, number>
-    private slotElements: HTMLDivElement[] = []
-
-    update_gui_items(slots: InventoryItemData[]) {
-        const res = this.game.resources
-        while (this.slotElements.length < slots.length) {
-            const el = document.createElement("div")
-            el.className = "inventory-item-slot"
-
-            const number = document.createElement("div")
-            number.className = "slot-number"
-            el.appendChild(number)
-
-            const count = document.createElement("div")
-            count.className = "slot-count"
-            el.appendChild(count)
-
-            const img = document.createElement("img")
-            img.className = "slot-image"
-            el.appendChild(img)
-
-            el.dataset.drop_kind = "3"
-            el.addEventListener("mousedown", this.handle_slot_click)
-
-            this.slotElements.push(el)
-            this.content.gui_items.appendChild(el)
-        }
-
-        const items: Record<string, number> = {}
-        for (let i = 0; i < slots.length; i++) {
-            const s = slots[i]
-            const el = this.slotElements[i]
-            const number = el.children[0] as HTMLDivElement
-            const count = el.children[1] as HTMLDivElement
-            const img = el.children[2] as HTMLImageElement
-
-            number.textContent = `${i + 4}`
-
-            if (s.count > 0) {
-                const def = GameItems.valueNumber[s.idNumber]
-                count.textContent = `${s.count}`
-                img.src = res.get_sprite(def.idString).src
-                img.style.display = "block"
-                el.dataset.slot = i.toString()
-                el.style.display = ""
-                items[def.idString] = (items[def.idString] ?? 0) + s.count
-            } else {
-                count.textContent = ""
-                img.style.display = "none"
-                el.dataset.slot = ""
-                el.style.display = ""
-            }
-        }
-
-        this.items = items
-    }
     players_name:Record<number,{name:string,badge:string,full:string}>={}
     process_joined_packet(jp:JoinedPacket){
         this.game.gameOver=false
@@ -413,9 +337,7 @@ export class GuiManager{
         ShowElement(this.content.game_gui)
         this.enableCrosshair()
         
-        this.content.gui_items.innerHTML=""
-        this.slotElements.length=0
-        this.items={}
+        this.game.inventoryManager.clear()
         disableContextMenuPrevent()
     }
     information_killbox_messages:string[]=[]
@@ -560,7 +482,6 @@ export class GuiManager{
                 this.game.add_damageSplash(ds)
             }
         }
-
         if(priv.dirty.weapons){
             this.game.inventoryManager.inventory.set_weapon(0,priv.weapons.melee)
             this.game.inventoryManager.inventory.set_weapon(1,priv.weapons.gun1)
@@ -571,10 +492,9 @@ export class GuiManager{
             this.game.inventoryManager.inventory.set_weapon_index(priv.current_weapon.slot)
             this.game.inventoryManager.update_hand(priv.current_weapon)
         }
-
-        if(priv.dirty.inventory&&priv.inventory){
-            this.update_gui_items(priv.inventory)
-        }
+        if (priv.dirty.inventory&&priv.inventory) {
+            this.game.inventoryManager.update_items(priv.inventory)
+        }        
         if(priv.dirty.action){
             if(priv.action){
                 this.action={
@@ -587,6 +507,7 @@ export class GuiManager{
             }
         }
         if(priv.dirty.oitems){
+            this.game.inventoryManager.inventory.oitems={}
             for(const a of Object.keys(priv.oitems)){
                 const def=Ammos.getFromNumber(a as unknown as number)
                 this.game.inventoryManager.inventory.oitems[def.idString]=priv.oitems[a as unknown as number]

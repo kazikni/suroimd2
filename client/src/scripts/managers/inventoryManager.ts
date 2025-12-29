@@ -1,7 +1,7 @@
-import { GameItem } from "common/scripts/definitions/alldefs.ts";
+import { GameItem, GameItems } from "common/scripts/definitions/alldefs.ts";
 import { type Game } from "../others/game.ts";
 import { GInventory, GunItem, LItem, MeleeItem } from "../others/inventory.ts";
-import { InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
+import { InventoryItemData, InventoryItemType, ItemQualitySettings } from "common/scripts/definitions/utils.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
@@ -18,10 +18,12 @@ export class InventoryManager{
         })
         //this.inventory.on_dirty=this.inventory_dirty.bind(this)
         this.inventory.clear_weapons()
+        this.handle_slot_click=this.handle_slot_click.bind(this)
     }
     content={
         weapons:document.querySelector("#gui-weapons") as HTMLDivElement,
         oitems:document.querySelector("#gui-oitems") as HTMLDivElement,
+        items: document.querySelector("#gui-items") as HTMLDivElement,
         hand_info:{
             count:document.querySelector("#hand-info-count") as HTMLSpanElement,
             consume_type:document.querySelector("#hand-info-consume-type")as HTMLImageElement,
@@ -106,16 +108,13 @@ export class InventoryManager{
         this.weapons_html[this.current_weapon]!.main.style.border=`3px solid ${ItemQualitySettings[weapon.def.quality].color2}`
         this.weapons_html[this.current_weapon]!.main.classList.add("weapon-slot-selected")
     }
-    inventory_dirty(_i:string){
-        /*switch(i){
-            case "weapons":
-                this.update_weapons()
+    inventory_dirty(i:string){
+        switch(i){
+            case "backpack":
+                //this.update_oitems()
                 break
-        }*/
-    }
-    clear(){
-        
-    }
+        }
+    }    
     melee_free():boolean{
         return this.inventory.weapon_is_free(0)
     }
@@ -163,8 +162,74 @@ export class InventoryManager{
                 this.oitems_cache.set(a,ele)
                 ele.dataset.drop_kind="2"
                 ele.dataset.drop=def.idNumber!.toString()
-                ele.addEventListener("mousedown",this.handle_slot_click.bind(this))
+                ele.addEventListener("mousedown",this.handle_slot_click)
             }
         }
+    }
+    items_cache: HTMLDivElement[] = []
+    items_map: Record<string, number> = {}
+    update_items(slots: InventoryItemData[]) {
+        const res = this.game.resources
+        const container = this.content.items
+    
+        while (this.items_cache.length < slots.length) {
+            const el = document.createElement("div")
+            el.className = "inventory-item-slot"
+    
+            const number = document.createElement("div")
+            number.className = "slot-number"
+            el.appendChild(number)
+    
+            const count = document.createElement("div")
+            count.className = "slot-count"
+            el.appendChild(count)
+    
+            const img = document.createElement("img")
+            img.className = "slot-image"
+            el.appendChild(img)
+    
+            el.dataset.drop_kind = "3"
+            el.addEventListener("mousedown", this.handle_slot_click.bind(this))
+    
+            this.items_cache.push(el)
+            container.appendChild(el)
+        }
+    
+        this.items_map = {}
+    
+        for (let i = 0; i < slots.length; i++) {
+            const s = slots[i]
+            const el = this.items_cache[i]
+    
+            const number = el.children[0] as HTMLDivElement
+            const count = el.children[1] as HTMLDivElement
+            const img = el.children[2] as HTMLImageElement
+    
+            number.textContent = `${i + 4}`
+    
+            el.dataset.slot = i.toString()
+    
+            if (s.count > 0) {
+                const def = GameItems.valueNumber[s.idNumber]
+    
+                count.textContent = `${s.count}`
+                img.src = res.get_sprite(def.idString).src
+                img.style.display = "block"
+    
+                el.classList.remove("slot-empty")
+    
+                this.items_map[def.idString] =
+                    (this.items_map[def.idString] ?? 0) + s.count
+            } else {
+                count.textContent = ""
+                img.style.display = "none"
+                el.classList.add("slot-empty")
+            }
+        }
+    }    
+    clear() {
+        this.items_cache.length = 0
+        this.items_map = {}
+        this.content.items.innerHTML = ""
     }
 }

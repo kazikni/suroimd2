@@ -438,17 +438,20 @@ export class GInventory extends GInventoryBase<LItem>{
         this.owner.privateDirtys.current_weapon=true
         this.owner.privateDirtys.weapons=true
     }
-    drop_oitem(idx:number=0){
-      const a=Ammos.getFromNumber(idx)
-      const rc=Math.min(a.drop_count??60,this.oitems[a.idString])
-      this.consume_oitem(a.idString,rc)
-      this.owner.game.add_loot(this.owner.position,a,rc)
+    drop_oitem(idx:number=0,drop_count:number=60){
+        const a=Ammos.getFromNumber(idx)
+        const res=this.consume_oitem(a.idString,drop_count)
+        if(res){
+
+            this.owner.game.add_loot(this.owner.position,a,res)
+            this.owner.privateDirtys.oitems=true
+        }
     }
     give_item(def:GameItem,count:number,drop_n:boolean=true):number{
         switch(def.item_type){
             case InventoryItemType.ammo:{
                 this.owner.privateDirtys.oitems=true
-                const max=this.backpack.max[def.idString]??0
+                const max=this.item_limit(def)
                 const ac=this.oitems[def.idString]??0
                 if(ac>=max){
                     if(drop_n)this.owner.game.add_loot(this.owner.position,def,count)
@@ -464,7 +467,7 @@ export class GInventory extends GInventoryBase<LItem>{
             case InventoryItemType.consumible:{
                 const item=new ConsumibleItem(def as unknown as ConsumibleDef)
                 item.inventory=this
-                item.limit_per_slot=this.backpack.max[item.def.idString]??this.default_backpack.max[item.def.idString]??15
+                item.limit_per_slot=this.item_limit(item.def)
                 const ov=this.add(item,count)
                 if(ov){
                   this.owner.game.add_loot(this.owner.position,def,ov)
