@@ -468,10 +468,17 @@ export class GuiManager{
                 this.content.information_interact.innerHTML=state.information_box_message
             }
         }
-        if(this.current_interaction&&this.mobile_enabled){
-            ShowElement(this.mobile_content.btn_interact)
-        }else{
-            HideElement(this.mobile_content.btn_interact)
+        if(this.mobile_enabled){
+            if(this.current_interaction){
+                ShowElement(this.mobile_content.btn_interact)
+            }else{
+                HideElement(this.mobile_content.btn_interact)
+            }
+            if(state.gun){
+                ShowElement(this.mobile_content.btn_reload)
+            }else{
+                HideElement(this.mobile_content.btn_reload)
+            }
         }
     }
     clear(){
