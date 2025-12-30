@@ -5,6 +5,7 @@ import { CreatureDef, Creatures } from "common/scripts/definitions/objects/creat
 import { GameObject } from "../others/gameObject.ts"
 import { Numeric } from "common/scripts/engine/utils.ts";
 import { NetStream } from "common/scripts/engine/stream.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Creature extends GameObject{
     stringType:string="creature"
     numberType: number=10
@@ -46,7 +47,7 @@ export class Creature extends GameObject{
         super()
         this.container.add_child(this.main_sprite)
         this.container.zIndex=zIndexes.Creatures
-        this.main_sprite.hotspot=v2.new(.5,.5)
+        this.main_sprite.hotspot=CenterHotspot
         this.main_sprite.zIndex=2
     }
     dest_pos?:Vec2

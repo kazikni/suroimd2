@@ -30,7 +30,7 @@ import {  Material2D, WebglRenderer } from "../engine/renderer.ts";
 import { Plane } from "./planes.ts";
 import { isMobile } from "../engine/game.ts";
 import { DeadZoneManager } from "../managers/deadZoneManager.ts";
-import { ToggleElement } from "../engine/utils.ts";
+import { CenterHotspot, ToggleElement } from "../engine/utils.ts";
 import { type MenuManager } from "../managers/menuManager.ts";
 import { ActionPacket, InputActionType } from "common/scripts/packets/action_packet.ts";
 import { TabManager } from "../managers/tabManager.ts";
@@ -267,7 +267,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.camera.addObject(this.fake_crosshair)
 
     this.fake_crosshair.zIndex=zIndexes.DamageSplashs
-    this.fake_crosshair.hotspot=v2.new(.5,.5)
+    this.fake_crosshair.hotspot=CenterHotspot
 
     this.light_map.zIndex=zIndexes.Lights
     this.grid_gfx.zIndex=zIndexes.Grid

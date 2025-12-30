@@ -7,6 +7,7 @@ import { ColorM, Renderer } from "../engine/renderer.ts";
 import { GameObject } from "../others/gameObject.ts";
 import { Creature } from "./creature.ts";
 import { Building } from "./building.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 const images=[
     "bullet_normal",
     "bullet_rocket"
@@ -115,7 +116,7 @@ export class Bullet extends GameObject{
                         position:this.position,
                         frame:{
                             image:particles[this.particles-1],
-                            hotspot:v2.new(.5,.5)
+                            hotspot:CenterHotspot
                         },
                         speed:random.float(0.5,1.2),
                         angle:0,
@@ -182,7 +183,7 @@ export class Bullet extends GameObject{
             const proj=stream.readUint8()
             if(proj>0){
                 this.sprite_projectile=new Sprite2D()
-                this.sprite_projectile.hotspot=v2.new(.5,.5)
+                this.sprite_projectile.hotspot=CenterHotspot
                 this.sprite_projectile.zIndex=2
                 this.sprite_projectile.position.x=0
                 this.sprite_projectile.position.y=0

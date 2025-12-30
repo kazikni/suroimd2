@@ -5,6 +5,7 @@ import { type FrameDef } from "common/scripts/engine/definitions.ts";
 import { v2, v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { Color, ColorM } from "./renderer.ts";
 import { Numeric } from "common/scripts/engine/utils.ts";
+import { CenterHotspot } from "./utils.ts";
 
 export abstract class ClientParticle2D extends Particle2D{
     constructor(){
@@ -143,7 +144,7 @@ export class RainParticle2D extends ClientParticle2D{
                     this.stage=1
                     this.sprite.set_frame(this.config.frame.wave,(this.manager.game as unknown as ClientGame2D).resources)
                     v2m.zero(this.sprite.scale)
-                    this.sprite.hotspot=v2.new(.5,.5)
+                    this.sprite.hotspot=CenterHotspot
                     if(this.config.zindex){
                         this.sprite.zIndex=this.config.zindex.wave
                     }

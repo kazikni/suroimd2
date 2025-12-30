@@ -22,8 +22,9 @@ import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { type Sound } from "../engine/resources.ts";
-import { Floors, FloorType } from "common/scripts/others/terrain.ts";
+import { FloorKind, Floors, FloorType } from "common/scripts/others/terrain.ts";
 import { log } from "node:console";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -419,11 +420,11 @@ export class Player extends GameObject{
         this.sprites.emote_container.visible=false
         this.sprites.emote_bg.set_frame({
             image:"emote_background",
-            hotspot:v2.new(.5,.5),
+            hotspot:CenterHotspot,
             scale:1.5
         },this.game.resources)
         this.sprites.emote_sprite.transform_frame({
-            hotspot:v2.new(.5,.5),
+            hotspot:CenterHotspot,
             scale:2.6
         })
     }
@@ -459,17 +460,33 @@ export class Player extends GameObject{
             if(this.distance_since_last_footstep>=2){
                 this.distance_since_last_footstep=0
                 if(this.assets.footstep_sounds){
-                    console.log(random.choose(this.assets.footstep_sounds))
                     this.sound_animation.footsteps = this.game.sounds.play(
                         this.game.resources.get_audio(random.choose(this.assets.footstep_sounds)),
                         {
                             rolloffFactor:0.5,
                             position:this.position,
                             max_distance: 40,
-                            volume:0.8
+                            volume:0.7
                         },
                         "players"
                     )
+                }
+                if(Floors[f].floor_kind===FloorKind.Liquid){
+                    this.game.particles.add_particle(new ABParticle2D({
+                        direction:0,
+                        frame:{
+                            image:"riple",
+                            hotspot:CenterHotspot,
+                            scale:0,
+                        },
+                        zIndex:zIndexes.Decals,
+                        life_time:0.5,
+                        position:this.position,
+                        speed:0,
+                        to:{
+                            scale:3,
+                        }
+                    }))
                 }
             }
         }
@@ -693,7 +710,7 @@ export class Player extends GameObject{
                     ),
                     frame:{
                         image:d.caseParticle.frame??"casing_"+d.ammoType,
-                        hotspot:v2.new(.5,.5)
+                        hotspot:CenterHotspot
                     },
                     speed:random.float(3,4),
                     angle:0,
@@ -717,7 +734,7 @@ export class Player extends GameObject{
                         
                         frame:{
                             image:"gas_smoke_particle",
-                            hotspot:v2.new(.5,.5)
+                            hotspot:CenterHotspot
                         },
                         speed:random.float(d.gasParticles.speed.min,d.gasParticles.speed.max),
                         scale:0.03,

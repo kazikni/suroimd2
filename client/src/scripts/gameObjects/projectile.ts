@@ -2,6 +2,7 @@ import { ProjectileDef, Projectiles } from "common/scripts/definitions/objects/p
 import { CircleHitbox2D, NetStream, v2 } from "common/scripts/engine/mod.ts"
 import { GameObject } from "../others/gameObject.ts"
 import { Sprite2D } from "../engine/container_2d.ts"
+import { CenterHotspot } from "../engine/utils.ts";
 export class Projectile extends GameObject{
     stringType:string="projectile"
     numberType: number=6
@@ -35,7 +36,7 @@ export class Projectile extends GameObject{
         this.hb=new CircleHitbox2D(this.position,this.def.radius)
         this.sprite.set_frame({
             image:this.def.frames.world,
-            hotspot:v2.new(.5,.5),
+            hotspot:CenterHotspot,
             scale:1
         },this.game.resources)
     }

@@ -1,6 +1,9 @@
 import { Numeric } from "common/scripts/engine/utils.ts";
 import { type ClientGame2D } from "./game.ts";
-
+export const CenterHotspot={
+    x:0.5,
+    y:0.5
+}
 export interface TweenOptions<T>{
     target: T
     to: Partial<T>

@@ -4,6 +4,7 @@ import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
 import { zIndexes } from "common/scripts/others/constants.ts";
 import { SoundInstance } from "../engine/sounds.ts";
 import { PlaneData } from "common/scripts/packets/general_update.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 
 export class Plane{
     container:Container2D=new Container2D()
@@ -55,7 +56,7 @@ export class Plane{
             this.sprite.set_frame({
                 image:"airdrop_plane",
                 scale:14,
-                hotspot:v2.new(.5,.5)
+                hotspot:CenterHotspot
             },this.game.resources)
         }
         if(this.initial){

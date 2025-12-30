@@ -12,6 +12,7 @@ import { type Player } from "./player.ts";
 import { type HelmetDef, type VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { Backpacks, type BackpackDef } from "common/scripts/definitions/items/backpacks.ts";
 import { ConsumibleDef } from "common/scripts/definitions/items/consumibles.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Loot extends GameObject{
     stringType:string="loot"
     numberType: number=2
@@ -39,10 +40,10 @@ export class Loot extends GameObject{
     constructor(){
         super()
         this.container.visible=false
-        this.sprite_main.hotspot=v2.new(.5,.5)
+        this.sprite_main.hotspot=CenterHotspot
         this.sprite_main.visible=false
         this.sprite_main.zIndex=3
-        this.sprite_outline.hotspot=v2.new(.5,.5)
+        this.sprite_outline.hotspot=CenterHotspot
         this.sprite_outline.visible=false
         this.sprite_outline.zIndex=0
         this.container.zIndex=zIndexes.Loots
@@ -215,7 +216,7 @@ export class Loot extends GameObject{
                     const ff=(this.item as unknown as SkinDef).frame?.base??(this.item.idString+"_body")
                     this.sprite_main.frame=this.game.resources.get_sprite(ff)
                     this.sprite_main.visible=true
-                    this.sprite_main.scale=v2.new(0.5,.5)
+                    this.sprite_main.scale=v2.new(0.5,0.5)
                     this.sprite_main.rotation=τ
                     this.sprite_outline.frame=this.game.resources.get_sprite(`null_outline`)
                     this.sprite_outline.visible=true;

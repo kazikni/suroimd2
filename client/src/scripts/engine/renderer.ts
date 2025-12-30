@@ -35,6 +35,7 @@ export const ColorM={
         return { r, g, b, a };
     },
     number(color:number):Color{
+        color=Math.min(0xffffff,color)
         const r = (color >> 16) & 0xFF
         const g = (color >> 8) & 0xFF
         const b = color & 0xFF

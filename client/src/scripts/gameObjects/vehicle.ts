@@ -4,6 +4,7 @@ import { v2, v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { zIndexes } from "common/scripts/others/constants.ts";
 import { NetStream, Numeric } from "common/scripts/engine/mod.ts";
 import { GameObject } from "../others/gameObject.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Vehicle extends GameObject{
     stringType:string="vehicle"
     numberType: number=9
@@ -42,7 +43,7 @@ export class Vehicle extends GameObject{
             this.main_sprite.scale=v2.new(def.frame.base_scale,def.frame.base_scale)
         }
         if(def.frame.zindex)this.container.zIndex=def.frame.zindex
-        const hotspot=v2.new(.5,.5)
+        const hotspot=CenterHotspot
         for(const w of def.wheels.defs){
             const spr=new Sprite2D()
             spr.frame=this.game.resources.get_sprite("wheel")
@@ -61,7 +62,7 @@ export class Vehicle extends GameObject{
         super()
         this.container.add_child(this.main_sprite)
         this.container.zIndex=zIndexes.Vehicles
-        this.main_sprite.hotspot=v2.new(.5,.5)
+        this.main_sprite.hotspot=CenterHotspot
         this.main_sprite.zIndex=2
     }
     dir:number=0
