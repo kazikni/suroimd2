@@ -22,7 +22,8 @@ import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { type Sound } from "../engine/resources.ts";
-import { Floor } from "common/scripts/others/terrain.ts";
+import { Floors, FloorType } from "common/scripts/others/terrain.ts";
+import { log } from "node:console";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -71,6 +72,7 @@ export class Player extends GameObject{
     }={consumible_particle:"healing_particle",mount_anims:[],mount_open:""}
     sound_animation:{
         animation?:SoundInstance
+        footsteps?:SoundInstance
         weapon:{
             switch?:SoundInstance
         }
@@ -84,10 +86,11 @@ export class Player extends GameObject{
     assets:{
         weapon_cycle_sound?:Sound
         weapon_fire_sound?:Sound
+        footstep_sounds?:string[]
     }={}
 
     default_melee=Melees.getFromString("survival_knife")
-    current_floor?:Floor
+    current_floor?:FloorType
 
     on_hitted(position:Vec2,critical:boolean=false){
         if(Math.random()<=0.1){
@@ -424,7 +427,9 @@ export class Player extends GameObject{
             scale:2.6
         })
     }
-    old_pos:Vec2=v2.new(-1,-1)
+    old_pos?:Vec2
+    distance_walked=0
+    distance_since_last_footstep=0
     update(dt:number): void {
         this.container.rotation=this.rotation
         if(this.dest_pos){
@@ -433,10 +438,40 @@ export class Player extends GameObject{
         if(this.dest_rot){
             this.rotation=Numeric.lerp_rad(this.rotation,this.dest_rot!,this.game.inter_global)
         }
-        if(this.old_pos.y!=this.position.x||this.old_pos.y!=this.position.y){
+        if(!this.old_pos){
             this.old_pos=v2.duplicate(this.position)
+            this.manager.cells.updateObject(this)
+        }
+        if(this.old_pos.y!=this.position.x||this.old_pos.y!=this.position.y){
+            const dist = v2.distance(this.old_pos, this.position)
+            this.old_pos=v2.duplicate(this.position)
+
             this.container._position.set(this.position.x,this.position.y)
             this.manager.cells.updateObject(this)
+
+            const f=this.game.terrain.get_floor_type(this.position,this.layer,FloorType.Water)
+            if(f!==this.current_floor){
+                this.current_floor=f
+                this.assets.footstep_sounds=Floors[f].footstep_sounds
+            }
+            this.distance_walked+=dist
+            this.distance_since_last_footstep+=dist
+            if(this.distance_since_last_footstep>=2){
+                this.distance_since_last_footstep=0
+                if(this.assets.footstep_sounds){
+                    console.log(random.choose(this.assets.footstep_sounds))
+                    this.sound_animation.footsteps = this.game.sounds.play(
+                        this.game.resources.get_audio(random.choose(this.assets.footstep_sounds)),
+                        {
+                            rolloffFactor:0.5,
+                            position:this.position,
+                            max_distance: 40,
+                            volume:0.8
+                        },
+                        "players"
+                    )
+                }
+            }
         }
         this.sprites.vest.rotation=Numeric.loop(this.sprites.vest.rotation+(1*dt),-3.1415,3.1415)
         if(this.sprites.emote_container.visible){
