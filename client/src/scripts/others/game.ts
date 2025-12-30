@@ -259,7 +259,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.grid_mat=(this.renderer as WebglRenderer).factorys2D.grid.create({
       color:ColorM.rgba(0,0,10,70),
       gridSize:3,
-      width:0.04
+      width:0.012
     })
     this.grid_gfx.fill_material(this.grid_mat)
     this.grid_gfx.drawModel(model2d.rect(v2.new(-100000,-100000),v2.new(100000,100000)))

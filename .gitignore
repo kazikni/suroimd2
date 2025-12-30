@@ -51,12 +51,13 @@ go.work.sum
 
 !/build/.npmkeep
 
-app/src/main/assets/*
-app/src/main/assets
-app/src/main/res
-app/src/main/res/*
-!app/src/main/res/values
-!app/src/main/res/xml/file_paths.xml
+/client/android/app/src/main/assets
+/client/android/app/src/main/assets/*
+app/src/main/release
+/client/android/app/src/main/res
+/client/android/app/src/main/res/*
+!/client/android/app/src/main/resvalues
+!/client/android/app/src/main/resxml/file_paths.xml
 
 __pycache__
 __pycache__/*

@@ -10,16 +10,19 @@ export type GL2D_GridMatArgs={
 export const GLF_Grid:GLMaterial2DFactoryCall<GL2D_GridMatArgs>={
     vertex:`
 attribute vec2 a_Position;
+
 uniform mat4 u_ProjectionMatrix;
 uniform vec3 u_Translation;
+
 varying vec2 v_WorldPosition;
 
 void main() {
-    v_WorldPosition = a_Position+u_Translation.xy;
-    gl_Position = u_ProjectionMatrix * vec4(a_Position,u_Translation.z, 1.0);
+    v_WorldPosition = a_Position + u_Translation.xy;
+    gl_Position = u_ProjectionMatrix * vec4(a_Position, u_Translation.z, 1.0);
 }`,
     frag:`
-precision mediump float;
+precision highp float;
+
 varying vec2 v_WorldPosition;
 
 uniform float u_GridSize;
@@ -27,10 +30,19 @@ uniform vec4 u_Color;
 uniform float u_LineWidth;
 
 void main() {
-    vec2 grid = abs(mod(v_WorldPosition, u_GridSize) - (u_GridSize * 0.5));
+    // normaliza para espaço da grid
+    vec2 gridUV = fract(v_WorldPosition / u_GridSize);
 
-    float line = 1.0-step(u_LineWidth, min(grid.x, grid.y));
-    gl_FragColor = vec4(u_Color.rgb, line * u_Color.a);
+    // distância até o centro da célula
+    vec2 dist = abs(gridUV - 0.5);
+
+    float line = 1.0 - smoothstep(
+        u_LineWidth,
+        u_LineWidth + 0.002,
+        min(dist.x, dist.y)
+    );
+
+    gl_FragColor = vec4(u_Color.rgb, u_Color.a * line);
 }`,
 create(gl:WebglRenderer,fac:GLMaterial2DFactory<GL2D_GridMatArgs>){
     const aPositionLoc=gl.gl.getAttribLocation(fac.program, "a_Position")
