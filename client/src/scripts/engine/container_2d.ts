@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Color, ColorM, Renderer, WebglRenderer,Material2D, GLMaterial2D, GL2D_LightMatArgs } from "./renderer.ts";
+import { Color, ColorM, Renderer, WebglRenderer,Material2D, GLMaterial2D } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -7,6 +7,7 @@ import { Hitbox2D, HitboxType2D } from "common/scripts/engine/hitbox.ts";
 import { ClientGame2D } from "./game.ts";
 import { type Tween } from "./utils.ts";
 import { ImageModel2D, Matrix, matrix4, Model2D, model2d, triangulateConvex } from "common/scripts/engine/models.ts";
+import { GL2D_LightMatArgs } from "./materials.ts";
 export interface CamA{
     matrix:Matrix
     position:Vec2
@@ -101,7 +102,11 @@ export abstract class Container2DObject {
         this._tint=new Vec4M(1,1,1,1,bid)
     }
 
+    update_v=true
     update_real(){
+        this.update_v=true
+    }
+    update_visual(){
         if (this.parent&&!this.parent.object_group) {
             this._real_scale = v2.mult(this.parent._real_scale, this._scale);
             if(this.sync_rotation){
@@ -130,7 +135,12 @@ export abstract class Container2DObject {
 
     update(_dt:number,_resources:ResourcesManager): void {
     }
-
+    draw_super(){
+        if(this.update_v){
+            this.update_visual()
+            this.update_v=false
+        }
+    }
     abstract draw(cam:CamA,renderer: Renderer): Promise<void>;
 }
 type Graphics2DCommand =
@@ -232,6 +242,7 @@ export class Graphics2D extends Container2DObject {
 
     override draw(cam:CamA,renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             const gl = renderer as WebglRenderer;
             let currentMat: Material2D=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
             let currentModel:Model2D
@@ -302,8 +313,8 @@ export class Sprite2D extends Container2DObject{
 
     cam?:CamA
 
-    override update_real(): void {
-        super.update_real()
+    override update_visual(): void {
+        super.update_visual()
         this.update_model()
     }
 
@@ -343,6 +354,7 @@ export class Sprite2D extends Container2DObject{
     }
     override draw(cam:CamA,renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             this.cam=cam
             if(this.frame)renderer.draw_image2D(this.frame,this._real_position,this.model,cam.matrix,this._real_tint)
             resolve()
@@ -390,6 +402,7 @@ export class Container2D extends Container2DObject{
         this.children.sort((a, b) => a.zIndex - b.zIndex || a.id_on_parent - b.id_on_parent);
     }
     async draw(cam:CamA,renderer:Renderer,objects?:Container2DObject[]):Promise<void>{
+        this.draw_super()
         if(!objects)objects=this.visible_children
         for(let o =0;o<objects.length;o++){
             const c=objects[o]
@@ -676,6 +689,7 @@ export class Lights2D extends Container2DObject {
 
     draw(cam:CamA,renderer: WebglRenderer):Promise<void>{
         return new Promise<void>((resolve) => {
+            this.draw_super()
             if (!this.lightTexture||this.quality===0) {resolve();return}
             const mat = renderer.factorys2D.texture.create({
                 texture: this.lightTexture,
@@ -837,6 +851,7 @@ export class SubCanvas2D extends Container2DObject {
 
     override draw(cam:CamA,renderer: WebglRenderer) {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             if (!this.Texture) {resolve();return;}
             const mat = renderer.factorys2D.texture.create({
                 texture: this.Texture,

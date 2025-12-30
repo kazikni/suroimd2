@@ -22,6 +22,7 @@ import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { type Sound } from "../engine/resources.ts";
+import { Floor } from "common/scripts/others/terrain.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -86,6 +87,7 @@ export class Player extends GameObject{
     }={}
 
     default_melee=Melees.getFromString("survival_knife")
+    current_floor?:Floor
 
     on_hitted(position:Vec2,critical:boolean=false){
         if(Math.random()<=0.1){
@@ -357,7 +359,6 @@ export class Player extends GameObject{
 
         this.update_weapon(false)
     }
-
     create(_args: Record<string, void>): void {
         this.hb=new CircleHitbox2D(v2.new(0,0),GameConstants.player.playerRadius)
         this.container=new AnimatedContainer2D(this.game as unknown as ClientGame2D)
@@ -423,17 +424,21 @@ export class Player extends GameObject{
             scale:2.6
         })
     }
+    old_pos:Vec2=v2.new(-1,-1)
     update(dt:number): void {
+        this.container.rotation=this.rotation
         if(this.dest_pos){
             this.position=v2.lerp(this.position,this.dest_pos,this.game.inter_global)
         }
         if(this.dest_rot){
             this.rotation=Numeric.lerp_rad(this.rotation,this.dest_rot!,this.game.inter_global)
         }
-        this.container._position.set(this.position.x,this.position.y)
-        this.container.rotation=this.rotation
+        if(this.old_pos.y!=this.position.x||this.old_pos.y!=this.position.y){
+            this.old_pos=v2.duplicate(this.position)
+            this.container._position.set(this.position.x,this.position.y)
+            this.manager.cells.updateObject(this)
+        }
         this.sprites.vest.rotation=Numeric.loop(this.sprites.vest.rotation+(1*dt),-3.1415,3.1415)
-        this.manager.cells.updateObject(this)
         if(this.sprites.emote_container.visible){
             this.sprites.emote_container.position=this.position
             v2m.add_component(this.sprites.emote_container.position,0,-1.5)
