@@ -6,7 +6,7 @@
    viewBox="0 0 176.03334 176.03334"
    id="svg18"
    sodipodi:docname="bush.svg"
-   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,10 +23,10 @@
      inkscape:zoom="2.4506788"
      inkscape:cx="106.29708"
      inkscape:cy="145.4699"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -269,7 +269,7 @@
      style="opacity:0.952">
     <path
        sodipodi:type="star"
-       style="fill:#0b590d;fill-opacity:1;stroke:#08420a;stroke-width:10.4744;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#0b590d;fill-opacity:1;stroke:#000000;stroke-width:10.4744;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
        id="path1407"
        inkscape:flatsided="false"
        sodipodi:sides="20"

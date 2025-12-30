@@ -2,12 +2,12 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="51.80468mm"
+   width="52.120502mm"
    height="51.951416mm"
-   viewBox="0 0 51.804679 51.95142"
+   viewBox="0 0 52.120502 51.95142"
    version="1.1"
    id="svg5"
-   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
    sodipodi:docname="barrel_dead.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,13 +24,13 @@
      inkscape:pagecheckerboard="true"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.2999535"
-     inkscape:cx="119.23503"
-     inkscape:cy="255.00912"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:zoom="1.843075"
+     inkscape:cx="82.199583"
+     inkscape:cy="189.08617"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
      fit-margin-top="0"
@@ -69,24 +69,24 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="matrix(1.3409032,0,0,1.3409032,-35.881131,-25.444921)">
+     transform="matrix(1.3409032,0,0,1.3409032,-35.565307,-25.444921)">
     <path
        style="fill:url(#radialGradient2);stroke-width:0.447363"
        d="m 35.468117,28.613173 -2.158025,-6.548622 5.623861,5.159842 -0.795185,-7.035306 4.009031,6.34524 2.196195,-7.55837 1.913633,8.829802 5.204126,-6.822228 -2.160558,9.341685 8.730798,-6.54325 -5.506513,9.878767 9.947508,-4.829416 -7.113436,8.510863 8.816832,-1.453939 -7.837349,4.965107 9.05406,0.753435 -8.819365,3.87439 7.350664,4.642587 -8.993224,-1.645093 1.998185,6.953288 -4.714909,-4.295608 0.772519,5.829775 -3.897798,-4.530611 -3.642228,5.284046 -2.745505,-7.534962 -3.05833,5.699458 -0.895981,-7.889538 -6.146182,6.933462 1.705187,-9.184377 -6.439922,1.158101 6.500758,-4.504056 -6.681474,-1.167362 5.290161,-3.328356 -3.962216,-5.359642 4.925147,-0.532759 -5.418688,-5.010439 z"
        id="path1"
        sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccc" />
     <path
-       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.372064;stroke-opacity:1"
+       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.745766;stroke-dasharray:none;stroke-opacity:1"
        d="m 26.993426,39.481746 2.289707,-13.308924 2.504367,-1.28796 0.930194,1.860387 2.719027,-0.787086 v 2.003494 l 2.432814,-1.001748 -0.572427,2.146601 1.931941,-0.64398 -3.363008,11.019216 -1.71728,-2.146601 -0.930194,1.860387 -0.858641,-2.075047 -1.502619,1.788835 -0.429321,-2.361262 -1.788833,2.432815 z"
        id="path2"
        sodipodi:nodetypes="ccccccccccccccccc" />
     <path
-       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.329394;stroke-opacity:1"
+       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.745766;stroke-dasharray:none;stroke-opacity:1"
        d="m 50.691276,37.271523 11.782615,2.027116 1.140253,2.21716 -1.647034,0.823515 0.696822,2.4072 h -1.773726 l 0.886863,2.153813 -1.900421,-0.506781 0.570126,1.710381 -9.755499,-2.977328 1.900422,-1.520337 -1.647032,-0.823517 1.837074,-0.760169 -1.583684,-1.330294 2.090463,-0.380085 -2.153811,-1.583684 z"
        id="path3"
        sodipodi:nodetypes="ccccccccccccccccc" />
     <path
-       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.329394;stroke-opacity:1"
+       style="fill:#484848;fill-opacity:1;stroke:#000000;stroke-width:0.745766;stroke-dasharray:none;stroke-opacity:1"
        d="m 34.980969,57.129329 9.683788,-1.631685 2.083204,-4.437658 -2.589985,1.396983 0.696822,-2.4072 h -1.773726 l -1.013558,-1.647032 1.33057,-1.527874 -10.515943,2.794821 1.900422,1.520337 -1.647032,0.823517 1.837074,0.760169 -1.583684,1.330294 2.090463,0.380085 -2.39918,1.48412 z"
        id="path4"
        sodipodi:nodetypes="cccccccccccccccc" />

@@ -50,6 +50,7 @@ __                                                                              
 * Spas12 Damage: 7 -> 6.5
 * Spas12 Bullet Count: 9 -> 10
 __                                                                                                      __
+* Change ArtStyle
 ### Others
 * Redesign Bushes
 __                                                                                                      __

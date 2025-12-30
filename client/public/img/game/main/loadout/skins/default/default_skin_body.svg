@@ -7,7 +7,7 @@
    viewBox="0 0 30.789232 30.805735"
    version="1.1"
    id="svg5"
-   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
    sodipodi:docname="default_skin_body.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -28,10 +28,10 @@
      inkscape:zoom="4.478191"
      inkscape:cx="78.044907"
      inkscape:cy="86.530476"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
      showguides="false"
@@ -137,16 +137,6 @@
          id="stop14" />
     </linearGradient>
     <linearGradient
-       inkscape:collect="always"
-       xlink:href="#color-6"
-       id="linearGradient38"
-       x1="213.13498"
-       y1="167.74408"
-       x2="266.86505"
-       y2="167.74408"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.89718188,0,0,0.89718188,21.81132,15.39949)" />
-    <linearGradient
        x1="240.00002"
        y1="150.37373"
        x2="240.00002"
@@ -228,7 +218,7 @@
        transform="matrix(0,-0.75225428,0.73256371,0,-116.32131,190.73205)"
        style="stroke-width:0.999823;stroke-dasharray:none">
       <path
-         style="fill:#ffc266;stroke:#563702;stroke-width:2.59807;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:#ffc266;stroke:#000000;stroke-width:2.59807;stroke-dasharray:none;stroke-opacity:1"
          d="m 212.83947,176.30376 c 0,-13.41811 10.8774,-24.29551 24.29551,-24.29551 13.41811,0 24.29551,10.8774 24.29551,24.29551 0,13.41811 -10.8774,24.29551 -24.29551,24.29551 -13.41811,0 -24.29551,-10.8774 -24.29551,-24.29551 z"
          id="path1"
          inkscape:label="Skin"
@@ -340,7 +330,7 @@
          d="m 213.03216,174.1983 c 0,-12.99362 10.29515,-23.52703 24.10282,-23.52703 13.80767,0 24.10282,10.53341 24.10282,23.52703 0,12.99361 -9.93596,3.71076 -23.74362,3.71076 -13.80767,0 -24.46201,9.28285 -24.46201,-3.71076 z"
          fill="url(#color-7)"
          id="path37"
-         style="fill:url(#color-7);stroke:url(#linearGradient38);stroke-width:2.59807;stroke-dasharray:none;stroke-opacity:1"
+         style="fill:url(#color-7);stroke:#000000;stroke-width:2.59807;stroke-dasharray:none;stroke-opacity:1"
          inkscape:label="Hair"
          sodipodi:nodetypes="cssscc" />
     </g>
