@@ -1,5 +1,5 @@
 import { EaseFunction, ease, v2 } from "common/scripts/engine/mod.ts";
-import { Material2D } from "./renderer.ts";
+import { type Renderer, type WebglRenderer, type Material } from "./renderer.ts";
 import { type SoundManager } from "./sounds.ts";
 import { Vec2 } from "common/scripts/engine/geometry.ts";
 interface FrameData {
@@ -41,6 +41,8 @@ export class Frame{
     living_texture:boolean=true
     readonly resourceType:SourceType.Frame=SourceType.Frame
     gl:WebGLRenderingContext
+
+    batch_mat?:Material
     constructor(source:HTMLImageElement,gl:WebGLRenderingContext,src:string,tc:number[]){
         this.source=source
         this.src=src
@@ -78,7 +80,7 @@ export enum SourceType{
     Sound,
     Material
 }
-export type Source=Frame|Animation|Sound|Material2D
+export type Source=Frame|Animation|Sound|Material
 function loadTexture(gl:WebGLRenderingContext, source:HTMLImageElement) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -107,11 +109,13 @@ export class ResourcesManager{
     audioCtx:AudioContext
     soundsManager:SoundManager
     default_sprite:Frame
-    constructor(gl:WebGLRenderingContext,soundsManager:SoundManager){ 
+    renderer:WebglRenderer
+    constructor(renderer:WebglRenderer,soundsManager:SoundManager){ 
         this.sources={}
         this.canvas=document.createElement("canvas")
         this.ctx=this.canvas.getContext("2d")!
-        this.gl=gl
+        this.renderer=renderer
+        this.gl=renderer.gl
         this.audioCtx=soundsManager.ctx
         this.soundsManager=soundsManager
 
@@ -158,15 +162,20 @@ export class ResourcesManager{
 
             this.ctx.restore()
             const ret=new Frame(new Image(),this.gl,src,[
-                0.0, 1.0, // top-left
-                1.0, 1.0, // top-right
-                0.0, 0.0, // bottom-left
-                1.0, 0.0  // bottom-right
+                0.0, 1.0,
+                1.0, 1.0,
+                0.0, 0.0,
+                0.0, 0.0,
+                1.0, 1.0,
+                1.0, 0.0
             ]);
             ret.source.addEventListener("load",()=>{
                 const sp=ret as Frame
                 sp.texture=loadTexture(this.gl,sp.source)!
                 ret.frame_size=v2.new(sp.source.width,sp.source.height)
+                ret.batch_mat=this.renderer.factorys2D.texture_batch.create({
+                    texture:sp.texture
+                })
                 resolve(ret)
             });
             ret.source.src=src
@@ -210,19 +219,25 @@ export class ResourcesManager{
                 x2: (frame.x + frame.w) / iw,
                 y2: 1.0 - frame.y / ih
             };
-            const sprite = new Frame(image, this.gl, frame.file??"",
+            const s = new Frame(image, this.gl, frame.file??"",
                 [
-                    rect.x1, rect.y2, // top-left
-                    rect.x2, rect.y2, // top-right
-                    rect.x1, rect.y1, // bottom-left
-                    rect.x2, rect.y1  // bottom-right
-                ]                
+                    rect.x1,rect.y2,
+                    rect.x2,rect.y2,
+                    rect.x1,rect.y1,
+                    rect.x1,rect.y1,
+                    rect.x2,rect.y2,
+                    rect.x2,rect.y1
+                ]
             );
-            sprite.texture = tex;
-            sprite.group=group
+            s.texture = tex;
+            s.group=group
 
-            sprite.frame_size=v2.new(frame.w/json.meta.scale,frame.h/json.meta.scale)
-            this.sources[`${idPrefix}${id}`] = sprite;
+            s.frame_size=v2.new(frame.w/json.meta.scale,frame.h/json.meta.scale)
+            this.sources[`${idPrefix}${id}`] = s
+
+            s.batch_mat=this.renderer.factorys2D.texture_batch.create({
+                texture:tex
+            })
         }
     }
 
@@ -255,11 +270,11 @@ export class ResourcesManager{
             
         })
     }
-    load_material2D(id:string,mat:Material2D){
+    load_material(id:string,mat:Material){
         this.sources[id]=mat
     }
-    get_material2D(id:string):Material2D{
-        return this.sources[id] as Material2D
+    get_material(id:string):Material{
+        return this.sources[id] as Material
     }
     get_audio(id:string):Sound{
         return this.sources[id] as Sound

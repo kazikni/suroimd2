@@ -283,6 +283,8 @@ export class Game extends ClientGame2D<GameObject>{
 
     this.tab.add_app(new MessageTabApp(this.tab))
     this.inventoryManager=new InventoryManager(this)
+
+    this.camera.after_draw.push(this.light_map.dd.bind(this.light_map))
   }
   add_damageSplash(d:DamageSplash){
     this.scene.objects.add_object(new DamageSplashOBJ(),7,undefined,d)

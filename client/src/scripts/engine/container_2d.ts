@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Color, ColorM, GLMaterial, Material, Renderer, SingleMatBatching2D, WebglRenderer } from "./renderer.ts";
+import { Batcher, Color, ColorM, GLMaterial, Material, Renderer, SingleMatBatching2D, WebglRenderer } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -14,6 +14,7 @@ export interface CamA{
     size:Vec2
     meter_size:number
     center_pos:boolean
+    batcher:Batcher
 }
 export abstract class Container2DObject {
     abstract object_type: string;
@@ -333,7 +334,7 @@ export class Sprite2D extends Container2DObject{
     update_model(){
         if(!this.frame||!this.frame.source||!this.cam)return
         this._real_size=this.size??this.frame.frame_size??v2.new(this.frame.source.width,this.frame.source.height)
-        this.model=ImageModel2D(this._real_scale,this._real_rotation,this.hotspot,this._real_size,100)
+        this.model=ImageModel2D(this._real_scale,this._real_rotation,this.hotspot,this._real_size,100,this._real_position)
         this.old_ms=this.cam.meter_size
     }
 
@@ -364,11 +365,12 @@ export class Sprite2D extends Container2DObject{
         if(frame.position)this.position=v2.duplicate(frame.position)
         this.update_real()
     }
-    override draw(cam:CamA,renderer: Renderer): Promise<void> {
+    override draw(cam:CamA,_renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
             this.draw_super()
             this.cam=cam
-            if(this.frame)renderer.draw_image2D(this.frame,this._real_position,this.model,cam.matrix,this._real_tint)
+            //if(this.frame)renderer.draw_image2D(this.frame,this._real_position,this.model,cam.matrix,this._real_tint)
+            cam.batcher.draw_frame2d(this.frame,this.model,this._real_tint)
             resolve()
         })
     }
@@ -707,22 +709,24 @@ export class Lights2D extends Container2DObject {
         console.log("Light Texture Base64:", dataURL)
     }
 
-    draw(cam:CamA,renderer: WebglRenderer):Promise<void>{
+    dd(cam:CamA,renderer: WebglRenderer){
+        this.draw_super()
+        if (!this.lightTexture||this.quality===0){}
+        const mat = renderer.factorys2D.texture.create({
+            texture: this.lightTexture,
+            tint: { r: 1, g: 1, b: 1, a: 1 }
+        });
+        const gl=renderer.gl
+        renderer.gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+        renderer.draw(mat,cam.matrix,{
+            model:this.screenModel,
+            position:cam.position,
+            scale:v2.new(0.01,0.01)
+        })
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    }
+    override draw(cam: CamA, renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
-            this.draw_super()
-            if (!this.lightTexture||this.quality===0) {resolve();return}
-            const mat = renderer.factorys2D.texture.create({
-                texture: this.lightTexture,
-                tint: { r: 1, g: 1, b: 1, a: 1 }
-            });
-            const gl=renderer.gl
-            renderer.gl.blendFunc(gl.DST_COLOR, gl.ZERO);
-            renderer.draw(mat,cam.matrix,{
-                model:this.screenModel,
-                position:cam.position,
-                scale:v2.new(0.01,0.01)
-            })
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
             resolve()
         })
     }
@@ -791,7 +795,8 @@ export class SubCanvas2D extends Container2DObject {
         meter_size:5,
         position:this.position,
         size:v2.new(5,5),
-        center_pos:false
+        center_pos:false,
+        batcher:undefined
     }
     render(renderer: WebglRenderer, camera: Camera2D,objects?:Container2DObject[]) {
         this.renderer = renderer;
@@ -911,11 +916,14 @@ export class Camera2D{
     visual_position=v2.new(0,0)
 
     center_pos:boolean=true
+    batcher:Batcher
 
+    after_draw:((cam:CamA,renderer:WebglRenderer)=>void)[]=[]
     constructor(renderer:Renderer){
         this.renderer=renderer
         this.zoom=1
         this.container.object_group=true
+        this.batcher=new Batcher(renderer)
     }
 
     addObject(...objects: Container2DObject[]): void {
@@ -958,12 +966,18 @@ export class Camera2D{
 
     async draw(dt:number,resources:ResourcesManager,renderer:Renderer){
         this.update(dt,resources)
-        await this.container.draw({
+        const cam={
             matrix:this.projectionMatrix,
             position:this.visual_position,
             meter_size:this.meter_size,
             size:v2.new(this.width,this.height),
-            center_pos:this.center_pos
-        },renderer)
+            center_pos:this.center_pos,
+            batcher:this.batcher
+        }
+        await this.container.draw(cam,renderer)
+        this.batcher.render(this.projectionMatrix)
+        for(const a of this.after_draw){
+            a(cam,renderer)
+        }
     }
 }

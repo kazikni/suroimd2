@@ -65,7 +65,7 @@ import { isMobile } from "../engine/game.ts";
 
     const renderer=new WebglRenderer(canvas,undefined,GameSave.get_variable("cv_graphics_renderer")==="webgl1"?1:2)
 
-    const resources=new ResourcesManager(renderer.gl,sounds)
+    const resources=new ResourcesManager(renderer,sounds)
     await resources.load_audio("menu_music",{src:`/sounds/musics/menu_music_${random.int(1,2)}.mp3`,volume:1},"essentials")
     //await resources.load_audio("menu_music_2",{src:"/sounds/musics/menu_music_2.mp3",volume:1},"essentials")
     await resources.load_audio("button_click",{src:"/sounds/ui/button_click.mp3",volume:1},"essentials")

@@ -1,5 +1,5 @@
 import { Matrix, Model2D, Model3D } from "common/scripts/engine/models.ts";
-import { GLMaterial, GLMaterialFactory, GLMaterialFactoryCall, type Color, type WebglRenderer } from "./renderer.ts";
+import { GLMaterial, GLMaterialFactory, GLMaterialFactoryCall, Material, type Color, type WebglRenderer } from "./renderer.ts";
 import { Vec2, Vec3 } from "common/scripts/engine/geometry.ts";
 export type GL2D_SimpleBatchArgs = {
 }
@@ -385,6 +385,104 @@ create(glr: WebglRenderer, fac: GLMaterialFactory<GL2D_TexMatArgs,GL2D_TexMatAtt
     })
 }
 }
+export type GL2D_TexBatchArgs = {
+    texture: WebGLTexture
+}
+export type GL2D_TexBatchAttr = {
+    vertices: Float32Array
+    tex_coord: Float32Array
+    tint: Float32Array
+}
+export const GLF_TextureBatch: GLMaterialFactoryCall<
+    GL2D_TexBatchArgs,
+    GL2D_TexBatchAttr
+> = {
+    vertex: `
+attribute vec2 a_Position;
+attribute vec2 a_TexCoord;
+attribute vec4 a_Tint;
+
+uniform mat4 u_ProjectionMatrix;
+
+varying highp vec2 v_TexCoord;
+varying lowp vec4 v_Tint;
+
+void main() {
+    gl_Position = u_ProjectionMatrix * vec4(a_Position.xy, 0.0, 1.0);
+    v_TexCoord = a_TexCoord;
+    v_Tint = a_Tint;
+}`,
+    frag:   `
+precision mediump float;
+
+varying highp vec2 v_TexCoord;
+varying lowp vec4 v_Tint;
+
+uniform sampler2D u_Texture;
+
+void main() {
+    vec2 uv = vec2(v_TexCoord.x, 1.0 - v_TexCoord.y);
+    gl_FragColor = texture2D(u_Texture, uv) * v_Tint;
+}
+`,
+
+    create(glr: WebglRenderer, fac) {
+        const gl = glr.gl
+
+        const aPos   = gl.getAttribLocation(fac.program, "a_Position")
+        const aUV    = gl.getAttribLocation(fac.program, "a_TexCoord")
+        const aTint  = gl.getAttribLocation(fac.program, "a_Tint")
+
+        const uProj  = gl.getUniformLocation(fac.program, "u_ProjectionMatrix")!
+        const uTex   = gl.getUniformLocation(fac.program, "u_Texture")!
+
+        const buffers = {
+            position: gl.createBuffer()!,
+            uv: gl.createBuffer()!,
+            tint: gl.createBuffer()!,
+        }
+
+        const draw = (mat:GLMaterial<GL2D_TexBatchArgs,GL2D_TexBatchAttr>,matrix: Matrix,attr: GL2D_TexBatchAttr) => {
+            if (!attr.vertices) return
+
+            gl.useProgram(fac.program)
+            gl.uniformMatrix4fv(uProj, false, matrix)
+
+            // vertices
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+            gl.bufferData(gl.ARRAY_BUFFER, attr.vertices, gl.STATIC_DRAW)
+            gl.enableVertexAttribArray(aPos)
+            gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0)
+
+            // uv
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.uv)
+            gl.bufferData(gl.ARRAY_BUFFER, attr.tex_coord, gl.STATIC_DRAW)
+            gl.enableVertexAttribArray(aUV)
+            gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 0, 0)
+
+            // tint
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.tint)
+            gl.bufferData(gl.ARRAY_BUFFER, attr.tint, gl.STATIC_DRAW)
+            gl.enableVertexAttribArray(aTint)
+            gl.vertexAttribPointer(aTint, 4, gl.FLOAT, false, 0, 0)
+
+            // texture
+            gl.activeTexture(gl.TEXTURE0)
+            gl.bindTexture(gl.TEXTURE_2D, mat.texture)
+            gl.uniform1i(uTex, 0)
+
+            gl.drawArrays(gl.TRIANGLES, 0, attr.vertices.length / 2)
+        }
+
+        return (arg: GL2D_TexBatchArgs) => ({
+            ...arg,
+            factory: fac,
+            group: "texture_batch",
+            draw
+        })
+    }
+}
+
 export type GL2D_LightMatArgs = {
     color: Color
 }

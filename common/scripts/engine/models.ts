@@ -160,7 +160,8 @@ export function ImageModel2D(
     angle: number,
     hotspot: Vec2 = v2.new(0,0),
     size: Vec2,
-    meter_size: number = 100
+    meter_size: number = 100,
+    position:Vec2={x:0,y:0}
 ): Float32Array {
 
     const sizeR = v2.new(
@@ -183,10 +184,13 @@ export function ImageModel2D(
     const rot = base.map(v => rotatePoint(v.x, v.y, angle));
 
     return new Float32Array([
-        rot[0].x, rot[0].y,
-        rot[1].x, rot[1].y,
-        rot[2].x, rot[2].y,
-        rot[3].x, rot[3].y
+        rot[0].x+position.x, rot[0].y+position.y,
+        rot[1].x+position.x, rot[1].y+position.y,
+        rot[2].x+position.x, rot[2].y+position.y,
+
+        rot[2].x+position.x, rot[2].y+position.y,
+        rot[1].x+position.x, rot[1].y+position.y,
+        rot[3].x+position.x, rot[3].y+position.y,
     ]);
 }
 export function ImageModel3D(
