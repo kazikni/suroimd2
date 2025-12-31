@@ -2,7 +2,7 @@ import { Vec2 } from "common/scripts/engine/mod.ts"
 import { type Frame } from "./resources.ts";
 import { Numeric } from "common/scripts/engine/utils.ts";
 import { Matrix, Model2D} from "common/scripts/engine/models.ts";
-import { GL2D_GridMatArgs, GL2D_GridMatAttr, GL2D_LightMatArgs, GL2D_LightMatAttr, GL2D_SimpleMatArgs, GL2D_SimpleMatAttr, GL2D_TexMatArgs, GL2D_TexMatAttr, GL3D_SimpleMatArgs, GL3D_SimpleMatAttr, GLF_Grid, GLF_Light, GLF_Simple, GLF_Simple3, GLF_Texture } from "./materials.ts";
+import { GL2D_GridMatArgs, GL2D_GridMatAttr, GL2D_LightMatArgs, GL2D_LightMatAttr, GL2D_SimpleBatchArgs, GL2D_SimpleBatchAttr, GL2D_SimpleMatArgs, GL2D_SimpleMatAttr, GL2D_TexMatArgs, GL2D_TexMatAttr, GL3D_SimpleMatArgs, GL3D_SimpleMatAttr, GLF_Grid, GLF_Light, GLF_Simple, GLF_Simple3, GLF_SimpleBatch, GLF_Texture } from "./materials.ts";
 export interface Color {
     r: number; // Red
     g: number; // Green
@@ -125,54 +125,69 @@ export const ColorM={
 }
 export type RGBAT={r: number, g: number, b: number, a?: number}
 export type Material=GLMaterial
-
-export type SingleBatchingCommand2D=({
-    model:Model2D
-    position:Vec2
-    scale:Vec2
-    // deno-lint-ignore no-explicit-any
-    args:any
-})
-export abstract class SingleMatBatching2D<
-    Command extends SingleBatchingCommand2D = SingleBatchingCommand2D
-> {
+export abstract class SingleMatBatching2D{
     mat: Material
     renderer: Renderer
-    draws: Command[] = []
+    arrays: Record<string, number[]> = {}
     constructor(renderer: Renderer, mat: Material) {
         this.renderer = renderer
         this.mat = mat
     }
-    draw(
+    draw_model2d(
         model: Model2D,
         position: Vec2,
         scale: Vec2,
-        args: any
+        attr:Record<string,{value:Float32Array|number[]}>
     ) {
-        this.draws.push({
-            model,
-            position,
-            scale,
-            args
-        } as Command)
+        const vertexCount = model.vertices.length / 2
+        if(vertexCount<2)return
+        this.push_array("vertices",model.vertices,vertexCount)
+        this.push_array("tex_coord",model.tex_coords,vertexCount)
+        this.push_array("position",[position.x,position.y],vertexCount)
+        this.push_array("scale",[scale.x,scale.y],vertexCount)
+        for(const k of Object.keys(attr)){
+            this.push_array(k,attr[k].value,vertexCount)
+        }
     }
+    push_array(name: string, data: Float32Array|number[], vertexCount: number) {
+        if (!this.arrays[name]) this.arrays[name] = []
+        const out = this.arrays[name]
+    
+        if (vertexCount <= 0) {
+            throw new Error("push_array called without vertex context")
+        }
+    
+        const components = data.length
+
+        if (components >= vertexCount * 2) {
+            for (let i = 0; i < data.length; i++) {
+                out.push(data[i])
+            }
+            return
+        }
+    
+        for (let v = 0; v < vertexCount; v++) {
+            for (let i = 0; i < data.length; i++) {
+                out.push(data[i])
+            }
+        }
+    }
+    
+    
     clear() {
-        this.draws.length = 0
+        for(const k of Object.keys(this.arrays)){
+            this.arrays[k].length=0
+        }
     }
     render(matrix: Matrix) {
-        if (this.draws.length === 0) return
+        if (!this.arrays) return
 
-        const mat = this.mat
-
-        for (const cmd of this.draws) {
-            mat.draw(
-                { ...mat, ...cmd.args },
-                matrix,
-                cmd.model,
-                cmd.position,
-                cmd.scale
-            )
+        const gpuArrays: Record<string, Float32Array> = {}
+        for (const k in this.arrays) {
+            gpuArrays[k] = new Float32Array(this.arrays[k])
         }
+        
+        this.mat.draw(this.mat, matrix, gpuArrays)
 
         this.clear()
     }
@@ -231,7 +246,7 @@ export interface GLMaterialFactory<Args,Attr>{
 }
 export type GLMaterialFactoryCall<Args,Attr>={vertex:string,frag:string,create:(gl:WebglRenderer,fac:GLMaterialFactory<Args,Attr>)=>(arg:Args)=>GLMaterial<Args,Attr>}
 
-export class SingleMatBatching2DGL<Command extends SingleBatchingCommand2D=SingleBatchingCommand2D> extends SingleMatBatching2D<Command>{
+export class SingleMatBatching2DGL extends SingleMatBatching2D{
     declare renderer:WebglRenderer
     declare mat:Material
     constructor(renderer:WebglRenderer,mat:Material){
@@ -239,10 +254,12 @@ export class SingleMatBatching2DGL<Command extends SingleBatchingCommand2D=Singl
         this.mat=mat
     }
 }
+
 export class WebglRenderer extends Renderer {
     readonly gl: WebGLRenderingContext
     readonly tex_program:WebGLProgram
     readonly factorys2D:{
+        simple_batch:GLMaterialFactory<GL2D_SimpleBatchArgs,GL2D_SimpleBatchAttr>,
         simple:GLMaterialFactory<GL2D_SimpleMatArgs,GL2D_SimpleMatAttr>,
         grid:GLMaterialFactory<GL2D_GridMatArgs,GL2D_GridMatAttr>,
         texture:GLMaterialFactory<GL2D_TexMatArgs,GL2D_TexMatAttr>,
@@ -287,6 +304,7 @@ export class WebglRenderer extends Renderer {
         gl!.linkProgram(this.tex_program)
 
         this.factorys2D={
+            simple_batch:this.proccess_factory(GLF_SimpleBatch),
             simple:this.proccess_factory(GLF_Simple),
             grid:this.proccess_factory(GLF_Grid),
             texture:this.proccess_factory(GLF_Texture),
@@ -392,7 +410,7 @@ export class WebglRenderer extends Renderer {
     
         // DRAW
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-    }    
+    }
 
     clear() {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)

@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Color, ColorM, GLMaterial, Material, Renderer, WebglRenderer } from "./renderer.ts";
+import { Color, ColorM, GLMaterial, Material, Renderer, SingleMatBatching2D, WebglRenderer } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -161,6 +161,8 @@ export class Graphics2D extends Container2DObject {
     command: Graphics2DCommand[] = [];
     paths:number[][]=[]
 
+    batcher?:SingleMatBatching2D
+
     beginPath(): this {
         this.current_path.length=0
         return this
@@ -245,7 +247,10 @@ export class Graphics2D extends Container2DObject {
             this.draw_super()
             const gl = renderer as WebglRenderer;
             let currentMat: Material=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
-            let currentModel:Model2D
+            let currentModel:Model2D=model2d.zero()
+            if(!this.batcher){
+                this.batcher=gl.create_single_mat_batcher(gl.factorys2D.simple_batch.create({}))
+            }
 
             for (const cmd of this.command) {
                 switch (cmd.type) {
@@ -253,17 +258,15 @@ export class Graphics2D extends Container2DObject {
                         currentMat=cmd.mat
                         break
                     case "fillColor":
-                        // deno-lint-ignore ban-ts-comment
-                        //@ts-ignore
-                        cmd.type="fillMaterial"
-                        currentMat=gl.factorys2D.simple.create({color:cmd.color})
-                        // deno-lint-ignore ban-ts-comment
-                        //@ts-ignore
-                        cmd.mat=currentMat
+                        this.batcher.draw_model2d(currentModel,this._real_position,this._real_scale,{
+                            color:{
+                                value:[cmd.color.r,cmd.color.g,cmd.color.b,cmd.color.a  ]
+                            }
+                        })
                         break
                     case "fill":
                         gl.draw(currentMat,cam.matrix,{
-                            model:currentModel!,
+                            model:currentModel,
                             position:this._real_position,
                             scale:this._real_scale
                         })
@@ -281,6 +284,7 @@ export class Graphics2D extends Container2DObject {
                         break
                 }
             }
+            renderer.draw_single_mat_batcher2d(cam.matrix,this.batcher)
             resolve()
         })
     }
@@ -649,7 +653,7 @@ export class Lights2D extends Container2DObject {
                 const L = this.lights[i];
                 if (L.destroyed) { this.lights.splice(i, 1); i--; continue; }
                 renderer.draw(L.mat,camera.projectionMatrix,{
-                    model:this.screenModel,
+                    model:L.model,
                     position:L.pos,
                     scale:v2.new(1,1)
                 })

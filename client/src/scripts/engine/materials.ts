@@ -4,65 +4,83 @@ import { Vec2, Vec3 } from "common/scripts/engine/geometry.ts";
 export type GL2D_SimpleBatchArgs = {
 }
 export type GL2D_SimpleBatchAttr = {
-    model:Model2D[]
-    color: Color[]
-    position: Vec2[]
-    scale: Vec2[]
+    vertices:Float32Array
+    color:Float32Array
+    position:Float32Array
+    scale:Float32Array
 }
 export const GLF_SimpleBatch: GLMaterialFactoryCall<GL2D_SimpleBatchArgs,GL2D_SimpleBatchAttr> = {
     vertex: `
 attribute vec2 a_Position;
-attribute vec2 u_Translation;
-attribute vec2 u_Scale;
+attribute vec2 a_Translation;
+attribute vec2 a_Scale;
+attribute vec4 a_Color;
 
 uniform mat4 u_ProjectionMatrix;
 
+varying vec4 v_Color;
+
 void main() {
     gl_Position = u_ProjectionMatrix *
-        vec4((a_Position * u_Scale) + u_Translation, 0.0, 1.0);
+        vec4((a_Position * a_Scale  ) + a_Translation, 0.0, 1.0);
+    v_Color = a_Color;
 }`,
     frag: `
 precision mediump float;
-uniform vec4 u_Color;
+
+varying vec4 v_Color;
 
 void main() {
-    gl_FragColor = u_Color;
+    gl_FragColor = v_Color;
 }`,
 create(gl: WebglRenderer, fac: GLMaterialFactory<GL2D_SimpleBatchArgs,GL2D_SimpleBatchAttr>) {
     const aPosition = gl.gl.getAttribLocation(fac.program, "a_Position")
+    const aTrans = gl.gl.getAttribLocation(fac.program, "a_Translation")!
+    const aScale = gl.gl.getAttribLocation(fac.program, "a_Scale")!
+    const aColor = gl.gl.getAttribLocation(fac.program, "a_Color")!
     const uProj = gl.gl.getUniformLocation(fac.program, "u_ProjectionMatrix")!
-    const uTrans = gl.gl.getUniformLocation(fac.program, "u_Translation")!
-    const uScale = gl.gl.getUniformLocation(fac.program, "u_Scale")!
-    const uColor = gl.gl.getUniformLocation(fac.program, "u_Color")!
 
-    const vbo = gl.gl.createBuffer()!
+    const buffers = {
+        position: gl.gl.createBuffer()!,
+        translation: gl.gl.createBuffer()!,
+        scale: gl.gl.createBuffer()!,
+        color: gl.gl.createBuffer()!,
+    }
 
     const draw = (
-        mat: GLMaterial<GL2D_SimpleBatchArgs>,
+        mat: GLMaterial<GL2D_SimpleBatchArgs,GL2D_SimpleBatchAttr>,
         matrix: Matrix,
-        model: Model2D,
         attr:GL2D_SimpleBatchAttr
     ) => {
+        if(!attr["vertices"])return
         gl.gl.useProgram(fac.program)
+        gl.gl.uniformMatrix4fv(uProj, false, matrix)
 
-        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, vbo)
-        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, model.vertices, gl.gl.STATIC_DRAW)
-
+        // position
+        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, buffers.position)
+        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, attr.vertices, gl.gl.STATIC_DRAW)
         gl.gl.enableVertexAttribArray(aPosition)
         gl.gl.vertexAttribPointer(aPosition, 2, gl.gl.FLOAT, false, 0, 0)
 
-        gl.gl.uniformMatrix4fv(uProj, false, matrix)
-        gl.gl.uniform2f(uTrans, position.x, position.y)
-        gl.gl.uniform2f(uScale, scale.x, scale.y)
-        gl.gl.uniform4f(
-            uColor,
-            mat.color.r,
-            mat.color.g,
-            mat.color.b,
-            mat.color.a
-        )
+        // translation
+        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, buffers.translation)
+        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, attr.position, gl.gl.STATIC_DRAW)
+        gl.gl.enableVertexAttribArray(aTrans)
+        gl.gl.vertexAttribPointer(aTrans, 2, gl.gl.FLOAT, false, 0, 0)
 
-        gl.gl.drawArrays(gl.gl.TRIANGLES, 0, model.vertices.length / 2)
+        // scale
+        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, buffers.scale)
+        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, attr.scale, gl.gl.STATIC_DRAW)
+        gl.gl.enableVertexAttribArray(aScale)
+        gl.gl.vertexAttribPointer(aScale, 2, gl.gl.FLOAT, false, 0, 0)
+
+        // color
+        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, buffers.color)
+        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, attr.color, gl.gl.STATIC_DRAW)
+        gl.gl.enableVertexAttribArray(aColor)
+        gl.gl.vertexAttribPointer(aColor, 4, gl.gl.FLOAT, false, 0, 0)
+
+        gl.gl.drawArrays(gl.gl.TRIANGLES, 0, attr.vertices.length / 2)
     }
 
     return (arg: GL2D_SimpleBatchArgs) => ({
@@ -414,7 +432,6 @@ void main() {
             gl.gl.vertexAttribPointer(aPositionLoc, 2, gl.gl.FLOAT, false, 0, 0)
 
             gl.gl.uniform4f(uColorLoc, mat.color.r, mat.color.g, mat.color.b, mat.color.a)
-
             gl.gl.uniform2f(uTranslationLoc, attr.position.x, attr.position.y)
             gl.gl.uniform2f(uScaleLoc, attr.scale.x, attr.scale.y)
             gl.gl.uniformMatrix4fv(uProjectionMatrixLoc, false, matrix)

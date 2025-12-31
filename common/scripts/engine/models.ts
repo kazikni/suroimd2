@@ -249,6 +249,12 @@ function rotate3D(v: { x: number; y: number; z: number }, angle: { x: number; y:
 
 
 export const model2d={
+    zero(){
+        return {
+            vertices:new Float32Array(),
+            tex_coords:new Float32Array(),
+        }
+    },
     line(start: Vec2, end: Vec2, width: number): Model2D {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
