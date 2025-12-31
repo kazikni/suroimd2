@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Color, ColorM, Renderer, WebglRenderer,Material2D, GLMaterial2D } from "./renderer.ts";
+import { Color, ColorM, GLMaterial, Material, Renderer, WebglRenderer } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -7,7 +7,7 @@ import { Hitbox2D, HitboxType2D } from "common/scripts/engine/hitbox.ts";
 import { ClientGame2D } from "./game.ts";
 import { type Tween } from "./utils.ts";
 import { ImageModel2D, Matrix, matrix4, Model2D, model2d, triangulateConvex } from "common/scripts/engine/models.ts";
-import { GL2D_LightMatArgs } from "./materials.ts";
+import { GL2D_LightMatArgs, GL2D_LightMatAttr } from "./materials.ts";
 export interface CamA{
     matrix:Matrix
     position:Vec2
@@ -144,7 +144,7 @@ export abstract class Container2DObject {
     abstract draw(cam:CamA,renderer: Renderer): Promise<void>;
 }
 type Graphics2DCommand =
-  | { type: 'fillMaterial'; mat:Material2D }
+  | { type: 'fillMaterial'; mat:Material }
   | { type: 'fillColor'; color:Color }
   | { type: 'fill' }
   | { type: 'path'; path:Model2D }
@@ -183,7 +183,7 @@ export class Graphics2D extends Container2DObject {
         this.command.push({type:"fill"})
         return this
     }
-    fill_material(mat:Material2D):this{
+    fill_material(mat:Material):this{
         this.command.push({type:"fillMaterial",mat:mat})
         return this
     }
@@ -244,7 +244,7 @@ export class Graphics2D extends Container2DObject {
         return new Promise<void>((resolve) => {
             this.draw_super()
             const gl = renderer as WebglRenderer;
-            let currentMat: Material2D=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
+            let currentMat: Material=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
             let currentModel:Model2D
 
             for (const cmd of this.command) {
@@ -262,10 +262,18 @@ export class Graphics2D extends Container2DObject {
                         cmd.mat=currentMat
                         break
                     case "fill":
-                        gl.draw(currentModel!,currentMat,cam.matrix,this._real_position,this._real_scale)
+                        gl.draw(currentMat,cam.matrix,{
+                            model:currentModel!,
+                            position:this._real_position,
+                            scale:this._real_scale
+                        })
                         break
                     case "model": {
-                        gl.draw(cmd.model,currentMat,cam.matrix,this._real_position,this._real_scale)
+                        gl.draw(currentMat,cam.matrix,{
+                            model:cmd.model,
+                            position:this._real_position,
+                            scale:this._real_scale
+                        })
                         break;
                     }
                     case "path":
@@ -542,7 +550,7 @@ export class AnimatedContainer2D extends Container2D{
 }
 
 export type Light2D = {
-    mat: GLMaterial2D<GL2D_LightMatArgs>
+    mat: GLMaterial<GL2D_LightMatArgs,GL2D_LightMatAttr>
     pos: Vec2
     model: Model2D
     destroyed: boolean
@@ -560,7 +568,7 @@ export class Lights2D extends Container2DObject {
 
     quality:number=2 // 0 = None, 1=Just Global Light, 2 All Lights
 
-    ambient_light?:GLMaterial2D<GL2D_LightMatArgs>
+    ambient_light?:GLMaterial<GL2D_LightMatArgs,GL2D_LightMatAttr>
     get ambient() {
         return 1-this.ambientColor.a
     }
@@ -631,12 +639,20 @@ export class Lights2D extends Container2DObject {
 
         if(!this.ambient_light)this.ambient_light=renderer.factorys2D.light.create({color:this.ambientColor})
         this.ambient_light!.color=this.ambientColor
-        renderer.draw(this.screenModel,this.ambient_light,camera.projectionMatrix,camera.visual_position,v2.new(1,1))
+        renderer.draw(this.ambient_light,camera.projectionMatrix,{
+            model:this.screenModel,
+            position:camera.visual_position,
+            scale:v2.new(1,1)
+        })
         if(this.quality>=2){
             for (let i = 0; i < this.lights.length; i++) {
                 const L = this.lights[i];
                 if (L.destroyed) { this.lights.splice(i, 1); i--; continue; }
-                renderer.draw(L.model, L.mat,camera.projectionMatrix, L.pos, v2.new(1,1));
+                renderer.draw(L.mat,camera.projectionMatrix,{
+                    model:this.screenModel,
+                    position:L.pos,
+                    scale:v2.new(1,1)
+                })
             }
         }
 
@@ -697,7 +713,11 @@ export class Lights2D extends Container2DObject {
             });
             const gl=renderer.gl
             renderer.gl.blendFunc(gl.DST_COLOR, gl.ZERO);
-            renderer.draw(this.screenModel,mat,cam.matrix,cam.position,v2.new(0.01,0.01))
+            renderer.draw(mat,cam.matrix,{
+                model:this.screenModel,
+                position:cam.position,
+                scale:v2.new(0.01,0.01)
+            })
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
             resolve()
         })
@@ -857,7 +877,12 @@ export class SubCanvas2D extends Container2DObject {
                 texture: this.Texture,
                 tint: { r: 1, g: 1, b: 1, a: 1 }
             });
-            renderer.draw(this.screenModel,mat,cam.matrix,this._real_position,v2.new(1,-1))
+            
+            renderer.draw(mat,cam.matrix,{
+                model:this.screenModel,
+                position:this._real_position,
+                scale:v2.new(1,-1)
+            })
             resolve()
         })
     }

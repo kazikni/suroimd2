@@ -1,5 +1,5 @@
 import { BaseGameObject2D, Game2D, HitboxType2D, model2d, ParticlesManager2D, v2 } from "common/scripts/engine/mod.ts";
-import { ColorM, Material2D, WebglRenderer, type Renderer } from "./renderer.ts";
+import { ColorM, Material, WebglRenderer, type Renderer } from "./renderer.ts";
 import { ResourcesManager } from "./resources.ts";
 import { InputManager } from "./keys.ts";
 import { SoundManager } from "./sounds.ts";
@@ -55,7 +55,7 @@ export class ClientGame2D<GObject extends ClientGameObject2D=ClientGameObject2D>
     removeTween(tween: Tween<unknown>): void {
         this.tweens.delete(tween);
     }
-    hbm:Material2D
+    hbm:Material
     override async draw(dt:number){
         this.renderer.clear()
         await this.camera.draw(dt,this.resources,this.renderer)
@@ -69,11 +69,19 @@ export class ClientGame2D<GObject extends ClientGameObject2D=ClientGameObject2D>
                     if(obj.hb.type===HitboxType2D.group){
                         for(const hb of obj.hb.hitboxes){
                             const model=model2d.hitbox(hb)
-                            this.renderer.draw(model,this.hbm,this.camera.projectionMatrix,v2.new(0,0),v2.new(1,1))
+                            this.renderer.draw(this.hbm,this.camera.projectionMatrix,{
+                                model:model,
+                                position:v2.new(0,0),
+                                scale:v2.new(1,1)
+                            })
                         }
                     }else{
                         const model=model2d.hitbox(obj.hb)
-                        this.renderer.draw(model,this.hbm,this.camera.projectionMatrix,v2.new(0,0),v2.new(1,1))
+                        this.renderer.draw(this.hbm,this.camera.projectionMatrix,{
+                            model:model,
+                            position:v2.new(0,0),
+                            scale:v2.new(1,1)
+                        })
                     }
                 }
             }

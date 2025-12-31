@@ -26,7 +26,7 @@ import { Vehicle } from "../gameObjects/vehicle.ts";
 import { Skins } from "common/scripts/definitions/loadout/skins.ts";
 import { ActionEvent, AxisActionEvent, GamepadManagerEvent, Key, MouseEvents } from "../engine/keys.ts";
 import { Creature } from "../gameObjects/creature.ts";
-import {  Material2D, WebglRenderer } from "../engine/renderer.ts";
+import { Material, WebglRenderer } from "../engine/renderer.ts";
 import { Plane } from "./planes.ts";
 import { isMobile } from "../engine/game.ts";
 import { DeadZoneManager } from "../managers/deadZoneManager.ts";
@@ -61,7 +61,7 @@ export class Game extends ClientGame2D<GameObject>{
   
   terrain_gfx=new Graphics2D()
   grid_gfx=new Graphics2D()
-  grid_mat:Material2D
+  grid_mat:Material
   scope_zoom:number=0.53
 
   //0.14=l6 32x

@@ -1,8 +1,8 @@
 import { Game } from "../others/game.ts";
-import { DamageReason, InventoryItemData, InventoryItemType } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
 import { Angle, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts";
-import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
+import { DamageSources } from "common/scripts/definitions/alldefs.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { BoostType,Boosts } from "common/scripts/definitions/player/boosts.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";

@@ -1,8 +1,8 @@
-import { Vec2, Vec3 } from "common/scripts/engine/mod.ts"
+import { Vec2 } from "common/scripts/engine/mod.ts"
 import { type Frame } from "./resources.ts";
 import { Numeric } from "common/scripts/engine/utils.ts";
-import { Matrix, Model2D, Model3D } from "common/scripts/engine/models.ts";
-import { GL2D_GridMatArgs, GL2D_LightMatArgs, GL2D_TexMatArgs, GLF_Grid, GLF_Light, GLF_Texture } from "./materials.ts";
+import { Matrix, Model2D} from "common/scripts/engine/models.ts";
+import { GL2D_GridMatArgs, GL2D_GridMatAttr, GL2D_LightMatArgs, GL2D_LightMatAttr, GL2D_SimpleMatArgs, GL2D_SimpleMatAttr, GL2D_TexMatArgs, GL2D_TexMatAttr, GL3D_SimpleMatArgs, GL3D_SimpleMatAttr, GLF_Grid, GLF_Light, GLF_Simple, GLF_Simple3, GLF_Texture } from "./materials.ts";
 export interface Color {
     r: number; // Red
     g: number; // Green
@@ -124,8 +124,60 @@ export const ColorM={
     },
 }
 export type RGBAT={r: number, g: number, b: number, a?: number}
-export type Material2D=GLMaterial2D
-export type Material3D=GLMaterial3D
+export type Material=GLMaterial
+
+export type SingleBatchingCommand2D=({
+    model:Model2D
+    position:Vec2
+    scale:Vec2
+    // deno-lint-ignore no-explicit-any
+    args:any
+})
+export abstract class SingleMatBatching2D<
+    Command extends SingleBatchingCommand2D = SingleBatchingCommand2D
+> {
+    mat: Material
+    renderer: Renderer
+    draws: Command[] = []
+    constructor(renderer: Renderer, mat: Material) {
+        this.renderer = renderer
+        this.mat = mat
+    }
+    draw(
+        model: Model2D,
+        position: Vec2,
+        scale: Vec2,
+        args: any
+    ) {
+        this.draws.push({
+            model,
+            position,
+            scale,
+            args
+        } as Command)
+    }
+    clear() {
+        this.draws.length = 0
+    }
+    render(matrix: Matrix) {
+        if (this.draws.length === 0) return
+
+        const mat = this.mat
+
+        for (const cmd of this.draws) {
+            mat.draw(
+                { ...mat, ...cmd.args },
+                matrix,
+                cmd.model,
+                cmd.position,
+                cmd.scale
+            )
+        }
+
+        this.clear()
+    }
+}
+
 export abstract class Renderer {
     canvas: HTMLCanvasElement
     background: Color = ColorM.default.white;
@@ -133,9 +185,8 @@ export abstract class Renderer {
         this.canvas = canvas
     }
     abstract draw_image2D(image: Frame,position: Vec2,model:Float32Array,matrix:Matrix,tint?:Color): void
-    abstract draw(model:Model2D,material:Material2D,matrix:Matrix,position:Vec2,scale:Vec2):void
-    abstract draw_3d(model:Model3D,material:Material3D,matrix:Matrix,position:Vec3,scale:Vec3):void
-
+    abstract draw(material:Material,matrix:Matrix,attr:any):void
+    abstract draw_single_mat_batcher2d(matrix:Matrix,batcher:SingleMatBatching2D):void
     abstract clear(): void
 
     fullCanvas(){
@@ -169,172 +220,40 @@ void main(void) {
     gl_FragColor = texture2D(u_Texture, flippedCoord)*u_Tint;
 }`;
 // deno-lint-ignore no-explicit-any
-export type GLMaterial2D<MaterialArgs=any>={
+export type GLMaterial<Args=any,Attr=any>={
     group:string
-    factory:GLMaterial2DFactory<MaterialArgs>
-    draw:(mat:GLMaterial2D<MaterialArgs>,matrix:Matrix,model:Model2D,position:Vec2,scale:Vec2)=>void
-}&MaterialArgs
-export interface GLMaterial2DFactory<MaterialArgs>{
-    create:(arg:MaterialArgs)=>GLMaterial2D<Material2D>
+    factory:GLMaterialFactory<Args,Attr>
+    draw:(mat:GLMaterial<Args,Attr>,matrix:Matrix,attr:Attr)=>void
+}&Args
+export interface GLMaterialFactory<Args,Attr>{
+    create:(arg:Args)=>GLMaterial<Args,Attr>
     program:WebGLProgram
 }
-export type GLMaterial2DFactoryCall<MaterialArgs>={vertex:string,frag:string,create:(gl:WebglRenderer,fac:GLMaterial2DFactory<MaterialArgs>)=>(arg:MaterialArgs)=>GLMaterial2D<Material2D>}
+export type GLMaterialFactoryCall<Args,Attr>={vertex:string,frag:string,create:(gl:WebglRenderer,fac:GLMaterialFactory<Args,Attr>)=>(arg:Args)=>GLMaterial<Args,Attr>}
 
-// deno-lint-ignore no-explicit-any
-export type GLMaterial3D<MaterialArgs=any>={
-    factory:GLMaterial3DFactory<MaterialArgs>
-    draw:(mat:GLMaterial3D<MaterialArgs>,matrix:Matrix,model:Model3D,position:Vec3,scale:Vec3)=>void
-}&MaterialArgs
-export interface GLMaterial3DFactory<MaterialArgs>{
-    create:(arg:MaterialArgs)=>GLMaterial3D<Material3D>
-    program:WebGLProgram
-}
-export type GLMaterial3DFactoryCall<MaterialArgs>={vertex:string,frag:string,create:(gl:WebglRenderer,fac:GLMaterial3DFactory<MaterialArgs>)=>(arg:MaterialArgs)=>GLMaterial3D<Material3D>}
-
-export type GL2D_SimpleMatArgs={
-    color:Color
-}
-export const GLF_Simple:GLMaterial2DFactoryCall<GL2D_SimpleMatArgs>={
-    vertex:`
-attribute vec2 a_Position;
-uniform mat4 u_ProjectionMatrix;
-uniform vec2 u_Translation;
-uniform vec2 u_Scale;
-void main() {
-    gl_Position = u_ProjectionMatrix * vec4((a_Position*u_Scale)+u_Translation, 0.0, 1.0);
-}`,
-    frag:`
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec4 u_Color;
-
-void main() {
-    gl_FragColor = u_Color;
-}`,
-create(gl:WebglRenderer,fac:GLMaterial2DFactory<GL2D_SimpleMatArgs>){
-    const aPositionLoc=gl.gl.getAttribLocation(fac.program, "a_Position")
-    const uColorLoc=gl.gl.getUniformLocation(fac.program, "u_Color")!
-    const uTranslationLoc=gl.gl.getUniformLocation(fac.program, "u_Translation")!
-    const uScaleLoc=gl.gl.getUniformLocation(fac.program, "u_Scale")!
-    const uProjectionMatrixLoc=gl.gl.getUniformLocation(fac.program, "u_ProjectionMatrix")!
-
-    const vertexBuffer = gl.gl.createBuffer();
-    const draw=(mat:GLMaterial2D<GL2D_SimpleMatArgs>,matrix:Matrix,model:Model2D,position:Vec2,scale:Vec2)=>{
-        gl.gl.useProgram(fac.program)
-
-        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, vertexBuffer)
-        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, model.vertices, gl.gl.STATIC_DRAW)
-
-        gl.gl.enableVertexAttribArray(aPositionLoc)
-        gl.gl.vertexAttribPointer(aPositionLoc, 2, gl.gl.FLOAT, false, 0, 0)
-
-        gl.gl.uniform4f(uColorLoc, mat.color.r, mat.color.g, mat.color.b, mat.color.a)
-        gl.gl.uniform2f(uTranslationLoc, position.x, position.y)
-        gl.gl.uniform2f(uScaleLoc, scale.x, scale.y)
-        gl.gl.uniformMatrix4fv(uProjectionMatrixLoc, false, matrix)
-        gl.gl.drawArrays(gl.gl.TRIANGLES, 0, model.vertices.length / 2)
+export class SingleMatBatching2DGL<Command extends SingleBatchingCommand2D=SingleBatchingCommand2D> extends SingleMatBatching2D<Command>{
+    declare renderer:WebglRenderer
+    declare mat:Material
+    constructor(renderer:WebglRenderer,mat:Material){
+        super(renderer,mat)
+        this.mat=mat
     }
-    return (arg:GL2D_SimpleMatArgs)=>{
-        return {
-            ...arg,
-            group:"",
-            factory:fac,
-            draw:draw
-        }
-    }
-}
-}
-
-export type GL3D_SimpleMatArgs={
-    color:Color
-}
-export const GLF_Simple3:GLMaterial3DFactoryCall<GL3D_SimpleMatArgs>={
-    vertex:`
-attribute vec3 a_Position;
-uniform mat4 u_ProjectionMatrix;
-uniform vec3 u_Translation;
-uniform vec3 u_Scale;
-void main() {
-    gl_Position = u_ProjectionMatrix * vec4((a_Position*u_Scale)+u_Translation, 1.0);
-}`,
-    frag:`
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec4 u_Color;
-
-void main() {
-    gl_FragColor = u_Color;
-}`,
-create(gl:WebglRenderer,fac:GLMaterial3DFactory<GL3D_SimpleMatArgs>){
-    const aPositionLoc=gl.gl.getAttribLocation(fac.program, "a_Position")
-    const uColorLoc=gl.gl.getUniformLocation(fac.program, "u_Color")!
-    const uTranslationLoc=gl.gl.getUniformLocation(fac.program, "u_Translation")!
-    const uScaleLoc=gl.gl.getUniformLocation(fac.program, "u_Scale")!
-    const uProjectionMatrixLoc=gl.gl.getUniformLocation(fac.program, "u_ProjectionMatrix")!
-
-    const vertexBuffer = gl.gl.createBuffer();
-    
-    const indexBuffer = gl.gl.createBuffer();
-    const draw=(mat:GLMaterial3D<GL3D_SimpleMatArgs>,matrix:Matrix,model:Model3D,position:Vec3,scale:Vec3)=>{
-        gl.gl.useProgram(fac.program)
-
-        gl.gl.bindBuffer(gl.gl.ARRAY_BUFFER, vertexBuffer);
-        gl.gl.bufferData(gl.gl.ARRAY_BUFFER, new Float32Array(model._vertices), gl.gl.STATIC_DRAW)
-
-        gl.gl.bindBuffer(gl.gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-        gl.gl.bufferData(gl.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(model._indices), gl.gl.STATIC_DRAW)
-
-        gl.gl.enableVertexAttribArray(aPositionLoc)
-        gl.gl.vertexAttribPointer(aPositionLoc, 3, gl.gl.FLOAT, false, 0, 0)
-
-        gl.gl.uniform4f(uColorLoc, mat.color.r, mat.color.g, mat.color.b, mat.color.a)
-        gl.gl.uniform3f(uTranslationLoc, position.x, position.y, position.z)
-        gl.gl.uniform3f(uScaleLoc, scale.x, scale.y, scale.z)
-        gl.gl.uniformMatrix4fv(uProjectionMatrixLoc, false, matrix)
-
-        gl.gl.drawElements(gl.gl.TRIANGLES, model._indices.length, gl.gl.UNSIGNED_SHORT, 0)
-    }
-    return (arg:GL3D_SimpleMatArgs)=>{
-        return {
-            ...arg,
-            factory:fac,
-            group:"",
-            draw:draw
-        }
-    }
-}
 }
 export class WebglRenderer extends Renderer {
-    readonly gl: WebGLRenderingContext;
+    readonly gl: WebGLRenderingContext
     readonly tex_program:WebGLProgram
     readonly factorys2D:{
-        simple:GLMaterial2DFactory<GL2D_SimpleMatArgs>,
-        grid:GLMaterial2DFactory<GL2D_GridMatArgs>,
-        texture:GLMaterial2DFactory<GL2D_TexMatArgs>,
-        light:GLMaterial2DFactory<GL2D_LightMatArgs>
+        simple:GLMaterialFactory<GL2D_SimpleMatArgs,GL2D_SimpleMatAttr>,
+        grid:GLMaterialFactory<GL2D_GridMatArgs,GL2D_GridMatAttr>,
+        texture:GLMaterialFactory<GL2D_TexMatArgs,GL2D_TexMatAttr>,
+        light:GLMaterialFactory<GL2D_LightMatArgs,GL2D_LightMatAttr>
     }
     readonly factorys3D:{
-        simple:GLMaterial3DFactory<GL3D_SimpleMatArgs>,
+        simple:GLMaterialFactory<GL3D_SimpleMatArgs,GL3D_SimpleMatAttr>,
     }
 
     readonly isWebGL2: boolean;
-    proccess_factory<T>(fac_def:GLMaterial2DFactoryCall<T>):GLMaterial2DFactory<T>{
-        const prog=this.createProgram(fac_def.vertex,fac_def.frag)
-        const fac={
-            program:prog
-        }
-        // deno-lint-ignore ban-ts-comment
-        //@ts-ignore
-        fac.create=fac_def.create(this,fac)
-        // deno-lint-ignore ban-ts-comment
-        //@ts-ignore
-        return fac
-    }
-    proccess_factory3<T>(fac_def:GLMaterial3DFactoryCall<T>):GLMaterial3DFactory<T>{
+    proccess_factory<A,B>(fac_def:GLMaterialFactoryCall<A,B>):GLMaterialFactory<A,B>{
         const prog=this.createProgram(fac_def.vertex,fac_def.frag)
         const fac={
             program:prog
@@ -375,7 +294,7 @@ export class WebglRenderer extends Renderer {
         }
 
         this.factorys3D={
-            simple:this.proccess_factory3(GLF_Simple3)
+            simple:this.proccess_factory(GLF_Simple3)
         }
         
         this.factorys2D_consts["texture_ADV"]={
@@ -430,14 +349,15 @@ export class WebglRenderer extends Renderer {
         this.gl.linkProgram(p!)
         return p!
     }
-    override draw(model:Model2D,material:Material2D,matrix:Matrix,position:Vec2,scale:Vec2):void{
-        material.draw(material,matrix,model,position,scale)
+    override draw(material:Material,matrix:Matrix,attr:any):void{
+        material.draw(material,matrix,attr)
     }
-    override draw_3d(model:Model3D,material:Material3D,matrix:Matrix,position:Vec3,scale:Vec3):void{
-        if(!matrix)return
-        material.draw(material,matrix,model,position,scale)
+    create_single_mat_batcher(mat:Material):SingleMatBatching2DGL{
+        return new SingleMatBatching2DGL(this,mat)
     }
-
+    override draw_single_mat_batcher2d(matrix:Matrix,batcher:SingleMatBatching2D):void{
+        batcher.render(matrix)
+    }
     draw_image2D(image: Frame, position: Vec2, model: Float32Array, matrix: Matrix, tint: Color = ColorM.default.white) {
         const gl = this.gl
         const program = this.tex_program
