@@ -1,6 +1,6 @@
 import { ClientGame2D, ResourcesManager, Renderer, ColorM, InputManager} from "../engine/mod.ts"
 import { LayersL, zIndexes } from "common/scripts/others/constants.ts";
-import { Client, DefaultSignals, Numeric, Vec2, model2d, v2 } from "common/scripts/engine/mod.ts";
+import { Client, DefaultSignals, Numeric, Vec2, model2d, v2, v2m } from "common/scripts/engine/mod.ts";
 import { JoinPacket } from "common/scripts/packets/join_packet.ts";
 import { Player } from "../gameObjects/player.ts";
 import { Loot } from "../gameObjects/loot.ts";
@@ -61,7 +61,6 @@ export class Game extends ClientGame2D<GameObject>{
   
   terrain_gfx=new Graphics2D()
   grid_gfx=new Graphics2D()
-  grid_mat:Material
   scope_zoom:number=0.53
 
   //0.14=l6 32x
@@ -256,13 +255,6 @@ export class Game extends ClientGame2D<GameObject>{
     this.terrain_gfx.zIndex=zIndexes.Terrain
     this.camera.addObject(this.terrain_gfx)
     this.camera.addObject(this.grid_gfx)
-    this.grid_mat=(this.renderer as WebglRenderer).factorys2D.grid.create({
-      color:ColorM.rgba(0,0,10,70),
-      gridSize:3,
-      width:0.012
-    })
-    this.grid_gfx.fill_material(this.grid_mat)
-    this.grid_gfx.drawModel(model2d.rect(v2.new(-100000,-100000),v2.new(100000,100000)))
     this.camera.addObject(this.light_map)
     this.camera.addObject(this.fake_crosshair)
 
@@ -339,11 +331,24 @@ export class Game extends ClientGame2D<GameObject>{
     //FPS Show
     this.frame_calc++
   }
+  update_grid(grid_gfx:Graphics2D,gridSize:number,camera_position:Vec2,camera_size:Vec2,line_size:number){
+    this.grid_gfx.position=v2.new(0,0)
+    grid_gfx.clear()
+    const begin=v2.new(camera_size.x/2,camera_size.y/2)
+    v2m.sub(begin,camera_position,begin)
+    v2m.dscale(begin,begin,gridSize)
+    v2m.floor(begin)
+    v2m.sub_component(begin,1,1)
+
+    const size=v2.new(camera_size.x/gridSize+2,camera_size.y/gridSize+2)
+    v2m.ceil(size)
+    grid_gfx.fill_color({r:0,g:0,b:0,a:0.2})
+    grid_gfx.drawGrid(begin,size,gridSize,line_size)
+  }
   update_camera(){
     if(this.activePlayer){
       this.camera.position=this.activePlayer!.position
-      /*this.minimap.position=v2.duplicate(this.camera.position)
-      this.minimap.update_grid(this.grid_gfx,gridSize,this.camera.position,v2.new(this.camera.width,this.camera.height),0.08)*/
+      this.update_grid(this.grid_gfx,5,this.camera.position,v2.new(this.camera.width,this.camera.height),0.06)
       if(this.fake_crosshair.visible){
         this.fake_crosshair.position=v2.add(this.activePlayer.position,v2.scale(v2.from_RadAngle(this.activePlayer.rotation),2/this.camera.zoom))
         this.fake_crosshair.scale=v2.new(1/this.camera.zoom,1/this.camera.zoom)

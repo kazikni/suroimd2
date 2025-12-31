@@ -162,7 +162,7 @@ export class Graphics2D extends Container2DObject {
     command: Graphics2DCommand[] = [];
     paths:number[][]=[]
 
-    batcher?:SingleMatBatching2D
+    batcher?:Batcher
 
     beginPath(): this {
         this.current_path.length=0
@@ -200,18 +200,16 @@ export class Graphics2D extends Container2DObject {
     drawGrid(begin:Vec2,size:Vec2,space:number,width:number){
         const minx=begin.x*space
         const miny=begin.y*space
-        const maxx = (begin.x + size.x)*space;
-        const maxy = (begin.y + size.y)*space;
-
+        const maxx = (begin.x + size.x)*space
+        const maxy = (begin.y + size.y)*space
         for (let x = minx; x <= maxx; x += space) {
-            const p1 = v2.new(x, miny);
-            const p2 = v2.new(x, maxy);
+            const p1 = v2.new(x, miny)
+            const p2 = v2.new(x, maxy)
             this.drawLine(p1,p2,width)
         }
-
         for (let y = miny; y <= maxy; y += space) {
-            const p1 = v2.new(minx, y);
-            const p2 = v2.new(maxx, y);
+            const p1 = v2.new(minx, y)
+            const p2 = v2.new(maxx, y)
             this.drawLine(p1,p2,width)
         }
     }
@@ -242,15 +240,17 @@ export class Graphics2D extends Container2DObject {
                 break
         }
     }
-
+    color_material?:Material
     override draw(cam:CamA,renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
             this.draw_super()
             const gl = renderer as WebglRenderer;
-            let currentMat: Material=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
+            if(!this.color_material)this.color_material=gl.factorys2D.simple_batch.create({})
+            let currentMat: Material=this.color_material
+            let current_color: Color={r:0,g:0,b:0,a:1}
             let currentModel:Model2D=model2d.zero()
             if(!this.batcher){
-                this.batcher=gl.create_single_mat_batcher(gl.factorys2D.simple_batch.create({}))
+                this.batcher=new Batcher(renderer)
             }
 
             for (const cmd of this.command) {
@@ -259,24 +259,21 @@ export class Graphics2D extends Container2DObject {
                         currentMat=cmd.mat
                         break
                     case "fillColor":
-                        this.batcher.draw_model2d(currentModel,this._real_position,this._real_scale,{
+                        current_color=cmd.color
+                        currentMat=this.color_material
+                        break
+                    case "fill":
+                        this.batcher.draw_model2d(currentMat,currentModel,this._real_position,this._real_scale,{
                             color:{
-                                value:[cmd.color.r,cmd.color.g,cmd.color.b,cmd.color.a  ]
+                                value:[current_color.r,current_color.g,current_color.b,current_color.a]
                             }
                         })
                         break
-                    case "fill":
-                        gl.draw(currentMat,cam.matrix,{
-                            model:currentModel,
-                            position:this._real_position,
-                            scale:this._real_scale
-                        })
-                        break
                     case "model": {
-                        gl.draw(currentMat,cam.matrix,{
-                            model:cmd.model,
-                            position:this._real_position,
-                            scale:this._real_scale
+                        this.batcher.draw_model2d(currentMat,cmd.model,this._real_position,this._real_scale,{
+                            color:{
+                                value:[current_color.r,current_color.g,current_color.b,current_color.a]
+                            }
                         })
                         break;
                     }
@@ -285,7 +282,7 @@ export class Graphics2D extends Container2DObject {
                         break
                 }
             }
-            renderer.draw_single_mat_batcher2d(cam.matrix,this.batcher)
+            this.batcher.render(cam.matrix)
             resolve()
         })
     }
@@ -904,8 +901,8 @@ export class Camera2D{
     SubMatrix!: Matrix;
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        this._zoom = zoom;
-        this.resize();
+        this._zoom = zoom
+        this.resize()
     }
 
     width = 1;
