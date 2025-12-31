@@ -108,8 +108,6 @@ Obstacles.insert(
         hitbox:new CircleHitbox2D(v2.new(0,0),0.82),
         scale:{
             destroy:0.7,
-            min:0.7,
-            max:1.1
         },
         frame:{
             particle:"stone_particle",
@@ -135,6 +133,9 @@ Obstacles.insert(
         hitbox:new CircleHitbox2D(v2.new(0,0),0.57),
         scale:{
             destroy:0.68
+        },
+        frame_transform:{
+            scale:2,
         },
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles1,
@@ -174,11 +175,9 @@ Obstacles.insert(
         idString:"oak_tree",
         health:120,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.4),
-        spawnHitbox:new CircleHitbox2D(v2.new(0,0),0.6),
+        spawnHitbox:new CircleHitbox2D(v2.new(0,0),1),
         scale:{
             destroy:0.9,
-            max:1.2,
-            min:1
         },
         frame_transform:{
             scale:2
@@ -297,7 +296,7 @@ Obstacles.insert(
             destroy:0.8
         },
         frame_transform:{
-            scale:1.9
+            scale:2
         },
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles3,

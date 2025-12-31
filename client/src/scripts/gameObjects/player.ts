@@ -371,7 +371,7 @@ export class Player extends GameObject{
             body:this.container.add_animated_sprite("body",{scale:1.333333,zIndex:4}),
             mounth:this.container.add_animated_sprite("mounth",{hotspot:v2.new(0.3,0.5),scale:1.4,position:v2.new(0.3,0),zIndex:4}),
             backpack:this.container.add_sprite("backpack",{position:v2.new(-0.27,0),scale:1.34,zIndex:3}),
-            helmet:this.container.add_sprite("helmet",{zIndex:5}),
+            helmet:this.container.add_sprite("helmet",{zIndex:5,scale:1.333333}),
             vest:this.container.add_sprite("vest",{zIndex:0,scale:1.333333,hotspot:v2.new(.5,.5)}),
             left_arm:this.container.add_sprite("left_arm"),
             right_arm:this.container.add_sprite("right_arm"),
@@ -485,6 +485,12 @@ export class Player extends GameObject{
                         speed:0,
                         to:{
                             scale:3,
+                            tint:{
+                                r:1,
+                                g:1,
+                                b:1,
+                                a:0
+                            }
                         }
                     }))
                 }
@@ -519,9 +525,6 @@ export class Player extends GameObject{
         this.anims.consumible_particles!.destroyed=true
         this.container.destroy()
         if(this.sprites.emote_container.visible)this.sprites.emote_container.destroy()
-    }
-    override render(camera: Camera2D, renderer: Renderer, _dt: number): void {
-        
     }
     constructor(){
         super()

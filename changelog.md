@@ -4,6 +4,8 @@ __                                                                              
 ### Mains
 * **Mobile Port!!!**
 * Webgl2 Suport
+* Footstep Sounds
+* Water Riples
 * QuadCoord Render
 * Sillo
 - Mobile Auto Interaction
