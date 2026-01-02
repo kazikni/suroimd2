@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import subprocess
 import shutil
 import json
@@ -13,7 +12,7 @@ RESOURCES = RELEASE / "resources"
 
 def run(cmd, cwd=None):
     print(">", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=cwd)
+    subprocess.run(cmd, cwd=cwd)
 
 def copy_dir(src, dst):
     if dst.exists():
@@ -54,6 +53,7 @@ def build_electron(platform):
     print(f"⚡ Building Electron package for {platform}...")
 
     cmd = [
+        "cmd", "/c",
         "npx", "@electron/packager",
         "./release/resources",
         "suroimd2",
@@ -69,7 +69,6 @@ def build_electron(platform):
         "--ignore=deno.lock",
         "--ignore=deno.json",
         "--ignore=package-lock.json",
-        "--electron-version=31.3.0",
     ]
 
     run(cmd, cwd=ROOT)

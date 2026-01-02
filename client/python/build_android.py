@@ -10,7 +10,7 @@ RELEASE_DIR = ROOT / "release" / "android"
 
 def run(cmd, cwd=None):
     print(">", " ".join(cmd))
-    subprocess.check_call(cmd, cwd=cwd)
+    subprocess.run(cmd, cwd=cwd)
 
 print("🚀 Building Vite bundle...")
 
@@ -20,15 +20,15 @@ run(["deno", "task", "build"], cwd=ROOT)
 print("📦 Syncing Capacitor (Android)...")
 
 # STEP 2 - ICON
-run(["npx", "@capacitor/assets", "generate", "--android", "--assetPath", "public"], cwd=ROOT)
+run(["cmd", "/c","npx", "@capacitor/assets", "generate", "--android", "--assetPath", "public"], cwd=ROOT)
 
 # STEP 3 — Capacitor sync
-run(["npm", "exec", "--", "cap", "sync", "android"], cwd=ROOT)
+run(["cmd", "/c","npx", "cap", "sync", "android"], cwd=ROOT)
 
 print("🤖 Building APK (debug)...")
 
 # STEP 4 — Gradle build
-gradle_cmd = ["gradlew.bat", "assembleDebug"] if os.name == "nt" else ["./gradlew", "assembleDebug"]
+gradle_cmd = ["cmd","/c","gradlew.bat", "assembleDebug"] if os.name == "nt" else ["./gradlew", "assembleDebug"]
 run(gradle_cmd, cwd=ANDROID_DIR)
 
 # STEP 5 — Copy APK

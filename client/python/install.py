@@ -4,19 +4,15 @@ import shutil
 import os.path
 def run(cmd):
     print(">", " ".join(cmd))
-    subprocess.check_call(cmd,cwd=os.path.dirname(os.path.dirname(__file__)))
+    subprocess.run(cmd,cwd=os.path.dirname(os.path.dirname(__file__)))
 def check(cmd):
     return shutil.which(cmd) is not None
 if not check("node"):
     print("❌ Node.js not found in PATH")
     sys.exit(1)
-if not check("npm"):
-    print("❌ npm not found in PATH")
-    sys.exit(1)
-print("✅ Node:", subprocess.check_output(["node", "-v"]).decode().strip())
-print("✅ npm:", subprocess.check_output(["npm", "-v"]).decode().strip())
 print("📦 Installing project dependencies (no-save)...")
 run([
+    "cmd", "/c",
     "npm", "install",
     "vite",
     "@sveltejs/vite-plugin-svelte",
@@ -30,12 +26,14 @@ run([
 ])
 print("📦 Installing Electron deps...")
 run([
+    "cmd", "/c",
     "npm", "install",
     "electron@31.3.0",
     "@electron/packager"
 ])
 print("📦 Installing Capacitor deps...")
 run([
+    "cmd", "/c",
     "npm", "install",
     "@capacitor/cli",
     "@capacitor/core",
