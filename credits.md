@@ -18,6 +18,7 @@
 * I Wanna Be The Guy
 * Some Youtube Musics
 * NoCopyrightSound
+* Wrectfest
 ## Additional Art
 * @sentido_ss
 * @bien.star

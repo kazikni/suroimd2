@@ -39,6 +39,6 @@ ___
 * Keys
 * Addiction Damage
 * Parachute
-___
 * Game Over
 * Settings
+___

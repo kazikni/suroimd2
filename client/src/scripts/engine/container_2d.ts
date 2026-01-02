@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Batcher, Color, ColorM, GLMaterial, Material, Renderer, SingleMatBatching2D, WebglRenderer } from "./renderer.ts";
+import { Batcher, Color, ColorM, GLMaterial, Material, Renderer, WebglRenderer } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -560,14 +560,14 @@ export type Light2D = {
 }
 
 export class Lights2D extends Container2DObject {
-    override object_type = "lights";
+    override object_type = "lights"
 
-    private renderer!: WebglRenderer;
-    private lightFBO!: WebGLFramebuffer;
-    private lightTexture!: WebGLTexture;
-    private lights: Light2D[] = [];
-    downscale = 1.0;
-    ambientColor: Color = { r: 1, g: 1, b: 1, a: 1 };
+    private renderer!: WebglRenderer
+    private lightFBO!: WebGLFramebuffer
+    private lightTexture!: WebGLTexture
+    private lights: Light2D[] = []
+    downscale = 1.0
+    ambientColor: Color = { r: 1, g: 1, b: 1, a: 1 }
 
     quality:number=2 // 0 = None, 1=Just Global Light, 2 All Lights
 
@@ -706,15 +706,15 @@ export class Lights2D extends Container2DObject {
         console.log("Light Texture Base64:", dataURL)
     }
 
-    dd(cam:CamA,renderer: WebglRenderer){
+    dd(cam:CamA,renderer: Renderer){
         this.draw_super()
         if (!this.lightTexture||this.quality===0){}
-        const mat = renderer.factorys2D.texture.create({
+        const mat = (renderer as WebglRenderer).factorys2D.texture.create({
             texture: this.lightTexture,
             tint: { r: 1, g: 1, b: 1, a: 1 }
         });
-        const gl=renderer.gl
-        renderer.gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+        const gl=(renderer as WebglRenderer).gl
+        gl.blendFunc(gl.DST_COLOR, gl.ZERO);
         renderer.draw(mat,cam.matrix,{
             model:this.screenModel,
             position:cam.position,
@@ -915,7 +915,7 @@ export class Camera2D{
     center_pos:boolean=true
     batcher:Batcher
 
-    after_draw:((cam:CamA,renderer:WebglRenderer)=>void)[]=[]
+    after_draw:((cam:CamA,renderer:Renderer)=>void)[]=[]
     constructor(renderer:Renderer){
         this.renderer=renderer
         this.zoom=1

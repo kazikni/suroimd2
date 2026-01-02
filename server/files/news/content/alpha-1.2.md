@@ -5,6 +5,6 @@ ___
 * Users View
 ___
 ## Fixes
-___
 * Game Over
 * Settings
+___
