@@ -18,9 +18,13 @@ import { ParticlesEmitter2D} from "common/scripts/engine/particles.ts";
 import { Boosts } from "common/scripts/definitions/player/boosts.ts";
 import { ease, Numeric } from "common/scripts/engine/utils.ts";
 import { Container2D } from "../engine/container_2d.ts";
-import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
+import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
+import { type Sound } from "../engine/resources.ts";
+import { FloorKind, Floors, FloorType } from "common/scripts/others/terrain.ts";
+import { log } from "node:console";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -69,6 +73,7 @@ export class Player extends GameObject{
     }={consumible_particle:"healing_particle",mount_anims:[],mount_open:""}
     sound_animation:{
         animation?:SoundInstance
+        footsteps?:SoundInstance
         weapon:{
             switch?:SoundInstance
         }
@@ -76,8 +81,17 @@ export class Player extends GameObject{
 
     current_weapon?:WeaponDef
     dead:boolean=true
-    
+
     shield:boolean=false
+
+    assets:{
+        weapon_cycle_sound?:Sound
+        weapon_fire_sound?:Sound
+        footstep_sounds?:string[]
+    }={}
+
+    default_melee=Melees.getFromString("survival_knife")
+    current_floor?:FloorType
 
     on_hitted(position:Vec2,critical:boolean=false){
         if(Math.random()<=0.1){
@@ -231,7 +245,7 @@ export class Player extends GameObject{
             this.sprites.weapon.hotspot=def.image.hotspot??v2.new(.5,.5)
             if((def as GunDef).dual_from&&(def as unknown as GameItem).item_type===InventoryItemType.gun){
                 const df=Guns.getFromString((def as GunDef).dual_from!)
-                const world_frame=def.frames?.world??`${df.idString}_world`
+                const world_frame=def.assets?.world??`${df.idString}_world`
                 this.sprites.weapon2.visible=true
                 this.sprites.weapon2.scale=v2.new(1*(def.image.scale??1),1)
                 this.sprites.weapon2.position=v2.duplicate(def.image.position)
@@ -251,17 +265,17 @@ export class Player extends GameObject{
                 this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
                 this.sprites.weapon2.frame=this.game.resources.get_sprite(world_frame)
                 
-                if(def.frames?.world_tint){
-                    const col=ColorM.number(def.frames?.world_tint)
+                if(def.assets?.world_tint){
+                    const col=ColorM.number(def.assets?.world_tint)
                     this.sprites.weapon.tint=col
                     this.sprites.weapon2.tint=col
                 }else{
                     this.sprites.weapon.tint=ColorM.number(0xffffff)
                 }
             }else{
-            const world_frame=def.frames?.world??((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
+            const world_frame=def.assets?.world??((def as unknown as GameItem).item_type===InventoryItemType.melee?def.idString:`${def.idString}_world`)
                 this.sprites.weapon.frame=this.game.resources.get_sprite(world_frame)
-                if(def.frames?.world_tint)this.sprites.weapon.tint=ColorM.number(def.frames?.world_tint)
+                if(def.assets?.world_tint)this.sprites.weapon.tint=ColorM.number(def.assets?.world_tint)
                 else this.sprites.weapon.tint=ColorM.number(0xffffff)
             }
         }else{
@@ -282,6 +296,15 @@ export class Player extends GameObject{
                 },"players")
             }
             this.attacking=false
+            // deno-lint-ignore ban-ts-comment
+            //@ts-ignore
+            const sdd=def.dual_from??def.idString
+            this.assets.weapon_fire_sound=this.game.resources.get_audio(`${sdd}_fire`)
+            this.assets.weapon_cycle_sound=this.game.resources.get_audio(
+                (def.assets?.cycle_sound===true)?
+                (`${sdd}_switch`):
+                (def.assets?.cycle_sound as string)
+            )
         }
         this.container.updateZIndex()
     }
@@ -340,7 +363,6 @@ export class Player extends GameObject{
 
         this.update_weapon(false)
     }
-
     create(_args: Record<string, void>): void {
         this.hb=new CircleHitbox2D(v2.new(0,0),GameConstants.player.playerRadius)
         this.container=new AnimatedContainer2D(this.game as unknown as ClientGame2D)
@@ -349,7 +371,7 @@ export class Player extends GameObject{
             body:this.container.add_animated_sprite("body",{scale:1.333333,zIndex:4}),
             mounth:this.container.add_animated_sprite("mounth",{hotspot:v2.new(0.3,0.5),scale:1.4,position:v2.new(0.3,0),zIndex:4}),
             backpack:this.container.add_sprite("backpack",{position:v2.new(-0.27,0),scale:1.34,zIndex:3}),
-            helmet:this.container.add_sprite("helmet",{zIndex:5}),
+            helmet:this.container.add_sprite("helmet",{zIndex:5,scale:1.333333}),
             vest:this.container.add_sprite("vest",{zIndex:0,scale:1.333333,hotspot:v2.new(.5,.5)}),
             left_arm:this.container.add_sprite("left_arm"),
             right_arm:this.container.add_sprite("right_arm"),
@@ -398,25 +420,83 @@ export class Player extends GameObject{
         this.sprites.emote_container.visible=false
         this.sprites.emote_bg.set_frame({
             image:"emote_background",
-            hotspot:v2.new(.5,.5),
+            hotspot:CenterHotspot,
             scale:1.5
         },this.game.resources)
         this.sprites.emote_sprite.transform_frame({
-            hotspot:v2.new(.5,.5),
+            hotspot:CenterHotspot,
             scale:2.6
         })
     }
+    old_pos?:Vec2
+    distance_walked=0
+    distance_since_last_footstep=0
     update(dt:number): void {
+        this.container.rotation=this.rotation
         if(this.dest_pos){
             this.position=v2.lerp(this.position,this.dest_pos,this.game.inter_global)
         }
         if(this.dest_rot){
             this.rotation=Numeric.lerp_rad(this.rotation,this.dest_rot!,this.game.inter_global)
         }
-        this.container._position.set(this.position.x,this.position.y)
-        this.container.rotation=this.rotation
+        if(!this.old_pos){
+            this.old_pos=v2.duplicate(this.position)
+            this.manager.cells.updateObject(this)
+        }
+        if(this.old_pos.y!=this.position.x||this.old_pos.y!=this.position.y){
+            const dist = v2.distance(this.old_pos, this.position)
+            this.old_pos=v2.duplicate(this.position)
+
+            this.container._position.set(this.position.x,this.position.y)
+            this.manager.cells.updateObject(this)
+
+            const f=this.game.terrain.get_floor_type(this.position,this.layer,FloorType.Water)
+            if(f!==this.current_floor){
+                this.current_floor=f
+                this.assets.footstep_sounds=Floors[f].footstep_sounds
+            }
+            this.distance_walked+=dist
+            this.distance_since_last_footstep+=dist
+            if(this.distance_since_last_footstep>=2){
+                this.distance_since_last_footstep=0
+                if(this.assets.footstep_sounds){
+                    this.sound_animation.footsteps = this.game.sounds.play(
+                        this.game.resources.get_audio(random.choose(this.assets.footstep_sounds)),
+                        {
+                            rolloffFactor:0.5,
+                            position:this.position,
+                            max_distance: 40,
+                            volume:0.7
+                        },
+                        "players"
+                    )
+                }
+                if(Floors[f].floor_kind===FloorKind.Liquid){
+                    this.game.particles.add_particle(new ABParticle2D({
+                        direction:0,
+                        frame:{
+                            image:"riple",
+                            hotspot:CenterHotspot,
+                            scale:0,
+                        },
+                        zIndex:zIndexes.Decals,
+                        life_time:0.5,
+                        position:this.position,
+                        speed:0,
+                        to:{
+                            scale:3,
+                            tint:{
+                                r:1,
+                                g:1,
+                                b:1,
+                                a:0
+                            }
+                        }
+                    }))
+                }
+            }
+        }
         this.sprites.vest.rotation=Numeric.loop(this.sprites.vest.rotation+(1*dt),-3.1415,3.1415)
-        this.manager.cells.updateObject(this)
         if(this.sprites.emote_container.visible){
             this.sprites.emote_container.position=this.position
             v2m.add_component(this.sprites.emote_container.position,0,-1.5)
@@ -445,9 +525,6 @@ export class Player extends GameObject{
         this.anims.consumible_particles!.destroyed=true
         this.container.destroy()
         if(this.sprites.emote_container.visible)this.sprites.emote_container.destroy()
-    }
-    override render(camera: Camera2D, renderer: Renderer, _dt: number): void {
-        
     }
     constructor(){
         super()
@@ -517,7 +594,7 @@ export class Player extends GameObject{
             }
             case PlayerAnimationType.Consuming:{
                 const def=Consumibles.getFromNumber(this.current_animation.item)
-                const sound=this.game.resources.get_audio((def.sounds?.using)??`using_${def.idString}`)
+                const sound=this.game.resources.get_audio((def.assets?.using_sound)??`using_${def.idString}`)
                 if(sound){
                     if(def.drink){
                         this.sprites.mounth.frames=undefined
@@ -532,8 +609,8 @@ export class Player extends GameObject{
                         }
                     },"players")
                 }
-                if(def.frame?.using_particle){
-                    this.anims.consumible_particle=def.frame.using_particle
+                if(def.assets?.using_particle){
+                    this.anims.consumible_particle=def.assets.using_particle
                 }if(def.boost_type){
                     this.anims.consumible_particle=`boost_${Boosts[def.boost_type].name}_particle`
                 }else{
@@ -611,6 +688,20 @@ export class Player extends GameObject{
         this.game.addTimeout(()=>{
             this.attacking=false
         },d.fireDelay)
+        this.game.addTimeout(()=>{
+            //Cycle Sound
+            if(this.assets.weapon_cycle_sound){
+                this.sound_animation.weapon.switch?.stop()
+                this.sound_animation.weapon.switch=this.game.sounds.play(this.assets.weapon_cycle_sound,{
+                    on_complete:()=>{
+                        this.sound_animation.weapon.switch=undefined
+                    },
+                    volume:0.4,
+                    position:this.position,
+                    max_distance:10
+                },"players")
+            }
+        },d.fireDelay*0.25)
         if(this.game.save.get_variable("cv_graphics_particles")>=GraphicsDConfig.Advanced){
             if(d.caseParticle&&!d.caseParticle.at_begin){
                 const p=new ABParticle2D({
@@ -622,7 +713,7 @@ export class Player extends GameObject{
                     ),
                     frame:{
                         image:d.caseParticle.frame??"casing_"+d.ammoType,
-                        hotspot:v2.new(.5,.5)
+                        hotspot:CenterHotspot
                     },
                     speed:random.float(3,4),
                     angle:0,
@@ -646,7 +737,7 @@ export class Player extends GameObject{
                         
                         frame:{
                             image:"gas_smoke_particle",
-                            hotspot:v2.new(.5,.5)
+                            hotspot:CenterHotspot
                         },
                         speed:random.float(d.gasParticles.speed.min,d.gasParticles.speed.max),
                         scale:0.03,
@@ -660,9 +751,8 @@ export class Player extends GameObject{
                 }
             }
         }
-        const sound=this.game.resources.get_audio(`${d.dual_from??d.idString}_fire`)
-        if(sound){
-            this.game.sounds.play(sound,{
+        if(this.assets.weapon_fire_sound){
+            this.game.sounds.play(this.assets.weapon_fire_sound,{
                 volume:0.4,
                 position:this.position,
                 max_distance:30
@@ -702,6 +792,9 @@ export class Player extends GameObject{
             this.sprites.backpack.frame=undefined
         }else{
             this.sprites!.backpack.frame=this.game.resources.get_sprite(this.backpack.idString+"_world")
+        }
+        if(this.game.activePlayer===this){
+            this.game.inventoryManager.inventory.set_backpack(this.backpack)
         }
     }
     broke_shield(){

@@ -1,6 +1,6 @@
 import { listPosts, getPost, createPost, createComment, getCurrentUserName, deletePost, deleteComentary } from "./api.ts";
-import { formatToHtml } from "./formatter.ts";
 import "../scss/main.scss";
+import { formatToHtml } from "../../../../src/scripts/engine/utils.ts";
 
 const postsListEl = document.getElementById("posts-list")!;
 const postView = document.getElementById("post-view")!;

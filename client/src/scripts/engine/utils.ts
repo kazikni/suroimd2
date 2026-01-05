@@ -1,6 +1,9 @@
 import { Numeric } from "common/scripts/engine/utils.ts";
 import { type ClientGame2D } from "./game.ts";
-
+export const CenterHotspot={
+    x:0.5,
+    y:0.5
+}
 export interface TweenOptions<T>{
     target: T
     to: Partial<T>
@@ -87,6 +90,7 @@ export class Tween<T> {
 }
 export function HideElement(elem:HTMLElement,opacity=false){
     elem.style.pointerEvents="none"
+    elem.style.userSelect="none"
     if(opacity){
         elem.style.opacity="0"
     }else{
@@ -99,6 +103,7 @@ export function ShowElement(elem:HTMLElement,opacity=false){
     }
     elem.style.display = ""
     elem.style.pointerEvents = ""
+    elem.style.userSelect=""
 }
 export function ToggleElement(elem:HTMLElement){
     if(elem.style.display==="none")ShowElement(elem)
@@ -191,4 +196,17 @@ export function formatToHtml(src: string): string {
 
     if (inList) out.push("</ul>")
     return out.join("\n")
+}
+function preventHandler(e: Event) {
+    e.preventDefault();
+}
+
+export function enableContextMenuPrevent() {
+    document.addEventListener("contextmenu", preventHandler);
+    document.addEventListener("selectstart", preventHandler);
+}
+
+export function disableContextMenuPrevent() {
+    document.removeEventListener("contextmenu", preventHandler);
+    document.removeEventListener("selectstart", preventHandler);
 }

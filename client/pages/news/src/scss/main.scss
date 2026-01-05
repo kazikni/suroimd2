@@ -1,0 +1,59 @@
+@use "../../../../src/scss/palette.scss";
+@use "../../../../src/scss/utils/buttons.scss";
+@use "../../../../src/scss/utils/others.scss";
+@use "../../../../src/scss/fonts.scss";
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a;
+  color: #fff;
+}
+.news-layout {
+  display: flex;
+  background: #0f172a;
+  color: #fff;
+  height: 100vh;
+
+  .sidebar {
+    width: 300px;
+    padding: 20px;
+    background: #1e293b;
+    border-right: 1px solid #334155;
+    overflow-y: auto;
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    #news-list h3 {
+      margin: 10px 0;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #334155;
+      }
+    }
+  }
+
+  .preview {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+
+    .preview-content {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      line-height: 1.6;
+
+      a {
+        color: #38bdf8;
+      }
+    }
+  }
+}

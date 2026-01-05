@@ -33,10 +33,13 @@ export class Loot extends ServerGameObject{
             this.game.add_loot(this.position,this.item,this.count,this.layer)
         }
     }
+    override can_interact(user: Player): boolean {
+        return user.hb.collidingWith(this.hb)&&!this.destroyed
+    }
     interact(user: Player): void {
         switch(this.item.item_type!){
             case InventoryItemType.gun:{
-                const r=user.inventory.give_gun(this.item as GunDef)
+                const r=user.inventory.add_gun(this.item as GunDef)
                 if(r)this.reduce_count(1)
                 break
             }
@@ -48,8 +51,8 @@ export class Loot extends ServerGameObject{
             case InventoryItemType.ammo:
             case InventoryItemType.projectile:
             case InventoryItemType.consumible:{
-                user.inventory.give_item(this.item,this.count)
                 this.destroy()
+                user.inventory.give_item(this.item,this.count)
                 break
             }
             case InventoryItemType.vest:{
@@ -108,13 +111,6 @@ export class Loot extends ServerGameObject{
     oldPos:Vec2=v2.new(-1,-1)
     current_floor:FloorType=FloorType.Water
     update(dt:number): void {
-        if(!v2.is(this.position,this.oldPos)){
-            this.dirtyPart=true
-            this.oldPos=v2.duplicate(this.position)
-            this.game.map.clamp_hitbox(this.hb)
-            this.manager.cells.updateObject(this)
-            this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
-        }
         const cf=Floors[this.current_floor]
         const speed=1
                   * (cf.speed_mult??1)
@@ -156,6 +152,13 @@ export class Loot extends ServerGameObject{
                 ((cf.acceleration??13)/13)
             )))
             v2m.add_component(this.position,this.velocity.x*speed*dt,this.velocity.y*speed*dt)
+        }
+        if(!v2.is(this.position,this.oldPos)){
+            this.dirtyPart=true
+            this.oldPos=v2.duplicate(this.position)
+            this.game.map.clamp_hitbox(this.hb)
+            this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
+            this.manager.cells.updateObject(this)
         }
     }
     push(speed:number,angle:number){

@@ -7,6 +7,9 @@
             "key":"./private/private.key",
             "ca": "./private/ca_bundle.crt"
         },
+        "files":{
+            "news":"files/news"
+        },
         "global": "http://localhost:8000"
     },
     "game": {

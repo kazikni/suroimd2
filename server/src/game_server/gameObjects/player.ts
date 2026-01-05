@@ -7,7 +7,7 @@ import { DamageParams } from "../others/utils.ts"
 import { type Obstacle } from "./obstacle.ts"
 import { ActionsManager } from "common/scripts/engine/inventory.ts"
 import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts"
-import { DamageSourceDef, DamageSources, GameItems, GameObjectDef, GameObjectsDefs, Weapons } from "common/scripts/definitions/alldefs.ts"
+import { DamageSourceDef, DamageSources, GameItems, GameObjectDef, GameObjectsDefs, WeaponDef, Weapons } from "common/scripts/definitions/alldefs.ts"
 import { type PlayerModifiers } from "common/scripts/others/constants.ts"
 import { AccessoriesManager } from "../player/accesories.ts"
 import { ServerGameObject } from "../others/gameObject.ts"
@@ -28,6 +28,7 @@ import { Explosions } from "common/scripts/definitions/objects/explosions.ts"
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
 import { Building } from "./building.ts";
+import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 
 export class Player extends ServerGameObject{
     oldPosition:Vec2
@@ -323,7 +324,7 @@ export class Player extends ServerGameObject{
         ))
         let speed=4.7*(this.recoil?this.recoil.speed:1)
                   * (this.actions.current_action&&this.actions.current_action.type===ActionsType.Consuming?this.using_healing_speed:1)
-                  * (this.inventory.currentWeaponDef?.speed_mod??1)
+                  * ((this.inventory.hand_def as WeaponDef)?.speed_mod??1)
                   * this.modifiers.speed
                   * (this.downed?0.4:1)
                   * (this.parachute?1:((current_floor.speed_mult??1)))
@@ -414,9 +415,9 @@ export class Player extends ServerGameObject{
         }
         if(!v2.is(this.position,this.oldPosition)){
             this.oldPosition=v2.duplicate(this.position)
-            this.manager.cells.updateObject(this)
             this.game.map.clamp_hitbox(this.hb)
             this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
+            this.manager.cells.updateObject(this)
         }
 
         
@@ -432,9 +433,9 @@ export class Player extends ServerGameObject{
             })
         }else if(!this.parachute&&!this.seat){
             this.input.attacking=false
-            if(this.input.using_item&&this.inventory.currentWeapon&&!this.projectile_holding&&(this.pvpEnabled||this.game.debug.deenable_lobby)){
-                this.inventory.currentWeapon.on_fire(this,this.inventory.currentWeapon as LItem)
-                this.input.attacking=this.inventory.currentWeapon.attacking()
+            if(this.input.using_item&&this.inventory.hand_item&&!this.projectile_holding&&(this.pvpEnabled||this.game.debug.deenable_lobby)){
+                this.inventory.hand_item.on_fire(this)
+                this.input.attacking=this.inventory.hand_item.attacking()
             }
 
             if(this.projectile_holding){
@@ -462,7 +463,7 @@ export class Player extends ServerGameObject{
                     case "obstacle":
                         if((obj as Obstacle).def.no_collision)break
                         if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
-                            if(can_interact&&this.input.interaction&&(obj as Obstacle).hb.collidingWith(this.hb)){
+                            if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                                 (obj as Loot).interact(this)
                                 can_interact=false
                             }
@@ -482,7 +483,7 @@ export class Player extends ServerGameObject{
                         }
                         break
                     case "loot":
-                        if(can_interact&&this.input.interaction&&this.hb.collidingWith((obj as Loot).hb)){
+                        if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                             (obj as Loot).interact(this)
                             can_interact=false
                         }
@@ -515,8 +516,8 @@ export class Player extends ServerGameObject{
     }
     update_input(){
         this.input.swicthed=false
-        if(this.input.reload&&this.inventory.currentWeapon&&this.inventory.currentWeapon.itemType===InventoryItemType.gun){
-            (this.inventory.currentWeapon as GunItem).reloading=true
+        if(this.input.reload&&this.inventory.hand_item&&this.inventory.hand_item.item_type===InventoryItemType.gun){
+            (this.inventory.hand_item as GunItem).reloading=true
             this.input.reload=false
         }
         if(this.input.interaction&&this.seat){
@@ -536,10 +537,10 @@ export class Player extends ServerGameObject{
                             const drop=a.drop
                             switch(a.drop_kind){
                                 case 1:
-                                    this.inventory.drop_weapon(Numeric.clamp(drop,0,2) as (0|1|2))
+                                    this.inventory.drop_weapon(Numeric.clamp(drop,0,2))
                                     break
                                 case 2:
-                                    this.inventory.drop_ammo(drop)
+                                    this.inventory.drop_oitem(drop)
                                     break
                                 case 3:
                                     this.inventory.drop_slot(drop)
@@ -553,13 +554,13 @@ export class Player extends ServerGameObject{
                     case InputActionType.use_item:{
                         const item=this.inventory.slots[a.slot]?.item
                         if(item){
-                            item.on_use(this,item)
+                            item.on_use(this,this.inventory.slots[a.slot])
                         }
                         break
                     }
                     case InputActionType.set_hand:
-                        if(!(a.hand>=0&&a.hand<3))break
-                        this.inventory.set_current_weapon_index(a.hand)
+                        if(!this.inventory.weapons[a.hand])break
+                        this.inventory.set_weapon_index(a.hand)
                         break
                     case InputActionType.emote:
                         this.input.emote=a.emote
@@ -640,7 +641,7 @@ export class Player extends ServerGameObject{
             for(let i=0;i<this.inventory.slots.length;i++){
                 const s=this.inventory.slots[i]
                 if(s.item){
-                    up.priv.inventory.push({count:s.quantity,idNumber:GameItems.keysString[s.item!.def.idString!],type:s.item.itemType})
+                    up.priv.inventory.push({count:s.quantity,idNumber:GameItems.keysString[s.item!.def.idString!],type:s.item.item_type})
                 }else{
                     up.priv.inventory.push({count:0,idNumber:0,type:InventoryItemType.consumible})
                 }
@@ -648,19 +649,19 @@ export class Player extends ServerGameObject{
             }
             up.priv.dirty=this.privateDirtys
             up.priv.weapons={
-                melee:this.inventory.weapons[0]?.def,
-                gun1:this.inventory.weapons[1]?.def,
-                gun2:this.inventory.weapons[2]?.def,
+                melee:this.inventory.weapons[0]?.def as MeleeDef,
+                gun1:this.inventory.weapons[1]?.def as GunDef,
+                gun2:this.inventory.weapons[2]?.def as GunDef,
             }
-            if(this.inventory.currentWeapon&&this.inventory.currentWeapon.type==="gun"){
+            if(this.inventory.hand_item&&this.inventory.hand_item.item_type===InventoryItemType.gun){
                 up.priv.current_weapon={
-                    slot:this.inventory.weaponIdx,
-                    liquid:(this.inventory.currentWeapon as GunItem).liquid,
-                    ammo:(this.inventory.currentWeapon as GunItem).ammo
+                    slot:this.inventory.weapon_idx,
+                    liquid:(this.inventory.hand_item as GunItem).liquid,
+                    ammo:(this.inventory.hand_item as GunItem).ammo
                 }
             }else{
                 up.priv.current_weapon={
-                    slot:this.inventory.weaponIdx,
+                    slot:this.inventory.weapon_idx,
                     liquid:false,
                     ammo:0
                 }
@@ -995,7 +996,7 @@ export class Player extends ServerGameObject{
             .writeUint8(this.helmet?this.helmet.idNumber!+1:0)
             .writeUint8(this.inventory.backpack.idNumber!)
             .writeUint16(this.skin.idNumber!)
-            .writeInt16(Weapons.keysString[this.inventory.currentWeapon?.def.idString??""]??-1)
+            .writeInt16(Weapons.keysString[this.inventory.hand_item?.def.idString??""]??-1)
             
             if(this.current_animation!==undefined){
                 stream.writeUint8(this.current_animation.type)

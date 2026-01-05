@@ -1,4 +1,3 @@
-import { FrameDef } from "../engine/definitions.ts";
 import { v2, Vec2 } from "../engine/geometry.ts";
 
 export enum ItemQuality{
@@ -22,11 +21,12 @@ export interface FistRig{
         zIndex?:number
     }
 }
-export interface WeaponFrames{
+export interface WeaponAssets{
     item?:string
     item_tint?:number
     world?:string
     world_tint?:number
+    cycle_sound?:string|boolean
 }
 export interface WeaponRig{
     position:Vec2

@@ -111,9 +111,9 @@ export const DefaultGamemode:Gamemode={
         lobby:"lobby",
         date:{
             second:0,
-            minute:43,
-            hour:4,
-            month:3,
+            minute:30,
+            hour:13,
+            month:13,
             day:10,
             year:2000
         }
@@ -129,8 +129,8 @@ export const Gamemodes:Record<string,Gamemode>={
             no_battle_plane:DefaultGamemode.game.no_battle_plane,
             date:{
                 second:0,
-                minute:2,
-                hour:3,
+                minute:30,
+                hour:13,
                 month:3,
                 day:11,
                 year:2001

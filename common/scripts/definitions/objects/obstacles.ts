@@ -14,12 +14,20 @@ export interface ObstacleDoorStatus{
     open:-1|0|1
     locked:boolean
 }
+export interface ObstacleBehaviorPlaySound{
+    type:1
+    duration:number
+    click_sound:string
+    delay:number
+}
 export interface ObstacleDef extends Definition{
     health:number
     hitbox?:Hitbox2D
     spawnHitbox?:Hitbox2D
     no_collision?:boolean
     no_bullet_collision?:boolean
+    imortal?:boolean
+    resistence?:number
     invisibleOnMap?:boolean
     scale?:{
         min?:number
@@ -58,7 +66,7 @@ export interface ObstacleDef extends Definition{
     }
 
     expanded_behavior?:(
-        ObstacleBehaviorDoor
+        ObstacleBehaviorDoor|ObstacleBehaviorPlaySound
     )
 }
 export interface MaterialDef{
@@ -100,8 +108,6 @@ Obstacles.insert(
         hitbox:new CircleHitbox2D(v2.new(0,0),0.82),
         scale:{
             destroy:0.7,
-            min:0.7,
-            max:1.1
         },
         frame:{
             particle:"stone_particle",
@@ -128,6 +134,9 @@ Obstacles.insert(
         scale:{
             destroy:0.68
         },
+        frame_transform:{
+            scale:2,
+        },
         rotationMode:RotationMode.full,
         zIndex:zIndexes.Obstacles1,
         onDestroyExplosion:"barrel_explosion",
@@ -142,14 +151,33 @@ Obstacles.insert(
         spawnMode:Spawn.grass
     },
     {
+        idString:"sillo",
+        health:1,
+        imortal:true,
+        hitbox:new CircleHitbox2D(v2.new(0,0),2.8),
+        rotationMode:RotationMode.full,
+        zIndex:zIndexes.Obstacles1,
+        onDestroyExplosion:"barrel_explosion",
+        material:"metal",
+        reflect_bullets:true,
+        frame:{
+            particle:"metal_particle"
+        },
+        frame_transform:{
+            scale:2,
+        },
+        particles:{
+            tint:0x484848
+        },
+        spawnMode:Spawn.grass
+    },
+    {
         idString:"oak_tree",
         health:120,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.4),
-        spawnHitbox:new CircleHitbox2D(v2.new(0,0),0.6),
+        spawnHitbox:new CircleHitbox2D(v2.new(0,0),1),
         scale:{
             destroy:0.9,
-            max:1.2,
-            min:1
         },
         frame_transform:{
             scale:2
@@ -262,7 +290,7 @@ Obstacles.insert(
     {
         idString:"bush",
         health:70,
-        hitbox:new CircleHitbox2D(v2.new(0,0),0.7),
+        hitbox:new CircleHitbox2D(v2.new(0,0),0.8),
         no_collision:true,
         scale:{
             destroy:0.8
@@ -319,6 +347,33 @@ Obstacles.insert(
         material:"tree",
         frame:{
             particle:"oak_tree_particle"
+        },
+        spawnMode:Spawn.grass
+    },
+    {
+        idString:"recorded_tape",
+        health:1,
+        imortal:true,
+        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.26,0.48)),
+        frame_transform:{
+            hotspot:v2.new(0,0),
+            scale:1.5,
+        },
+        rotationMode:RotationMode.null,
+        zIndex:zIndexes.Obstacles3,
+        material:"iron",
+        reflect_bullets:true,
+        expanded_behavior:{
+            type:1,
+            duration:40,
+            click_sound:"click_play",
+            delay:1.2
+        },
+        frame:{
+            particle:"metal_particle"
+        },
+        particles:{
+            tint:0x656877
         },
         spawnMode:Spawn.grass
     },

@@ -24,6 +24,12 @@
         transform: translateY(1px);
     }
 
+    @media screen and (max-width: palette.$screen_large) {
+        font-size: 20px;
+        padding: 2px 10px;
+        text-align: center;
+        border-radius: 6px;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         font-size: 15px;
         padding: 2px 10px;
@@ -42,6 +48,11 @@
         border-color: rgba(0, 170, 119, 0.8);
         box-shadow: 0 0 20px rgba(0, 170, 119, 0.2);
     }
+}
+.btn-dark-green {
+    @extend .btn-green;
+    background: linear-gradient(135deg, rgba(0, 0, 10, 0.1) 0%, rgba(0, 0, 10, 0.2) 100%);
+    border: none;
 }
 .btn-red {
     @extend .btn-blue;
@@ -182,9 +193,16 @@
         box-shadow: 0 0 0 3px rgba(7, 170, 238, 0.5), 0 0 12px rgba(7, 170, 238, 0.6);
     }
 
+    @media screen and (max-width: palette.$screen_large) {
+        font-size: 20px;
+        padding: 7px 16px;
+        width: 200px;
+        min-width: 70px;
+        height: auto;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         font-size: 18px;
-        padding: 6px 14px;
+        padding: 6px 13px;
         width: 150px;
         min-width: 60px;
         height: auto;

@@ -32,6 +32,48 @@ export interface BulletDef{
     criticalMult?:number
     on_hit_explosion?:string
 }
+export type ItemQualitySetting={
+    name:string
+    color1:string
+    color2:string
+}
+export const ItemQualitySettings:Record<ItemQuality,ItemQualitySetting>={
+    [ItemQuality.Common]:{
+        name:"common",
+        color1:"#eeeeee",
+        color2:"#a0a0a0"
+    },
+    [ItemQuality.Uncommon]:{
+        name:"uncommon",
+        color1:"#11ef45",
+        color2:"#0c913a",
+    },
+    [ItemQuality.Rare]:{
+        name:"rare",
+        color1:"#3533ee",
+        color2:"#15118a"
+    },
+    [ItemQuality.Epic]:{
+        name:"epic",
+        color1:"#9309de",
+        color2:"#3b0b7d"
+    },
+    [ItemQuality.Mythic]:{
+        name:"mythic",
+        color1:"#f0d107",
+        color2:"#ab8c0f"
+    },
+    [ItemQuality.Legendary]:{
+        name:"legendary",
+        color1:"#ed092c",
+        color2:"#a3050a"
+    },
+    [ItemQuality.Developer]:{
+        name:"developer",
+        color1:"#eeeeee",
+        color2:"#eeeeee"
+    },
+}
 export enum InventoryItemType{
     gun,
     ammo,

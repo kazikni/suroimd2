@@ -1,6 +1,6 @@
 import { ClientGame2D, ResourcesManager, Renderer, ColorM, InputManager} from "../engine/mod.ts"
 import { LayersL, zIndexes } from "common/scripts/others/constants.ts";
-import { Client, DefaultSignals, KDate, Numeric, Vec2, model2d, v2 } from "common/scripts/engine/mod.ts";
+import { Client, DefaultSignals, Numeric, Vec2, model2d, v2, v2m } from "common/scripts/engine/mod.ts";
 import { JoinPacket } from "common/scripts/packets/join_packet.ts";
 import { Player } from "../gameObjects/player.ts";
 import { Loot } from "../gameObjects/loot.ts";
@@ -26,11 +26,11 @@ import { Vehicle } from "../gameObjects/vehicle.ts";
 import { Skins } from "common/scripts/definitions/loadout/skins.ts";
 import { ActionEvent, AxisActionEvent, GamepadManagerEvent, Key, MouseEvents } from "../engine/keys.ts";
 import { Creature } from "../gameObjects/creature.ts";
-import {  Material2D, WebglRenderer } from "../engine/renderer.ts";
+import { Material, WebglRenderer } from "../engine/renderer.ts";
 import { Plane } from "./planes.ts";
 import { isMobile } from "../engine/game.ts";
 import { DeadZoneManager } from "../managers/deadZoneManager.ts";
-import { ToggleElement } from "../engine/utils.ts";
+import { CenterHotspot, ToggleElement } from "../engine/utils.ts";
 import { type MenuManager } from "../managers/menuManager.ts";
 import { ActionPacket, InputActionType } from "common/scripts/packets/action_packet.ts";
 import { TabManager } from "../managers/tabManager.ts";
@@ -39,6 +39,9 @@ import { TranslationManager } from "common/scripts/engine/definitions.ts";
 import { GeneralUpdate, GeneralUpdatePacket } from "common/scripts/packets/general_update.ts";
 import { AmbientManager } from "../managers/ambientManager.ts";
 import { Building } from "../gameObjects/building.ts";
+import { MessageTabApp } from "../apps/message.ts";
+import { TeamManager } from "../managers/teamManager.ts";
+import { InventoryManager } from "../managers/inventoryManager.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -47,6 +50,7 @@ export class Game extends ClientGame2D<GameObject>{
 
   action:ActionPacket=new ActionPacket()
   guiManager!:GuiManager
+  inventoryManager:InventoryManager
   menuManager!:MenuManager
 
   can_act:boolean=true
@@ -57,7 +61,6 @@ export class Game extends ClientGame2D<GameObject>{
   
   terrain_gfx=new Graphics2D()
   grid_gfx=new Graphics2D()
-  grid_mat:Material2D
   scope_zoom:number=0.53
 
   //0.14=l6 32x
@@ -100,6 +103,8 @@ export class Game extends ClientGame2D<GameObject>{
 
   cam3:Camera3D
 
+  team:TeamManager=new TeamManager(this)
+
   listners_init(){
     this.input_manager.add_axis("movement",
       {
@@ -137,7 +142,7 @@ export class Game extends ClientGame2D<GameObject>{
           this.action.reload=true
           break
         case "interact":
-          this.action.interact=true
+          this.interact()
           break
         case "swamp_guns":
           this.action.swamp_guns=true
@@ -179,10 +184,10 @@ export class Game extends ClientGame2D<GameObject>{
           this.action.actions.push({type:InputActionType.use_item,slot:6})
           break
         case "previour_weapon":
-          this.action.actions.push({type:InputActionType.set_hand,hand:this.guiManager.currentWeaponIDX-1})
+          this.action.actions.push({type:InputActionType.set_hand,hand:this.inventoryManager.current_weapon-1})
           break
         case "next_weapon":
-          this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.guiManager.currentWeaponIDX+1,-1,3)})
+          this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.inventoryManager.current_weapon+1,-1,3)})
           break
         case "debug_menu":
           if((!this.menuManager.api_settings.debug.debug_menu)&&!this.offline)break
@@ -241,9 +246,7 @@ export class Game extends ClientGame2D<GameObject>{
       this.scene.objects.add_layer(i)
     }
     this.language=translation
-
-    this.renderer.background=ColorM.hex("#000");
-
+    this.renderer.background=ColorM.hex("#000")
     this.menuManager=menu
 
     this.cam3=new Camera3D(this.renderer)
@@ -252,18 +255,11 @@ export class Game extends ClientGame2D<GameObject>{
     this.terrain_gfx.zIndex=zIndexes.Terrain
     this.camera.addObject(this.terrain_gfx)
     this.camera.addObject(this.grid_gfx)
-    this.grid_mat=(this.renderer as WebglRenderer).factorys2D.grid.create({
-      color:ColorM.rgba(0,0,10,70),
-      gridSize:3,
-      width:0.04
-    })
-    this.grid_gfx.fill_material(this.grid_mat)
-    this.grid_gfx.drawModel(model2d.rect(v2.new(-100000,-100000),v2.new(100000,100000)))
     this.camera.addObject(this.light_map)
     this.camera.addObject(this.fake_crosshair)
 
     this.fake_crosshair.zIndex=zIndexes.DamageSplashs
-    this.fake_crosshair.hotspot=v2.new(.5,.5)
+    this.fake_crosshair.hotspot=CenterHotspot
 
     this.light_map.zIndex=zIndexes.Lights
     this.grid_gfx.zIndex=zIndexes.Grid
@@ -276,6 +272,11 @@ export class Game extends ClientGame2D<GameObject>{
 
     this.ambient=new AmbientManager(this)
     this.hitbox_view=Debug.hitbox
+
+    this.tab.add_app(new MessageTabApp(this.tab))
+    this.inventoryManager=new InventoryManager(this)
+
+    this.camera.after_draw.push(this.light_map.dd.bind(this.light_map))
   }
   add_damageSplash(d:DamageSplash){
     this.scene.objects.add_object(new DamageSplashOBJ(),7,undefined,d)
@@ -301,6 +302,14 @@ export class Game extends ClientGame2D<GameObject>{
   }
   override on_run(): void {
   }
+  interact(){
+    if(this.action.interact)return
+    this.action.interact=true
+    this.guiManager.update_active_player(this.activePlayer)
+    if(this.activePlayer&&this.guiManager.current_interaction){
+      this.guiManager.current_interaction.interact(this.activePlayer)
+    }
+  }
   override on_update(dt:number): void {
     super.on_update(dt)
     this.dead_zone.tick(dt)
@@ -322,11 +331,24 @@ export class Game extends ClientGame2D<GameObject>{
     //FPS Show
     this.frame_calc++
   }
+  update_grid(grid_gfx:Graphics2D,gridSize:number,camera_position:Vec2,camera_size:Vec2,line_size:number){
+    this.grid_gfx.position=v2.new(0,0)
+    grid_gfx.clear()
+    const begin=v2.new(camera_size.x/2,camera_size.y/2)
+    v2m.sub(begin,camera_position,begin)
+    v2m.dscale(begin,begin,gridSize)
+    v2m.floor(begin)
+    v2m.sub_component(begin,1,1)
+
+    const size=v2.new(camera_size.x/gridSize+2,camera_size.y/gridSize+2)
+    v2m.ceil(size)
+    grid_gfx.fill_color({r:0,g:0,b:0,a:0.2})
+    grid_gfx.drawGrid(begin,size,gridSize,line_size)
+  }
   update_camera(){
     if(this.activePlayer){
       this.camera.position=this.activePlayer!.position
-      /*this.minimap.position=v2.duplicate(this.camera.position)
-      this.minimap.update_grid(this.grid_gfx,gridSize,this.camera.position,v2.new(this.camera.width,this.camera.height),0.08)*/
+      this.update_grid(this.grid_gfx,5,this.camera.position,v2.new(this.camera.width,this.camera.height),0.06)
       if(this.fake_crosshair.visible){
         this.fake_crosshair.position=v2.add(this.activePlayer.position,v2.scale(v2.from_RadAngle(this.activePlayer.rotation),2/this.camera.zoom))
         this.fake_crosshair.scale=v2.new(1/this.camera.zoom,1/this.camera.zoom)
@@ -391,6 +413,8 @@ export class Game extends ClientGame2D<GameObject>{
       this.guiManager.start()
       this.guiManager.process_joined_packet(jp)
       this.ambient.date=jp.date
+
+      this.tab.game_start()      
     })
     this.client.on("map",async(mp:MapPacket)=>{
       await this.terrain.process_map(mp.map)

@@ -242,7 +242,7 @@ export class GameObjectManager2D<GameObject extends BaseObject2D>{
         if(obj.updatable){
             this.objects[layer].updatables.push(obj.id);
         }
-
+        this.cells.updateObject(obj)
         return obj;
     }
 

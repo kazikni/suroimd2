@@ -63,6 +63,10 @@
     font-size: 20px;
     font-family: "Russo-One", serif;
     
+    @media screen and (max-width: palette.$screen_large) {
+        width: 190px;
+        font-size: 11px;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         width: 130px;
         font-size: 10px;
@@ -104,8 +108,11 @@
         transform: translateY(-50%);
 
     }
+    @media screen and (max-width: palette.$screen_large) {
+        height: 25px;
+    };
     @media screen and (max-width: palette.$screen_medium) {
-        height: 20px;
+        height: 15px;
     };
 }
 #boost-bar-container {
@@ -132,100 +139,71 @@
         left: 103%;
         transform: translateY(-50%);
     }
+    @media screen and (max-width: palette.$screen_large) {
+        bottom: 34px;
+        height: 8px;
+    };
     @media screen and (max-width: palette.$screen_medium) {
-        height: 10px;
-        bottom: 30px;
+        bottom: 24px;
+        height: 7px;
     };
 }
 
-#bottom-center-container{
+#bottom-left-container{
     position: absolute;
     left: 5px;
     background-color: #0002;
+    border-radius: 10px;
     bottom: 60px;
-    width: 200px;
-    height: 80px;
+    width: 330px;
+    height: 60px;
     span{
         transform: translate(-50%,-50%);
         position: absolute;
         left: 50%;
         top: 50%;
         font-family: "Russo-One";
-        font-size: 50px;
+        font-size: 36px;
+    }
+    img{
+        position: absolute;
+        width: 30px;
+        height: auto;
+        right: 5px;
+        bottom: 5px;
     }
     #action-info{
         position: absolute;
         top: -30px;
         left: 50%;
     }
-    #current-item-slot{
-        position: absolute;
-        right: 103%;
-        background-color: #0002;
-        height: 80px;
-        width: 80px;
+    @media screen and (max-width: palette.$screen_large) {
+        bottom: 45px;
+        width: 190px;
+        height: 20px;
+        border-radius: 7px;
+        #action-info{
+            top:-15px;
+        }
+        span{
+            font-size: 15px;
+        }
         img{
-            width: 70px;
-            height: 70px;
+            width: 15px;
+            bottom: 2px;
         }
     }
     @media screen and (max-width: palette.$screen_medium) {
-        bottom: 45px;
-        width: 100px;
-        height: 40px;
-        span{
-            font-size: 20px;
-        }
-    }
-}
-
-#ammos-inventory{
-    display: grid;
-    grid-template-columns: repeat(auto, 5);
-    gap: 5px;
-    position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translate(0%, -50%);
-    justify-items: end;
-    pointer-events: none;
-    .ammo-slot{
-        background-color: #0003;
-        display: flex;
-        flex-direction: column;
+        bottom: 30px;
+        width: 115px;
+        height: 30px;
         border-radius: 5px;
-        pointer-events: auto;
-        .count {
-            font-family: "Russo-One", sans-serif;
-            text-align: center;
+        span{
             font-size: 15px;
-            text-anchor: middle;
         }
-        .icon{
-            width: 30px;
-            height: 30px;
-            margin: auto;
-            padding-top: 5px;
-            padding-left: 5px;
-            padding-right: 5px;
-            
+        img{
+            width: 20px;
         }
-    }
-    
-    .ammo-slot:hover{
-        border: 2px solid #ccc;
-    }
-    @media screen and (max-width: palette.$screen_medium){
-        .ammo-slot{
-            .count{
-                font-size: 10px;
-            }
-            .icon{
-                width: 12px;
-                height: 12px;
-            }
-        }
-        left: 3px;
     }
 }
 #equipaments{
@@ -264,42 +242,6 @@
         }
     }
 }
-#gui-weapons{
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: max-content;
-
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-
-    width: 32%;
-
-    .weapon-slot{
-        width: 100%;
-        display: block;
-        position: relative;
-    }
-    @media screen and (max-width: palette.$screen_medium) {
-        .weapon-slot{
-            height: 50px;
-            font-size: 7px;
-            .weapon-slot-image{
-                width: 30px;
-            }
-            .weapon-slot-number{
-                left:86%;
-            }
-            .weapon-slot-name{
-                bottom: 3px;
-                right: 3px;
-            }
-        }
-        
-    }
-}
 #killfeed-container{
     position: absolute;
     right: 300px;
@@ -320,6 +262,11 @@
         margin-bottom: -3px;
         margin-left: 3px;
     }
+    @media screen and (max-width: palette.$screen_large) {
+        .killfeed-message{
+            font-size: 12px;
+        }
+    }
     @media screen and (max-width: palette.$screen_medium) {
         .killfeed-message{
             font-size: 9px;
@@ -338,6 +285,12 @@
     top: 40%;
     padding: 15px;
     margin: auto;
+    @media screen and (max-width: palette.$screen_large) {
+        top: 10%;
+        border-radius: 5px;
+        font-size: 15px;
+        padding: 7px;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         top: 20%;
         border-radius: 5px;
@@ -357,6 +310,12 @@
     top: 50%;
     padding: 15px;
     margin: auto;
+    @media screen and (max-width: palette.$screen_large) {
+        top: 30%;
+        border-radius: 5px;
+        font-size: 10px;
+        padding: 10px;
+    }
     @media screen and (max-width: palette.$screen_medium) {
         top: 20%;
         border-radius: 5px;
@@ -380,6 +339,15 @@
     top: 140px;
     right: 5px;
     padding: 15px;
+    @media screen and (max-width: palette.$screen_large) {
+        font-size: 10px;
+        top: 5px;
+        right: 5px;
+        #killeader-container-icon{
+            width: 15px;
+            height: 15px;
+        }
+    }
     @media screen and (max-width: palette.$screen_medium) {
         font-size: 5px;
         top: 5px;
@@ -387,35 +355,6 @@
         #killeader-container-icon{
             width: 10px;
             height: 10px;
-        }
-    }
-}
-#gui-items{
-    position: absolute;
-    bottom: 105px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: max-content;
-
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-    @media screen and (max-width: palette.$screen_medium) {
-        bottom: 65px;
-        gap: 2px;
-        .inventory-item-slot{
-            width: 23px;
-            height: 23px;
-            .slot-count{
-                font-size: 6px;
-            }
-            .slot-number{
-                font-size: 4px;
-            }
-            .slot-image {
-                width: 20px;
-                height: 20px;
-            }
         }
     }
 }

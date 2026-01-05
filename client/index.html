@@ -2,7 +2,6 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <meta name="description" content=".IO Game Powered In KLSE" />
   
     <meta property="og:title" content="Suroimd.io 2"/>
@@ -11,15 +10,15 @@
       property="og:image"
       content="img/menu/logos/embed.png"
     />
-  
-    <title>Suroimd.io 2</title>
 
+    <title>Suroimd.io 2</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="/scripts/extra_elements.js"></script>
     <link rel="stylesheet" href="/scripts/extra_elements.css">
   </head>
   <body>
+    <script type="module" src="./src/scripts/others/index.ts" async></script>
     <div id="game" style="display: none;">
       <div>
         <div id="game-gui">
@@ -27,8 +26,8 @@
             <kl-joystick id="left-joystick"></kl-joystick>
             <kl-joystick id="right-joystick"></kl-joystick>
             <div id="mobile-action-buttons">
-              <button id="btn-mobile-interact" class="btn-green"><span>E</span></button>
-              <button id="btn-mobile-reload" class="btn-green"><span>R</span></button>
+              <button id="btn-mobile-interact" class="btn-dark-green"><div></div></button>
+              <button id="btn-mobile-reload" style="display:none;pointer-events: none;" class="btn-dark-green"><div></div></button>
             </div>
           </div>
           <div id="emote-wheel" class="emote-wheel">
@@ -51,8 +50,11 @@
               <span id="boost-bar-amount">100/100</span>
             </div>
           </div>
-          <div id="bottom-center-container">
-            <span id="hand-info-count">5/5</span>
+          <div id="bottom-left-container">
+            <div>
+              <img id="hand-info-consume-type"></img>
+              <span id="hand-info-count"></span>
+            </div>
             <div id="action-info">
               <span id="action-info-delay">1s</span>
             </div>
@@ -98,26 +100,8 @@
             <div id="gui-items">
             </div>
             <div id="gui-weapons">
-              <div class="weapon-slot" id="game-weapon-slot-00">
-                <span class="weapon-slot-number">1</span>
-                <span class="weapon-slot-name">fists</span>
-                <img class="weapon-slot-image"></img>
-              </div>
-              <div class="weapon-slot" id="game-weapon-slot-01">
-                <div class="weapon-slot-number">2</div>
-                <span class="weapon-slot-name">m870</span>
-                <img class="weapon-slot-image"></img>
-              </div>
-              <div class="weapon-slot" id="game-weapon-slot-02">
-                <div class="weapon-slot-number">3</div>
-                <span class="weapon-slot-name">m870</span>
-                <img class="weapon-slot-image"></img>
-              </div>
-              <!--<div class="weapon-slot" id="game-weapon-slot-03">
-                <div class="weapon-slot-number">4</div>
-              </div>-->
             </div>
-            <div id="ammos-inventory">
+            <div id="gui-oitems">
             </div>
           </div>  
         </div>
@@ -137,11 +121,11 @@
           <button class="btn-blue" id="debug-spawn-item">Spawn Item</button>
         </div>
       </div>  
-      <div id="vignetting-gfx"></div>
       <canvas id="game-canvas"></canvas>
       <div id="bloom-gfx"></div>
       <div id="tiltshift-gfx"></div>
       <div id="recolor-gfx"></div>
+      <div id="vignetting-gfx"></div>
     </div>
     <div id="menu">
       <div id="menu-background-effects">
@@ -158,26 +142,29 @@
       <kl-md-submenu id="menu-play-submenu" class ="md-menu-game" style="opacity: 0;">
         <kl-md-submenu-content>
             <kl-md-menu-options>
-              <button id="btn-play-normal" class="btn-green" play-sound="button_click">Normal</button>
-              <button id="btn-play-campaign" class="btn-green" play-sound="button_click">Campaign</button>
-              <p></p>
-              <select id="select-region" class="select-blue">
-              </select>
-              <select id="select-match-mode" class="select-blue">
-                  <option>Ranked</option>
-                  <option>Casual</option>
-              </select>
-              <select id="select-team-size" class="select-blue">
-                  <option>Solo</option>
-                  <option>Duo</option>
-                  <option>Squad</option>
-              </select>
+              <div>
+                <p class="span">Campaign</p>
+                <button id="btn-play-campaign" class="btn-green" play-sound="button_click">Level Selector</button>
+              </div>
+              <div id="menu-play-buttons">
+              </div>
+              <button id="btn-play-team" class="btn-green" play-sound="button_click">Team</button>
+              <div>
+                <p class="span">Region</p>
+                <select id="select-region" class="select-blue"></select>
+              </div>
             </kl-md-menu-options>
             <kl-md-extra>
-              <div id="gamemode-image"></div>
-              <div id="campaign-levels">
-                <button class="btn-blue">1</button>
+              <div id="gamemode-view" class="background-menu-md background-menu-ss background-menu"></div>
+              <div id="gamemode-team" class="background-menu-md background-menu-ss background-menu">
+                <div id="gamemode-team-connect" class="play-select-item background-menu">
+                  <h1>Teams</h1>
+                  <input class="input-green" placeholder="Team Code" id="insert-team-code"></input>
+                  <button class="btn-green" id="btn-team-create-team" play-sound="button_click">Connect</button>
+                  <button class="btn-green" id="btn-team-create-team" play-sound="button_click">Join</button>
+                </div>
               </div>
+              <div id="campaign-levels" class="background-menu-md background-menu-ss background-menu"></div>
             </kl-md-extra>
             <button class="btn-red close-btn submenu-close-btn" play-sound="button_click">X</button>
         </kl-md-submenu-content>
@@ -274,9 +261,7 @@
                   <a href="/pages/forum/"><button class="social-link">MD</button></a>
                 </div>
               </div>      
-              <div id="about-sm-news" class="background-menu-md background-menu updates-section">
-                <h2>News</h2>
-              </div>
+              <div id="about-sm-news" class="background-menu-md background-menu updates-section"></div>
               <div id="about-sm-rules" class="background-menu-md background-menu updates-section">
                 <div id="update-item">
   <h2>Rules</h2>
@@ -428,6 +413,5 @@ Are Allowed. Because Dont Improve Your Skill And Give Powers
         </div>
       </div>
     </div>
-    <script type="module" src="./src/scripts/others/index.ts" async></script>
   </body>
 </html>

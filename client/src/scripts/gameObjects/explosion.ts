@@ -3,6 +3,7 @@ import { ExplosionDef, Explosions } from "common/scripts/definitions/objects/exp
 import { ColorM } from "../engine/renderer.ts";
 import { GameObject } from "../others/gameObject.ts";
 import { Sprite2D } from "../engine/container_2d.ts";
+import { CenterHotspot } from "../engine/utils.ts";
 export class Explosion extends GameObject{
     stringType:string="explosion"
     numberType: number=5
@@ -35,7 +36,7 @@ export class Explosion extends GameObject{
     constructor(){
         super()
         this.sprite.visible=false
-        this.sprite.hotspot=v2.new(.5,.5)
+        this.sprite.hotspot=CenterHotspot
         this.sprite.size=v2.new(300,300)
     }
     set_definition(def:ExplosionDef){

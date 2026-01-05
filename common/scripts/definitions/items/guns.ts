@@ -1,8 +1,8 @@
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { Definitions,Definition, DeepPartial } from "../../engine/mod.ts";
-import { mergeDeep } from "../../engine/utils.ts";
-import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponFrames } from "../../others/item.ts";
-import { type BulletDef, BulletReflection, InventoryItemType } from "../utils.ts";
+import { cloneDeep, mergeDeep } from "../../engine/utils.ts";
+import { FistRig,WeaponsArmRig,WeaponsRig, ItemQuality, tracers, WeaponRig, WeaponAssets } from "../../others/item.ts";
+import { type BulletDef, BulletReflection, InventoryItemType, ItemQualitySettings } from "../utils.ts";
 export enum FireMode{
     Auto,
     Single,
@@ -87,7 +87,7 @@ export type GunDef={
     }
     arms?:FistRig
     image?:WeaponRig
-    frames?:WeaponFrames
+    assets?:WeaponAssets
     caseParticle?:{
         position:Vec2
         at_begin?:boolean
@@ -111,6 +111,32 @@ export const Guns=new Definitions<GunDef,{}>((g)=>{
         Guns.insert(dd)
     }
 })
+export const GunsConstructors={
+    extends(gun:GunDef,variant:DeepPartial<GunDef>):GunDef{
+        return mergeDeep({}as GunDef,gun,variant)as GunDef
+    },
+    create_variant(gun:GunDef,quality:ItemQuality,params:{
+        damage_increment?:number
+        capacity_increment?:number
+    }):GunDef{
+        const ret=cloneDeep(gun)
+        ret.idString=ItemQualitySettings[quality].name+"_"+ret.idString
+        ret.quality=quality
+        if(!ret.assets){
+            ret.assets={}
+        }
+        ret.assets.item=gun.assets?.item??gun.idString
+        ret.assets.item_tint=gun.assets?.item_tint
+        ret.assets.item=gun.assets?.world??gun.idString+"_world"
+        ret.assets.world_tint=gun.assets?.world_tint
+        if(ret.bullet){
+            if(params.damage_increment){
+                ret.bullet.def.damage+=params.damage_increment
+            }
+        }
+        return ret
+    }
+}
 
 export const GasParticles={
     shotgun:{
@@ -200,7 +226,7 @@ Guns.insert(
         },
         speed_mod:0.98,
         arms:WeaponsArmRig[3],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0xaaaaaa
         },
@@ -252,7 +278,7 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         image:WeaponsRig[0],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0xaaaaaa
         },
@@ -310,7 +336,7 @@ Guns.insert(
     },
     {
         idString:"ak47",
-        fireDelay:0.15,
+        fireDelay:0.1,
         switchDelay:0.6,
         spread:5,
         lenght:1.2,
@@ -321,7 +347,7 @@ Guns.insert(
         quality:ItemQuality.Rare,
         bullet:{
             def:{
-                damage:10,
+                damage:9,
                 radius:0.014,
                 range:170,
                 speed:40,
@@ -344,7 +370,7 @@ Guns.insert(
     },
     {
         idString:"ar15",
-        fireDelay:0.1,
+        fireDelay:0.07,
         switchDelay:0.7,
         spread:8,
         lenght:0.7,
@@ -355,7 +381,7 @@ Guns.insert(
         quality:ItemQuality.Rare,
         bullet:{
             def:{
-                damage:10,
+                damage:9,
                 radius:0.014,
                 range:190,
                 falloff:0.7,
@@ -375,7 +401,7 @@ Guns.insert(
         speed_mod:0.95,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[0],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x12111f
         },
@@ -421,7 +447,7 @@ Guns.insert(
         speed_mod:0.95,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[0],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x12111f
         },
@@ -432,7 +458,7 @@ Guns.insert(
     },
     {
         idString:"mp5",
-        fireDelay:0.14,
+        fireDelay:0.09,
         switchDelay:0.7,
         spread:2,
         lenght:0.87,
@@ -443,7 +469,7 @@ Guns.insert(
         quality:ItemQuality.Uncommon,
         bullet:{
             def:{
-                damage:9,
+                damage:8,
                 radius:0.014,
                 range:160,
                 falloff:0.9,
@@ -501,7 +527,7 @@ Guns.insert(
         gasParticles:GasParticles.pistols,
         muzzleFlash:MuzzleFlash.normal,
         arms:WeaponsArmRig[2],
-        frames:{
+        assets:{
             world:"weapon_medium_world",
             world_tint:0x3f3a2f
         },
@@ -541,7 +567,7 @@ Guns.insert(
         speed_mod:1,
         gasParticles:GasParticles.automatic,
         arms:WeaponsArmRig[2],
-        frames:{
+        assets:{
             world:"weapon_small_world",
             world_tint:0x12111f
         },
@@ -564,7 +590,7 @@ Guns.insert(
         quality:ItemQuality.Mythic,
         bullet:{
             def:{
-                damage:45,
+                damage:40,
                 radius:0.02,
                 range:210,
                 falloff:0.8,
@@ -595,7 +621,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"awp",
@@ -610,7 +639,7 @@ Guns.insert(
         ammoSpawnAmount:30,
         bullet:{
             def:{
-                damage:52,
+                damage:48,
                 radius:0.025,
                 range:220,
                 falloff:0.7,
@@ -639,7 +668,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"awms",
@@ -654,7 +686,7 @@ Guns.insert(
         ammoSpawnAmount:25,
         bullet:{
             def:{
-                damage:90,
+                damage:99,
                 radius:0.02,
                 range:230,
                 falloff:0.7,
@@ -682,7 +714,10 @@ Guns.insert(
         muzzleFlash:MuzzleFlash.normal,
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
     },
     {
         idString:"m870",
@@ -691,14 +726,14 @@ Guns.insert(
         lenght:0.9,
         ammoType:"12g",
         ammoSpawnAmount:10,
-        jitterRadius:0.5,
+        jitterRadius:0.45,
         size:4.3,
         fireMode:FireMode.Single,
         class:GunClasses.Shotgun,
         quality:ItemQuality.Rare,
         bullet:{
             def:{
-                damage:9,
+                damage:8,
                 radius:0.014,
                 speed:24,
                 range:25,
@@ -706,7 +741,7 @@ Guns.insert(
                 criticalMult:1.2,
                 tracer:tracers.small
             },
-            count:9
+            count:10
         },
         reload:{
             delay:0.8,
@@ -727,6 +762,9 @@ Guns.insert(
         caseParticle:{
             position:v2.new(0.8,0.3)
         },
+        assets:{
+            cycle_sound:true,
+        },
         muzzleFlash:MuzzleFlash.normal
     },
     {
@@ -741,10 +779,9 @@ Guns.insert(
         quality:ItemQuality.Epic,
         size:4.5,
         fireMode:FireMode.Single,
-        muzzleFlash:MuzzleFlash.normal,
         bullet:{
             def:{
-                damage:7,
+                damage:6.5,
                 radius:0.012,
                 speed:32,
                 range:54,
@@ -752,7 +789,7 @@ Guns.insert(
                 falloff:0.65,
                 tracer:tracers.small
             },
-            count:9
+            count:10
         },
         reload:{
             delay:0.6,
@@ -772,7 +809,11 @@ Guns.insert(
         },
         caseParticle:{
             position:v2.new(0.6,0.3)
-        }
+        },
+        assets:{
+            cycle_sound:true,
+        },
+        muzzleFlash:MuzzleFlash.normal,
     },
     {
         idString:"hp18",
@@ -811,14 +852,16 @@ Guns.insert(
         speed_mod:1,
         gasParticles:GasParticles.shotgun,
         arms:WeaponsArmRig[0],
-        frames:{
-            world:"weapon_medium_world",
-            world_tint:0x12111f
-        },
         image:{
             position:v2.new(0.45,0.0),
             rotation:0
         },
+        assets:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f,
+            cycle_sound:true,
+        },
+        muzzleFlash:MuzzleFlash.normal,
     },
     {
         idString:"rpg7",
@@ -975,3 +1018,8 @@ Guns.insert(
         speed_mod:0.97,
     },*/
 )
+/*Guns.insert(
+    GunsConstructors.create_variant(Guns.getFromString("ak47"),ItemQuality.Uncommon,{
+        damage_increment:-0.5
+    })
+)*/

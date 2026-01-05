@@ -119,8 +119,11 @@
     transform: translate(-50%,-50%);
     left: 50%;
     top: 50%;
+    @media screen and (max-width: palette.$screen_large) {
+        scale: 100%;
+    };
     @media screen and (max-width: palette.$screen_medium) {
-        scale: 50%;
+        scale: 100%;
     };
 }
 .tab-view-minimized{
@@ -128,10 +131,16 @@
     transform: translate(0%,0%);
     left: -180px;
     top: -90px;
+
+    @media screen and (max-width: palette.$screen_large) {
+        scale: 30%;
+        left: -240px;
+        top: -120px;
+    };
     @media screen and (max-width: palette.$screen_medium) {
         scale: 25%;
         left: -270px;
-        top: -1450px;
+        top: -145px;
     };
 }
 
@@ -258,4 +267,9 @@
             }
         }
     }
+    .msg img.badge-icon {
+        height: 18px;
+        vertical-align: middle;
+        margin: 0 4px;
+    }    
 }

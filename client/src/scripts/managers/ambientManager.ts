@@ -117,9 +117,15 @@ export class AmbientManager{
             },
             enabled:false
         })
+        this.game.sounds.init_html_sound_bindings("ui",this.game.resources)
 
         this.music=this.game.sounds.get_manipulative_si("music")??game.sounds.add_manipulative_si("music")
         this.ambience=game.sounds.add_manipulative_si("ambience")
+        const menu_music=this.game.resources.get_audio(`menu_music`)
+        this.game.sounds.signals.on("load",()=>{
+            this.music.set(menu_music)
+        })
+        this.music.set(menu_music)
     }
     reset(){
         this.end_game=false
@@ -158,17 +164,17 @@ export class AmbientManager{
             this.game.renderer.canvas.style.filter="none"
         }
     }
-    /*musics:string[]=[
+    musics:string[]=[
         "game_normal_music_1",
         "game_normal_music_2",
         "game_normal_music_3",
         "game_normal_music_4",
         "game_normal_music_5",
-    ]*/
-   musics:string[]=[
+    ]
+    /*musics:string[]=[
         "game_snow_music_1",
         "game_snow_music_2",
-    ]
+    ]*/
     ending_music:string[]=[
         "game_campaing_ending_1",
         "game_campaing_ending_2"

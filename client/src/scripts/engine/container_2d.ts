@@ -1,5 +1,5 @@
 import { SmoothShape2D, v2, Vec2, Vec2M, Vec4M } from "common/scripts/engine/geometry.ts";
-import { Color, ColorM, Renderer, WebglRenderer,Material2D, GLMaterial2D, GL2D_LightMatArgs } from "./renderer.ts";
+import { Batcher, Color, ColorM, GLMaterial, Material, Renderer, WebglRenderer } from "./renderer.ts";
 import { type ResourcesManager, type Frame, DefaultTexCoords } from "./resources.ts";
 import { AKeyFrame, FrameDef, FrameTransform, KeyFrameSpriteDef } from "common/scripts/engine/definitions.ts";
 import { Numeric, v2m } from "common/scripts/engine/mod.ts";
@@ -7,12 +7,14 @@ import { Hitbox2D, HitboxType2D } from "common/scripts/engine/hitbox.ts";
 import { ClientGame2D } from "./game.ts";
 import { type Tween } from "./utils.ts";
 import { ImageModel2D, Matrix, matrix4, Model2D, model2d, triangulateConvex } from "common/scripts/engine/models.ts";
+import { GL2D_LightMatArgs, GL2D_LightMatAttr } from "./materials.ts";
 export interface CamA{
     matrix:Matrix
     position:Vec2
     size:Vec2
     meter_size:number
     center_pos:boolean
+    batcher:Batcher
 }
 export abstract class Container2DObject {
     abstract object_type: string;
@@ -101,7 +103,11 @@ export abstract class Container2DObject {
         this._tint=new Vec4M(1,1,1,1,bid)
     }
 
+    update_v=true
     update_real(){
+        this.update_v=true
+    }
+    update_visual(){
         if (this.parent&&!this.parent.object_group) {
             this._real_scale = v2.mult(this.parent._real_scale, this._scale);
             if(this.sync_rotation){
@@ -130,11 +136,16 @@ export abstract class Container2DObject {
 
     update(_dt:number,_resources:ResourcesManager): void {
     }
-
+    draw_super(){
+        if(this.update_v){
+            this.update_visual()
+            this.update_v=false
+        }
+    }
     abstract draw(cam:CamA,renderer: Renderer): Promise<void>;
 }
 type Graphics2DCommand =
-  | { type: 'fillMaterial'; mat:Material2D }
+  | { type: 'fillMaterial'; mat:Material }
   | { type: 'fillColor'; color:Color }
   | { type: 'fill' }
   | { type: 'path'; path:Model2D }
@@ -150,6 +161,8 @@ export class Graphics2D extends Container2DObject {
 
     command: Graphics2DCommand[] = [];
     paths:number[][]=[]
+
+    batcher?:Batcher
 
     beginPath(): this {
         this.current_path.length=0
@@ -173,7 +186,7 @@ export class Graphics2D extends Container2DObject {
         this.command.push({type:"fill"})
         return this
     }
-    fill_material(mat:Material2D):this{
+    fill_material(mat:Material):this{
         this.command.push({type:"fillMaterial",mat:mat})
         return this
     }
@@ -187,18 +200,16 @@ export class Graphics2D extends Container2DObject {
     drawGrid(begin:Vec2,size:Vec2,space:number,width:number){
         const minx=begin.x*space
         const miny=begin.y*space
-        const maxx = (begin.x + size.x)*space;
-        const maxy = (begin.y + size.y)*space;
-
+        const maxx = (begin.x + size.x)*space
+        const maxy = (begin.y + size.y)*space
         for (let x = minx; x <= maxx; x += space) {
-            const p1 = v2.new(x, miny);
-            const p2 = v2.new(x, maxy);
+            const p1 = v2.new(x, miny)
+            const p2 = v2.new(x, maxy)
             this.drawLine(p1,p2,width)
         }
-
         for (let y = miny; y <= maxy; y += space) {
-            const p1 = v2.new(minx, y);
-            const p2 = v2.new(maxx, y);
+            const p1 = v2.new(minx, y)
+            const p2 = v2.new(maxx, y)
             this.drawLine(p1,p2,width)
         }
     }
@@ -229,12 +240,18 @@ export class Graphics2D extends Container2DObject {
                 break
         }
     }
-
+    color_material?:Material
     override draw(cam:CamA,renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             const gl = renderer as WebglRenderer;
-            let currentMat: Material2D=gl.factorys2D.simple.create({color:{r:0,g:0,b:0,a:1}})
-            let currentModel:Model2D
+            if(!this.color_material)this.color_material=gl.factorys2D.simple_batch.create({})
+            let currentMat: Material=this.color_material
+            let current_color: Color={r:0,g:0,b:0,a:1}
+            let currentModel:Model2D=model2d.zero()
+            if(!this.batcher){
+                this.batcher=new Batcher(renderer)
+            }
 
             for (const cmd of this.command) {
                 switch (cmd.type) {
@@ -242,19 +259,22 @@ export class Graphics2D extends Container2DObject {
                         currentMat=cmd.mat
                         break
                     case "fillColor":
-                        // deno-lint-ignore ban-ts-comment
-                        //@ts-ignore
-                        cmd.type="fillMaterial"
-                        currentMat=gl.factorys2D.simple.create({color:cmd.color})
-                        // deno-lint-ignore ban-ts-comment
-                        //@ts-ignore
-                        cmd.mat=currentMat
+                        current_color=cmd.color
+                        currentMat=this.color_material
                         break
                     case "fill":
-                        gl.draw(currentModel!,currentMat,cam.matrix,this._real_position,this._real_scale)
+                        this.batcher.draw_model2d(currentMat,currentModel,this._real_position,this._real_scale,{
+                            color:{
+                                value:[current_color.r,current_color.g,current_color.b,current_color.a]
+                            }
+                        })
                         break
                     case "model": {
-                        gl.draw(cmd.model,currentMat,cam.matrix,this._real_position,this._real_scale)
+                        this.batcher.draw_model2d(currentMat,cmd.model,this._real_position,this._real_scale,{
+                            color:{
+                                value:[current_color.r,current_color.g,current_color.b,current_color.a]
+                            }
+                        })
                         break;
                     }
                     case "path":
@@ -262,6 +282,7 @@ export class Graphics2D extends Container2DObject {
                         break
                 }
             }
+            this.batcher.render(cam.matrix)
             resolve()
         })
     }
@@ -302,15 +323,15 @@ export class Sprite2D extends Container2DObject{
 
     cam?:CamA
 
-    override update_real(): void {
-        super.update_real()
+    override update_visual(): void {
+        super.update_visual()
         this.update_model()
     }
 
     update_model(){
         if(!this.frame||!this.frame.source||!this.cam)return
         this._real_size=this.size??this.frame.frame_size??v2.new(this.frame.source.width,this.frame.source.height)
-        this.model=ImageModel2D(this._real_scale,this._real_rotation,this.hotspot,this._real_size,100)
+        this.model=ImageModel2D(this._real_scale,this._real_rotation,this.hotspot,this._real_size,100,this._real_position)
         this.old_ms=this.cam.meter_size
     }
 
@@ -341,10 +362,12 @@ export class Sprite2D extends Container2DObject{
         if(frame.position)this.position=v2.duplicate(frame.position)
         this.update_real()
     }
-    override draw(cam:CamA,renderer: Renderer): Promise<void> {
+    override draw(cam:CamA,_renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             this.cam=cam
-            if(this.frame)renderer.draw_image2D(this.frame,this._real_position,this.model,cam.matrix,this._real_tint)
+            //if(this.frame)renderer.draw_image2D(this.frame,this._real_position,this.model,cam.matrix,this._real_tint)
+            cam.batcher.draw_frame2d(this.frame,this.model,this._real_tint)
             resolve()
         })
     }
@@ -390,6 +413,7 @@ export class Container2D extends Container2DObject{
         this.children.sort((a, b) => a.zIndex - b.zIndex || a.id_on_parent - b.id_on_parent);
     }
     async draw(cam:CamA,renderer:Renderer,objects?:Container2DObject[]):Promise<void>{
+        this.draw_super()
         if(!objects)objects=this.visible_children
         for(let o =0;o<objects.length;o++){
             const c=objects[o]
@@ -529,25 +553,25 @@ export class AnimatedContainer2D extends Container2D{
 }
 
 export type Light2D = {
-    mat: GLMaterial2D<GL2D_LightMatArgs>
+    mat: GLMaterial<GL2D_LightMatArgs,GL2D_LightMatAttr>
     pos: Vec2
     model: Model2D
     destroyed: boolean
 }
 
 export class Lights2D extends Container2DObject {
-    override object_type = "lights";
+    override object_type = "lights"
 
-    private renderer!: WebglRenderer;
-    private lightFBO!: WebGLFramebuffer;
-    private lightTexture!: WebGLTexture;
-    private lights: Light2D[] = [];
-    downscale = 1.0;
-    ambientColor: Color = { r: 1, g: 1, b: 1, a: 1 };
+    private renderer!: WebglRenderer
+    private lightFBO!: WebGLFramebuffer
+    private lightTexture!: WebGLTexture
+    private lights: Light2D[] = []
+    downscale = 1.0
+    ambientColor: Color = { r: 1, g: 1, b: 1, a: 1 }
 
     quality:number=2 // 0 = None, 1=Just Global Light, 2 All Lights
 
-    ambient_light?:GLMaterial2D<GL2D_LightMatArgs>
+    ambient_light?:GLMaterial<GL2D_LightMatArgs,GL2D_LightMatAttr>
     get ambient() {
         return 1-this.ambientColor.a
     }
@@ -618,12 +642,20 @@ export class Lights2D extends Container2DObject {
 
         if(!this.ambient_light)this.ambient_light=renderer.factorys2D.light.create({color:this.ambientColor})
         this.ambient_light!.color=this.ambientColor
-        renderer.draw(this.screenModel,this.ambient_light,camera.projectionMatrix,camera.visual_position,v2.new(1,1))
+        renderer.draw(this.ambient_light,camera.projectionMatrix,{
+            model:this.screenModel,
+            position:camera.visual_position,
+            scale:v2.new(1,1)
+        })
         if(this.quality>=2){
             for (let i = 0; i < this.lights.length; i++) {
                 const L = this.lights[i];
                 if (L.destroyed) { this.lights.splice(i, 1); i--; continue; }
-                renderer.draw(L.model, L.mat,camera.projectionMatrix, L.pos, v2.new(1,1));
+                renderer.draw(L.mat,camera.projectionMatrix,{
+                    model:L.model,
+                    position:L.pos,
+                    scale:v2.new(1,1)
+                })
             }
         }
 
@@ -674,17 +706,24 @@ export class Lights2D extends Container2DObject {
         console.log("Light Texture Base64:", dataURL)
     }
 
-    draw(cam:CamA,renderer: WebglRenderer):Promise<void>{
+    dd(cam:CamA,renderer: Renderer){
+        this.draw_super()
+        if (!this.lightTexture||this.quality===0){}
+        const mat = (renderer as WebglRenderer).factorys2D.texture.create({
+            texture: this.lightTexture,
+            tint: { r: 1, g: 1, b: 1, a: 1 }
+        });
+        const gl=(renderer as WebglRenderer).gl
+        gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+        renderer.draw(mat,cam.matrix,{
+            model:this.screenModel,
+            position:cam.position,
+            scale:v2.new(0.01,0.01)
+        })
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    }
+    override draw(cam: CamA, renderer: Renderer): Promise<void> {
         return new Promise<void>((resolve) => {
-            if (!this.lightTexture||this.quality===0) {resolve();return}
-            const mat = renderer.factorys2D.texture.create({
-                texture: this.lightTexture,
-                tint: { r: 1, g: 1, b: 1, a: 1 }
-            });
-            const gl=renderer.gl
-            renderer.gl.blendFunc(gl.DST_COLOR, gl.ZERO);
-            renderer.draw(this.screenModel,mat,cam.matrix,cam.position,v2.new(0.01,0.01))
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
             resolve()
         })
     }
@@ -753,7 +792,8 @@ export class SubCanvas2D extends Container2DObject {
         meter_size:5,
         position:this.position,
         size:v2.new(5,5),
-        center_pos:false
+        center_pos:false,
+        batcher:undefined
     }
     render(renderer: WebglRenderer, camera: Camera2D,objects?:Container2DObject[]) {
         this.renderer = renderer;
@@ -837,12 +877,18 @@ export class SubCanvas2D extends Container2DObject {
 
     override draw(cam:CamA,renderer: WebglRenderer) {
         return new Promise<void>((resolve) => {
+            this.draw_super()
             if (!this.Texture) {resolve();return;}
             const mat = renderer.factorys2D.texture.create({
                 texture: this.Texture,
                 tint: { r: 1, g: 1, b: 1, a: 1 }
             });
-            renderer.draw(this.screenModel,mat,cam.matrix,this._real_position,v2.new(1,-1))
+            
+            renderer.draw(mat,cam.matrix,{
+                model:this.screenModel,
+                position:this._real_position,
+                scale:v2.new(1,-1)
+            })
             resolve()
         })
     }
@@ -855,8 +901,8 @@ export class Camera2D{
     SubMatrix!: Matrix;
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        this._zoom = zoom;
-        this.resize();
+        this._zoom = zoom
+        this.resize()
     }
 
     width = 1;
@@ -867,11 +913,14 @@ export class Camera2D{
     visual_position=v2.new(0,0)
 
     center_pos:boolean=true
+    batcher:Batcher
 
+    after_draw:((cam:CamA,renderer:Renderer)=>void)[]=[]
     constructor(renderer:Renderer){
         this.renderer=renderer
         this.zoom=1
         this.container.object_group=true
+        this.batcher=new Batcher(renderer)
     }
 
     addObject(...objects: Container2DObject[]): void {
@@ -914,12 +963,18 @@ export class Camera2D{
 
     async draw(dt:number,resources:ResourcesManager,renderer:Renderer){
         this.update(dt,resources)
-        await this.container.draw({
+        const cam={
             matrix:this.projectionMatrix,
             position:this.visual_position,
             meter_size:this.meter_size,
             size:v2.new(this.width,this.height),
-            center_pos:this.center_pos
-        },renderer)
+            center_pos:this.center_pos,
+            batcher:this.batcher
+        }
+        await this.container.draw(cam,renderer)
+        this.batcher.render(this.projectionMatrix)
+        for(const a of this.after_draw){
+            a(cam,renderer)
+        }
     }
 }

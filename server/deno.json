@@ -5,7 +5,6 @@
     "build:api":"go build -o dist/main.exe src/api/main.go",
     "prod_l:api":"sudo /usr/local/go/bin/go run src/api/main.go",
     "dev": "deno task dev:game & deno task dev:api",
-    "install":"go get github.com/mattn/go-sqlite3 & go install github.com/cespare/reflex@latest",
     "build": "deno compile ./src/others/main.ts",
 
     "test:stress":"deno run -A ./src/test/stress_test.ts"

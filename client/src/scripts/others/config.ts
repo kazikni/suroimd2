@@ -1,6 +1,7 @@
 import { IPLocation } from "common/scripts/engine/utils.ts"
 import { Casters } from "../engine/console.ts"
 import { GamepadButtonID, Key } from "../engine/mod.ts"
+import { isMobile } from "../engine/game.ts";
 
 /*
 * LOCAL SERVER
@@ -8,9 +9,9 @@ export const api_server=new IPLocation("localhost",3000,false,false,"api")
 */
 /*
 * GLOBAL SERVER
-export const api_server=new IPLocation("na.suroimd.io",443,true,true,"")
+export const api_server=new IPLocation("api.suroimd.io",443,true,true,"")
 */
-//export const api_server=new IPLocation("na.suroimd.io",443,true,true,"")
+//export const api_server=new IPLocation("api.suroimd.io",443,true,true,"")
 export const api_server=new IPLocation("localhost",3000,false,false,"api")
 export const API_BASE=api_server.toString("http")
 export const api=true
@@ -19,6 +20,11 @@ export enum GraphicsDConfig {
     None=0,
     Normal,
     Advanced,
+}
+
+export const Debug={
+    hitbox:false,
+    force_mobile:false
 }
 
 export const ConfigCasters=Object.freeze({
@@ -32,11 +38,14 @@ export const ConfigCasters=Object.freeze({
     cv_graphics_post_proccess:Casters.toInt,
     cv_graphics_climate:Casters.toBoolean,
 
+
     cv_game_region:Casters.toString,
     cv_game_friendly_fire:Casters.toBoolean,
     cv_game_interpolation:Casters.toBoolean,
     cv_game_client_rot:Casters.toBoolean,
     cv_game_ping:Casters.toInt,
+
+    cv_mobile_auto_pickup:Casters.toBoolean,
 
     cv_sounds_master_volume:Casters.toInt,
 })
@@ -45,7 +54,7 @@ export const ConfigDefaultValues={
     cv_loadout_name:"",
 
     cv_graphics_renderer:"webgl2",
-    cv_graphics_resolution:"high",
+    cv_graphics_resolution:(Debug.force_mobile||isMobile)?"very-low":"high",
     cv_graphics_particles:GraphicsDConfig.Advanced,
     cv_graphics_lights:GraphicsDConfig.Advanced,
     cv_graphics_post_proccess:GraphicsDConfig.Advanced,
@@ -56,6 +65,8 @@ export const ConfigDefaultValues={
     cv_game_interpolation:true,
     cv_game_client_rot:true,
     cv_game_ping:5,
+
+    cv_mobile_auto_pickup:(Debug.force_mobile||isMobile),
 
     cv_sounds_master_volume:100,
     
@@ -139,10 +150,6 @@ export const ConfigDefaultActions={
     },
     "debug_menu":{
         buttons:[GamepadButtonID.R3],
-        keys:[Key.Delete]
+        keys:[Key.Delete,Key.Backspace]
     }
-}
-export const Debug={
-    hitbox:false,
-    force_mobile:false
 }

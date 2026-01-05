@@ -69,11 +69,10 @@ export interface ConsumibleDef extends Definition{
     quality:ItemQuality
     use_delay:number
     condition?:ConsumibleCondition[]
-    frame?:{
-        using_particle:string
-    }
-    sounds?:{
-        using?:string
+    assets?:{
+        using_particle?:string
+        using_sound?:string
+        pickup_sound?:string
     }
     boost_type?:BoostType
     drink?:boolean
@@ -102,8 +101,9 @@ export function CreateSoda(color:string,boost_type:BoostType,max?:number,amount:
         animation:ConsumiblesAnimations.drinking(color+"_soda",2.5),
         drink:true,
         boost_type:boost_type,
-        sounds:{
-            using:"using_soda"
+        assets:{
+            using_sound:"using_soda",
+            pickup_sound:"soda_pickup"
         }
     },item)
 }
@@ -123,8 +123,9 @@ export function CreatePills(color:string,boost_type:BoostType,item:DeepPartial<C
         quality:ItemQuality.Epic,
         condition:[ConsumibleCondition.UnfullExtra],
         boost_type:boost_type,
-        sounds:{
-            using:"using_pills"
+        assets:{
+            using_sound:"using_pills",
+            pickup_sound:"pills_pickup",
         },
     },item)
 }
@@ -143,7 +144,7 @@ Consumibles.insert(
         use_delay:3,
         quality:ItemQuality.Uncommon,
         condition:[ConsumibleCondition.UnfullHealth],
-        frame:{
+        assets:{
             using_particle:"healing_particle"
         }
     },
@@ -198,8 +199,8 @@ Consumibles.insert(
         use_delay:4.5,
         quality:ItemQuality.Rare,
         condition:[ConsumibleCondition.UnfullExtra],
-        sounds:{
-            using:"using_potion"
+        assets:{
+            using_sound:"using_potion"
         },
         animation:ConsumiblesAnimations.drinking("blue_potion",4.5,v2.new(0.5,0.35)),
         drink:true,
@@ -222,8 +223,8 @@ Consumibles.insert(
         use_delay:4.5,
         quality:ItemQuality.Epic,
         condition:[ConsumibleCondition.UnfullExtra],
-        sounds:{
-            using:"using_potion"
+        assets:{
+            using_sound:"using_potion"
         },
         animation:ConsumiblesAnimations.drinking("purple_potion",4.5,v2.new(0.5,0.35)),
         drink:true,

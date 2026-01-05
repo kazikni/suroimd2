@@ -5,8 +5,8 @@
    height="60.428001"
    viewBox="0 0 34.643 60.428"
    id="svg83"
-   sodipodi:docname="satchel_world.svg"
-   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="basic_pack_world.svg"
+   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -21,11 +21,11 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#505050"
-     inkscape:zoom="13.454028"
-     inkscape:cx="8.5476263"
-     inkscape:cy="28.913275"
-     inkscape:window-width="2560"
-     inkscape:window-height="1372"
+     inkscape:zoom="8.6766101"
+     inkscape:cx="14.003165"
+     inkscape:cy="56.070285"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -342,12 +342,13 @@
          id="path69"
          style="fill:url(#linearGradient3)" />
       <path
-         d="m 234.14286,191.28572 c 0,-5.99079 0,-19.58488 0,-22.71429 0,-1.36105 1.2196,-2.42857 2.42857,-2.42857 1.68595,0 6.60033,0 9.28571,0 1.19118,0 2,0.98655 2,2.57143 0,5.63218 0,18.82056 0,22.14286 0,1.48323 -0.9353,3 -2.28571,3 -2.8965,0 -7.70278,0 -9.28571,0 -0.99877,0 -2.14286,-0.65472 -2.14286,-2.57143 z"
+         d="m 234.14286,191.28572 v -22.71429 c 0,-1.36105 1.2196,-2.42857 2.42857,-2.42857 h 9.28571 c 1.19118,0 2,0.98655 2,2.57143 v 22.14286 c 0,1.48323 -0.9353,3 -2.28571,3 h -9.28571 c -0.99877,0 -2.14286,-0.65472 -2.14286,-2.57143 z"
          fill="url(#color-2)"
          stroke="#343434"
          stroke-width="2.5"
          id="path71"
-         style="fill:url(#linearGradient5)" />
+         style="fill:url(#linearGradient5);stroke:#000000;stroke-opacity:1"
+         sodipodi:nodetypes="sssssssss" />
       <g
          id="g1"
          transform="translate(0,0.142855)"
@@ -358,14 +359,16 @@
            stroke="#343434"
            stroke-width="1"
            id="path73"
-           style="fill:url(#linearGradient3)" />
+           style="fill:url(#linearGradient3);stroke:#000000;stroke-opacity:1"
+           sodipodi:nodetypes="ccccc" />
         <path
            d="m 232.30953,187.71429 v -5.28571 h 3 v 5.28571 z"
            fill="url(#color-4)"
            stroke="#343434"
            stroke-width="1"
            id="path75"
-           style="fill:url(#linearGradient3)" />
+           style="fill:url(#linearGradient3);stroke:#000000;stroke-opacity:1"
+           sodipodi:nodetypes="ccccc" />
       </g>
       <path
          d="m 239.00001,188.21429 v -16.42857 h 4 v 16.42857 z"

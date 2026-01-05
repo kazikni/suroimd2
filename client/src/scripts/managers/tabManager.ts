@@ -1,6 +1,9 @@
 import { KDate } from "common/scripts/engine/definitions.ts";
 import { type Game } from "../others/game.ts";
 import { HideElement, ShowElement } from "../engine/utils.ts";
+import { isMobile } from "../engine/game.ts";
+import { config } from "node:process";
+import { Debug } from "../others/config.ts";
 
 
 export abstract class TabApp {
@@ -41,64 +44,8 @@ export abstract class TabApp {
     abstract on_run():void
     abstract on_stop():void
     abstract on_tick(dt:number):void
-}
-export class MessageTabApp extends TabApp{
-    override on_run(): void {
-        this.element!.classList.add("tab-message-app")
-        this.element!.innerHTML = `
-<div class="contacts-panel">
-    <div class="contact">
-        <div class="avatar">A</div>
-        <div class="contact-info">
-            Alice
-        </div>
-        <div class="contact-time">Yeaster Day</div>
-    </div>
-</div>
-<div class="chat-panel">
-    <div class="chat-header">
-        <div class="chat-contact">Alice</div>
-    </div>
-    <div class="chat-messages"></div>
-    <div class="chat-input">
-        <input type="text" id="tab-message-app-input-msg" placeholder="Type A Message..." />
-        <button id="tab-message-app-send-button">➤</button>
-    </div>
-</div>
-        `
-        
-        this.messagesContainer = this.element!.querySelector(".chat-messages") as HTMLDivElement
 
-        this.addMessage("Hey!", "other")
-        this.addMessage("See Me In The Final. <3", "other")
-
-        const btn=this.element!.querySelector("#tab-message-app-send-button") as HTMLButtonElement
-        const input=this.element!.querySelector("#tab-message-app-input-msg") as HTMLButtonElement
-        btn.onclick=(_e)=>{
-            this.addMessage(input.value,"you")
-            input.value=""
-        }
-        input.value=""
-    }
-    override on_stop(): void {
-    }
-    override on_tick(dt: number): void {
-    }
-    
-    addMessage(text: string, from: "you" | "other") {
-        if (!this.messagesContainer) return
-        const msg = document.createElement("div")
-        msg.classList.add("msg", from === "you" ? "sent" : "received")
-        msg.innerText = text
-        this.messagesContainer.appendChild(msg)
-
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight
-    }
-
-    private messagesContainer?: HTMLDivElement
-    constructor(tab:TabManager){
-        super("Message","/img/menu/gui/tab/icons/map.png",tab)
-    }
+    initialize():void{}
 }
 export type TabStyle = {
     primary: string
@@ -119,6 +66,7 @@ export class TabManager {
 
     full_tab: boolean = false
     visible_tab: boolean = false
+    enabled:boolean = true
     apps: TabApp[] = []
 
     state:TabState=TabState.InitialPage
@@ -133,9 +81,6 @@ export class TabManager {
         this.tab.innerHTML=`
 <div id="tab-content">
     <div id="tab-apps">
-    <div class="tab-app">
-        <img src="/img/menu/gui/tab/icons/map.png" draggable="false" app-id="map" class="tab-app-icon">
-    </div>
     </div>
     <div id="tab-current-app">
 
@@ -166,25 +111,32 @@ export class TabManager {
         HideElement(this.content.tab_current_app)
         this.content.back_button.onclick=(_e)=>this.back_to_menu()
 
-        this.add_app(new MessageTabApp(this))
-
         this.tab.onmouseover=(_e)=>{
             if(this.full_tab)this.game.input_manager.focus=false
         }
         this.tab.onmouseout=(_e)=>{
             if(this.full_tab)this.game.input_manager.focus=true
         }
+        if(!this.enabled){
+            if(this.visible_tab)this.toggle_tab_visibility()
+        }
     }
 
     toggle_tab_full() {
-        this.full_tab = !this.full_tab
-        this.tab.className = this.full_tab ? "tab-view-full" : "tab-view-minimized"
+        if(this.enabled){
+            this.full_tab = !this.full_tab
+            this.tab.className = this.full_tab ? "tab-view-full" : "tab-view-minimized"
+        }
     }
     toggle_tab_visibility(){
-        this.visible_tab = !this.visible_tab
-        if(this.full_tab)this.toggle_tab_full()
-        if(this.visible_tab){
-            this.game.guiManager.content.game_gui.appendChild(this.tab)
+        if(this.enabled){
+            this.visible_tab = !this.visible_tab
+            if(this.full_tab)this.toggle_tab_full()
+            if(this.visible_tab){
+                this.game.guiManager.content.game_gui.appendChild(this.tab)
+            }else{
+                this.tab.remove()
+            }
         }else{
             this.tab.remove()
         }
@@ -212,6 +164,11 @@ export class TabManager {
             this.set_wallpaper(style.wallpaper)
         }
     }
+    game_start(){
+        if(!this.enabled){
+            if(this.visible_tab)this.toggle_tab_visibility()
+        }
+    }
 
     back_to_menu(){
         if(this.state===TabState.InitialPage)return
@@ -237,6 +194,7 @@ export class TabManager {
         this.appsContainer.appendChild(app.icon_element)
 
         app.icon_element.onclick=(_e)=>this.open_app(app)
+        app.initialize()
     }
 
     remove_app(name: string) {

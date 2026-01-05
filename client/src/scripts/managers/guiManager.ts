@@ -1,32 +1,28 @@
 import { Game } from "../others/game.ts";
-import { DamageReason, InventoryItemData, InventoryItemType } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { ActionsType } from "common/scripts/others/constants.ts";
-import { Angle, Numeric, random, v2, Vec2 } from "common/scripts/engine/mod.ts";
-import { DamageSources, GameItems } from "common/scripts/definitions/alldefs.ts";
+import { Angle, Numeric, v2, Vec2 } from "common/scripts/engine/mod.ts";
+import { DamageSources } from "common/scripts/definitions/alldefs.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
-import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 import { BoostType,Boosts } from "common/scripts/definitions/player/boosts.ts";
-import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { KillFeedMessage, KillFeedMessageKillleader, KillFeedMessageType } from "common/scripts/packets/killfeed_packet.ts";
 import { JoinedPacket } from "common/scripts/packets/joined_packet.ts";
 import { isMobile } from "../engine/game.ts";
 import { Debug, GraphicsDConfig } from "../others/config.ts";
-import { HideElement, ShowElement } from "../engine/utils.ts";
+import { disableContextMenuPrevent, enableContextMenuPrevent, HideElement, ShowElement } from "../engine/utils.ts";
 import { JoystickEvent } from "../engine/keys.ts";
 import { PrivateUpdate } from "common/scripts/packets/update_packet.ts";
 import { Badges } from "common/scripts/definitions/loadout/badges.ts";
 import { EmoteDef, Emotes} from "common/scripts/definitions/loadout/emotes.ts";
-import { type Loot } from "../gameObjects/loot.ts";
-import { type Obstacle } from "../gameObjects/obstacle.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
 import { CrosshairManager } from "./crosshairManager.ts";
 import { DefaultCrosshair } from "../defs/crosshair.ts";
+import { GameObject } from "../others/gameObject.ts";
 export interface HelpGuiState{
     driving:boolean
     gun:boolean
-    loot:boolean
     interact:boolean
     information_box_message:string
 }
@@ -43,13 +39,8 @@ export class GuiManager{
         _bar_interior:document.querySelector("#boost-bar") as HTMLDivElement,
         _bar_amount:document.querySelector("#boost-bar-amount") as HTMLSpanElement,
 
-        hand_info_count:document.querySelector("#hand-info-count") as HTMLSpanElement,
-        current_item_image:document.querySelector("#current-item-image") as HTMLImageElement,
-
         action_info_delay:document.querySelector("#action-info-delay") as HTMLSpanElement,
         action_info:document.querySelector("#action-info") as HTMLDivElement,
-
-        inventory:document.querySelector("#inventory") as HTMLDivElement,
 
         helmet_slot:document.querySelector("#helmet-slot") as HTMLImageElement,
         vest_slot:document.querySelector("#vest-slot") as HTMLImageElement,
@@ -64,20 +55,12 @@ export class GuiManager{
         gameOver_score:document.querySelector("#gameover-score") as HTMLDivElement,
         gameOver_menu_btn:document.querySelector("#gameover-menu-btn") as HTMLButtonElement,
 
-        weapon1:document.querySelector("#game-weapon-slot-00") as HTMLDivElement,
-        weapon2:document.querySelector("#game-weapon-slot-01") as HTMLDivElement,
-        weapon3:document.querySelector("#game-weapon-slot-02") as HTMLDivElement,
-
-        ammos:document.querySelector("#ammos-inventory") as HTMLDivElement,
-
         killfeed:document.querySelector("#killfeed-container") as HTMLDivElement,
         
         information_killbox:document.querySelector("#information-killbox") as HTMLDivElement,
         information_interact:document.querySelector("#information-interaction") as HTMLDivElement,
 
         killeader_span:document.querySelector("#killeader-text") as HTMLSpanElement,
-
-        gui_items:document.querySelector("#gui-items") as HTMLSpanElement,
 
         help_gui:document.querySelector("#help-gui") as HTMLDivElement,
 
@@ -112,31 +95,11 @@ export class GuiManager{
         right_joystick:document.querySelector("#right-joystick") as HTMLDivElement,
 
         btn_interact:document.querySelector("#btn-mobile-interact") as HTMLButtonElement,
-        btn_inventory:document.querySelector("#btn-mobile-inventory") as HTMLButtonElement,
         btn_reload:document.querySelector("#btn-mobile-reload") as HTMLButtonElement,
     }
 
-    weapons:{
-        0?:MeleeDef,
-        1?:GunDef,
-        2?:GunDef
-    }={
-        0:undefined,
-        1:undefined,
-        2:undefined
-    }
-    weapons_content={
-        weapon1_name:this.content.weapon1.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon1_image:this.content.weapon1.querySelector(".weapon-slot-image") as HTMLImageElement,
-        weapon2_name:this.content.weapon2.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon2_image:this.content.weapon2.querySelector(".weapon-slot-image") as HTMLImageElement,
-        weapon3_name:this.content.weapon3.querySelector(".weapon-slot-name") as HTMLSpanElement,
-        weapon3_image:this.content.weapon3.querySelector(".weapon-slot-image") as HTMLImageElement,
-    }
     action?:{delay:number,start:number,type:ActionsType}
 
-    currentWeapon?:HTMLDivElement
-    currentWeaponIDX:number=0
     killleader?:{
         id:number
         kills:number
@@ -190,33 +153,8 @@ export class GuiManager{
                 count:parseInt(this.content.debug.input_item_count.value)
             })
         })
-
-        const dropW=(w:number)=>{
-            return (e:MouseEvent)=>{
-                if(e.button==2){
-                    this.game.action.actions.push({type:InputActionType.drop,drop:w,drop_kind:1})
-                }
-            }
-        }
-        const selecW=(w:number)=>{
-            return ()=>{
-                this.game.action.actions.push({type:InputActionType.set_hand,hand:w})
-            }
-        }
-        this.content.weapon1.addEventListener("mousedown",dropW(0))
-        this.content.weapon2.addEventListener("mousedown",dropW(1))
-        this.content.weapon3.addEventListener("mousedown",dropW(2))
-
-        this.content.weapon1.addEventListener("touchstart",selecW(0))
-        this.content.weapon2.addEventListener("touchstart",selecW(1))
-        this.content.weapon3.addEventListener("touchstart",selecW(2))
-
-        this.update_ammos({})
-        document.addEventListener("contextmenu", e => e.preventDefault());
         HideElement(this.content.emote_wheel.main)
         HideElement(this.content.information_killbox)
-
-        this.handle_slot_click=this.handle_slot_click.bind(this)
     }
     mobile_init(){
         this.mobile_open()
@@ -299,13 +237,16 @@ export class GuiManager{
             })
         }
     }
+    mobile_enabled:boolean=false
     mobile_close(){
         HideElement(this.mobile_content.gui)
         ShowElement(this.content.help_gui)
+        this.mobile_enabled=false
     }
     mobile_open(){
         ShowElement(this.mobile_content.gui)
         HideElement(this.content.help_gui)
+        this.mobile_enabled=true
     }
     init(game:Game){
         this.game=game
@@ -332,107 +273,7 @@ export class GuiManager{
 
         this.content.killeader_span.innerText=this.game.language.get("killleader-wait",{})
         this.enableCrosshair()
-    }
-    handle_slot_click(e:MouseEvent){
-        const t=e.currentTarget as HTMLDivElement
-        if(e.button==2){
-            if(t.dataset.drop_kind==="2"){
-                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.drop!),drop_kind:2})
-            }else if(t.dataset.drop_kind==="3"){
-                this.game.action.actions.push({type:InputActionType.drop,drop:parseInt(t.dataset.slot!),drop_kind:3})
-            }
-        }else if(e.button===0){
-            if(t.dataset.drop_kind==="3"){
-                this.game.action.actions.push({type:InputActionType.use_item,slot:parseInt(t.dataset.slot!)})
-            }
-        }
-    }
-    ammos_cache:Map<string,HTMLDivElement>=new Map()
-    update_ammos(ammos:Record<string,number>){
-        const ak=Object.keys(ammos)
-        const ack=Array.from(this.ammos_cache.entries())
-        if(ack.length===ak.length&&ack.length>0){
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${ammos[a]}${def.liquid?"l":""}`
-                const c1=this.ammos_cache.get(a)!.querySelector(".count") as HTMLSpanElement
-                c1.innerText=`${c}`
-            }
-        }else{
-            this.content.ammos.innerHTML=""
-            this.ammos_cache.clear()
-            for(const a of ak){
-                const def=Ammos.getFromString(a)
-                const c=`${ammos[a]}${def.liquid?"l":""}`
-                const htm=`<div class="ammo-slot" id="ammo-${a}">
-                    <image class="icon" src="img/game/main/items/ammos/${a}.svg"></image>
-                    <span class="count">${c}</span>
-                </div>`
-
-                this.content.ammos.insertAdjacentHTML("beforeend", htm);
-                const ele=this.content.ammos.querySelector(`#ammo-${a}`) as HTMLDivElement
-                this.ammos_cache.set(a,ele)
-                ele.dataset.drop_kind="2"
-                ele.dataset.drop=def.idNumber!.toString()
-                ele.addEventListener("mousedown",this.handle_slot_click)
-            }
-        }
-    }
-    items?: Record<string, number>
-    private slotElements: HTMLDivElement[] = []
-
-    update_gui_items(slots: InventoryItemData[]) {
-        const res = this.game.resources
-        while (this.slotElements.length < slots.length) {
-            const el = document.createElement("div")
-            el.className = "inventory-item-slot"
-
-            const number = document.createElement("div")
-            number.className = "slot-number"
-            el.appendChild(number)
-
-            const count = document.createElement("div")
-            count.className = "slot-count"
-            el.appendChild(count)
-
-            const img = document.createElement("img")
-            img.className = "slot-image"
-            el.appendChild(img)
-
-            el.dataset.drop_kind = "3"
-            el.addEventListener("mousedown", this.handle_slot_click)
-
-            this.slotElements.push(el)
-            this.content.gui_items.appendChild(el)
-        }
-
-        const items: Record<string, number> = {}
-        for (let i = 0; i < slots.length; i++) {
-            const s = slots[i]
-            const el = this.slotElements[i]
-            const number = el.children[0] as HTMLDivElement
-            const count = el.children[1] as HTMLDivElement
-            const img = el.children[2] as HTMLImageElement
-
-            number.textContent = `${i + 4}`
-
-            if (s.count > 0) {
-                const def = GameItems.valueNumber[s.idNumber]
-                count.textContent = `${s.count}`
-                img.src = res.get_sprite(def.idString).src
-                img.style.display = "block"
-                el.dataset.slot = i.toString()
-                el.style.display = ""
-                items[def.idString] = (items[def.idString] ?? 0) + s.count
-            } else {
-                count.textContent = ""
-                img.style.display = "none"
-                el.dataset.slot = ""
-                el.style.display = ""
-            }
-        }
-
-        this.items = items
+        enableContextMenuPrevent()
     }
     players_name:Record<number,{name:string,badge:string,full:string}>={}
     process_joined_packet(jp:JoinedPacket){
@@ -451,9 +292,8 @@ export class GuiManager{
     }
     state:HelpGuiState={
         driving:false,
-        gun:false,
-        loot:false,
         interact:false,
+        gun:false,
         information_box_message:""
     }
     update_hint(){
@@ -467,6 +307,18 @@ export class GuiManager{
             }else{
                 ShowElement(this.content.information_interact)
                 this.content.information_interact.innerHTML=state.information_box_message
+            }
+        }
+        if(this.mobile_enabled){
+            if(this.current_interaction){
+                ShowElement(this.mobile_content.btn_interact)
+            }else{
+                HideElement(this.mobile_content.btn_interact)
+            }
+            if(state.gun){
+                ShowElement(this.mobile_content.btn_reload)
+            }else{
+                HideElement(this.mobile_content.btn_reload)
             }
         }
     }
@@ -485,9 +337,8 @@ export class GuiManager{
         ShowElement(this.content.game_gui)
         this.enableCrosshair()
         
-        this.content.gui_items.innerHTML=""
-        this.slotElements.length=0
-        this.items={}
+        this.game.inventoryManager.clear()
+        disableContextMenuPrevent()
     }
     information_killbox_messages:string[]=[]
     information_killbox_time:number=0
@@ -600,6 +451,8 @@ export class GuiManager{
         this.game.addTimeout(()=>{
             elem.remove()
         },4)
+
+      this.game.signals.emit("killfeed_message",{obj:msg,text:elem.innerHTML})
     }
     crosshair=false
     enableCrosshair() {
@@ -629,72 +482,19 @@ export class GuiManager{
                 this.game.add_damageSplash(ds)
             }
         }
-
         if(priv.dirty.weapons){
-            let name=this.weapons_content.weapon1_name
-            let img=this.weapons_content.weapon1_image
-            if(priv.weapons.melee){
-                name.innerText=priv.weapons.melee.idString
-                const src=this.game.resources.get_sprite(priv.weapons.melee.idString).src
-                img.src=src
-                this.weapons[0]=priv.weapons.melee
-                img.style.display="block"
-            }else{
-                name.innerText=""
-            }
-            name=this.weapons_content.weapon2_name
-            img=this.weapons_content.weapon2_image
-            if(priv.weapons.gun1){
-                name.innerText=priv.weapons.gun1.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun1.idString).src
-                img.src=src
-                this.weapons[1]=priv.weapons.gun1
-                img.style.display="block"
-            }else{
-                name.innerText=""
-                img.style.display="none"
-            }
-            name=this.weapons_content.weapon3_name
-            img=this.weapons_content.weapon3_image
-            if(priv.weapons.gun2){
-                name.innerText=priv.weapons.gun2.idString
-                const src=this.game.resources.get_sprite(priv.weapons.gun2.idString).src
-                img.src=src
-                this.weapons[2]=priv.weapons.gun2
-                img.style.display="block"
-            }else{
-                name.innerText=""
-                img.style.display="none"
-            }
+            this.game.inventoryManager.inventory.set_weapon(0,priv.weapons.melee)
+            this.game.inventoryManager.inventory.set_weapon(1,priv.weapons.gun1)
+            this.game.inventoryManager.inventory.set_weapon(2,priv.weapons.gun2)
+            this.game.inventoryManager.update_weapons()
         }
         if(priv.dirty.current_weapon&&priv.current_weapon){
-            if(this.currentWeapon)this.currentWeapon.classList.remove("weapon-slot-selected")
-            const wp=this.weapons[priv.current_weapon.slot as keyof typeof this.weapons]
-            switch(priv.current_weapon.slot){
-                case 1:
-                    this.currentWeapon=this.content.weapon2
-                    this.currentWeaponIDX=1
-                    break
-                case 2:
-                    this.currentWeapon=this.content.weapon3
-                    this.currentWeaponIDX=2
-                    break
-                default:
-                    this.currentWeapon=this.content.weapon1
-                    this.currentWeaponIDX=0
-            }
-
-            if(priv.current_weapon.slot===0){
-                //
-            }else if(wp&&(wp as GunDef).reload){
-                this.content.hand_info_count.innerText=`${priv.current_weapon.ammo}/${(wp as GunDef).reload?.capacity}`
-            }
-            this.currentWeapon.classList.add("weapon-slot-selected")
+            this.game.inventoryManager.inventory.set_weapon_index(priv.current_weapon.slot)
+            this.game.inventoryManager.update_hand(priv.current_weapon)
         }
-
-        if(priv.dirty.inventory&&priv.inventory){
-            this.update_gui_items(priv.inventory)
-        }
+        if (priv.dirty.inventory&&priv.inventory) {
+            this.game.inventoryManager.update_items(priv.inventory)
+        }        
         if(priv.dirty.action){
             if(priv.action){
                 this.action={
@@ -707,14 +507,13 @@ export class GuiManager{
             }
         }
         if(priv.dirty.oitems){
-            const aa:Record<string,number>={}
+            this.game.inventoryManager.inventory.oitems={}
             for(const a of Object.keys(priv.oitems)){
                 const def=Ammos.getFromNumber(a as unknown as number)
-                aa[def.idString]=priv.oitems[a as unknown as number]
+                this.game.inventoryManager.inventory.oitems[def.idString]=priv.oitems[a as unknown as number]
             }
-            this.update_ammos(aa)
+            this.game.inventoryManager.update_oitems()
         }
-
         if (this.emote_wheel.active) {
             const angle = Angle.rad2deg(
                 v2.lookTo(this.emote_wheel.positon, this.game.input_manager.mouse.position)
@@ -758,6 +557,7 @@ export class GuiManager{
                 }
             }
         }
+
         this.update_crosshair()
     }
     show_game_over(g:GameOverPacket){
@@ -806,6 +606,7 @@ export class GuiManager{
         }*/
     }
     update(){
+        this.update_active_player(this.game.activePlayer)
         if(this.action){
             const w=(Date.now()-this.action.start)/1000
             if(w<this.action.delay){
@@ -817,7 +618,6 @@ export class GuiManager{
         }else{
             HideElement(this.content.action_info)
         }
-        this.update_hint()
         if(this.information_killbox_messages.length>0){
             if(this.information_killbox_time<=0){
                 ShowElement(this.content.information_killbox)
@@ -831,49 +631,33 @@ export class GuiManager{
             }
         }
         this.content.debug_show.innerText=`FPS: ${this.game.fps}`
-        this.update_active_player(this.game.activePlayer)
     }
-    current_interaction?:Loot|Obstacle
-    update_active_player(player?:Player){
+    current_interaction?: GameObject
+    update_active_player(player?: Player) {
         const old_inter=this.current_interaction
-        this.current_interaction=undefined
-        if(player){
-            const objs=this.game.scene.objects.cells.get_objects(player.hb,player.layer)
-            for(const o of objs){
-                if(player.hb.collidingWith(o.hb)){
-                    switch(o.stringType){
-                        case "loot":{
-                            if(old_inter===o)return
-                            if(!(o as Loot).item)continue
-                            this.state.information_box_message=this.game.language.get("interact-loot",{
-                                source:this.game.language.get((o as Loot).item.idString),
-                                count:(o as Loot).count>1?`(${(o as Loot).count})`:""
-                            })
-                            this.current_interaction=o as Loot
-                            this.state.loot=true
-                            this.update_hint()
-                            return
-                        }
-                        case "obstacle":{
-                            if((o as Obstacle).def.interactDestroy&&!(o as Obstacle).dead){
-                                if(old_inter===o)return
-                                this.state.interact=true
-                                this.state.information_box_message=this.game.language.get("interact-obstacle-break",{})
-                                this.current_interaction=o as Obstacle
-                                this.update_hint()
-                            }
-                            return
-                        }
-                    }
+        this.current_interaction = undefined
+        this.state.interact = false
+        this.state.information_box_message = ""
+        if (!player) {
+            return
+        }
+        const objs = this.game.scene.objects.cells.get_objects(player.hb, player.layer)
+        for (const o of objs) {
+            if(!o.can_interact(player)) continue
+            this.current_interaction = o
+            const hint = o.get_interact_hint(player)
+            if(hint) {
+                this.state.information_box_message = hint
+            }
+            if(this.current_interaction!==old_inter){
+                if(this.game.save.get_variable("cv_mobile_auto_pickup")&&this.current_interaction.auto_interact(player)){
+                    this.game.input_manager.emit("actiondown",{action:"interact"})
                 }
             }
+            break
         }
-        this.game.guiManager.state.information_box_message=""
-        this.state.interact=false
-        this.state.loot=false
         this.update_hint()
     }
-
     health:number=-1
     boost:number=-1
     boost_type:BoostType=BoostType.Null

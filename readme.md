@@ -14,6 +14,7 @@ The main ones are:
 - [Deno](https://deno.com/)  
 - [Node.js](https://nodejs.org/) (via [NVM](https://github.com/nvm-sh/nvm))  
 - [Golang](https://go.dev/)
+- [Python](https://www.python.org/)
 ---
 ### 1️⃣ Install Deno
 Follow the instructions here: [Deno Installation Guide](https://deno.com/)
@@ -31,6 +32,9 @@ nvm use 20.12.0
 ### 3️⃣ Install Golang
 Download and install from: [Golang](https://go.dev/)
 ---
+### 3️⃣ Install Python
+Download and install from: [Golang](https://www.python.org/)
+---
 ### 4️⃣ Get the Suroimd.io 2 Code
 You have three options:
 * Download the source code directly from GitHub
@@ -40,7 +44,7 @@ You have three options:
 ### 5️⃣ Install Dependencies
 Open the project folder in your terminal and run:
 ```bash
-deno task install
+python3 setup.py
 ```
 This will install all required dependencies.
 **Note: If you encounter errors, double-check your installation or the deno.json file.**

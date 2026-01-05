@@ -10,6 +10,7 @@ import { GameObject } from "../others/gameObject.ts";
 import { model2d } from "common/scripts/engine/models.ts";
 import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { Color } from "../engine/renderer.ts";
+import { type Player } from "./player.ts";
 export function GetObstacleBaseFrame(def:ObstacleDef,variation:number,skin:number):string{
     let spr=(def.frame&&def.frame.base)?def.frame.base:def.idString
     if(skin>0&&def.biome_skins){
@@ -42,6 +43,8 @@ export class Obstacle extends GameObject{
         dead:"",
         base:""
     }
+
+    interacted:boolean=false
 
     door_status?:ObstacleDoorStatus
 
@@ -149,14 +152,14 @@ export class Obstacle extends GameObject{
                         duration:(this.def.expanded_behavior as ObstacleBehaviorDoor).open_duration,
                         to:{rotation:this.rotation+(3.141592/2)},
                     })
-                    this.hb=this.doors_hitboxes![1].transform(this.container.position,this.scale,0)
+                    this.hb=this.doors_hitboxes![1].transform(this.container.position,this.scale)
                 }else if(door_status.open===0){
                     this.game.addTween({
                         target:this.container,
                         duration:(this.def.expanded_behavior as ObstacleBehaviorDoor).open_duration,
                         to:{rotation:this.rotation},
                     })
-                    this.hb=this.doors_hitboxes![0].transform(this.container.position,this.scale,0)
+                    this.hb=this.doors_hitboxes![0].transform(this.container.position,this.scale)
                 }
                 
             }
@@ -238,6 +241,37 @@ export class Obstacle extends GameObject{
                     //this.doors_hitboxes=CalculateDoorHitbox(this.def.hitbox!.to_rect(),this.side,this.def.expanded_behavior as ObstacleBehaviorDoor)
             }
         }
+    }
+    override interact(player:Player){
+        if(this.def.expanded_behavior){
+            if(this.def.expanded_behavior.type==1){
+                if(this.interacted)return
+                this.interacted=true
+                this.game.sounds.play(this.game.resources.get_audio(this.def.expanded_behavior.click_sound),{
+                    position:this.m_position,
+                })
+                this.game.addTimeout(()=>{
+                    this.game.sounds.play(this.game.resources.get_audio("menu_music"),{
+                        position:this.m_position,
+                    })
+                },this.def.expanded_behavior.delay)
+            }
+        }
+    }
+    override get_interact_hint(player:Player) {
+        if (this.def.interactDestroy) {
+            return player.game.language.get("interact-obstacle-break", {})
+        }
+        return player.game.language.get(
+            "interact-obstacle-playaudio-" + this.id,
+            {}
+        )
+    }
+    override can_interact(player: Player): boolean {
+        return !this.dead&&this.hb.collidingWith(player.hb)&&this.def.interactDestroy===true
+    }
+    override auto_interact(player: Player): boolean {
+        return (this.def.interactDestroy===true)
     }
     scale=0
     override decode(stream: NetStream, full: boolean): void {

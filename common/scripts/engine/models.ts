@@ -155,30 +155,43 @@ function rotatePoint(x:number, y:number, angle:number) {
         y: sinTheta * x + cosTheta * y
     };
 }
-export function ImageModel2D(scale: Vec2, angle: number, hotspot: Vec2=v2.new(0,0),size:Vec2,meter_size:number=100):Float32Array{
-    const sizeR=v2.new((size.x/meter_size)*(scale.x/2),(size.y/meter_size)*(scale.y/2))
+export function ImageModel2D(
+    scale: Vec2,
+    angle: number,
+    hotspot: Vec2 = v2.new(0,0),
+    size: Vec2,
+    meter_size: number = 100,
+    position:Vec2={x:0,y:0}
+): Float32Array {
+
+    const sizeR = v2.new(
+        (size.x / meter_size) * (scale.x / 2),
+        (size.y / meter_size) * (scale.y / 2)
+    );
+
     const x1 = -sizeR.x*hotspot.x
     const y1 = -sizeR.y*hotspot.y
     const x2 = sizeR.x+x1
     const y2 = sizeR.y+y1
 
-    const verticesB = [
-        { x: x1, y: y1 },
-        { x: x2, y: y1 },
-        { x: x1, y: y2 },
-        { x: x2, y: y2 }
+    const base = [
+        { x: x1, y: y1 }, // 0
+        { x: x2, y: y1 }, // 1
+        { x: x1, y: y2 }, // 2
+        { x: x2, y: y2 }  // 3
     ];
-    const verticesR = verticesB.map(vertex => rotatePoint(vertex.x, vertex.y, angle))
+
+    const rot = base.map(v => rotatePoint(v.x, v.y, angle));
 
     return new Float32Array([
-        verticesR[0].x, verticesR[0].y,
-        verticesR[1].x, verticesR[1].y,
-        verticesR[2].x, verticesR[2].y,
-        
-        verticesR[2].x, verticesR[2].y,
-        verticesR[1].x, verticesR[1].y,
-        verticesR[3].x, verticesR[3].y
-    ])
+        rot[0].x+position.x, rot[0].y+position.y,
+        rot[1].x+position.x, rot[1].y+position.y,
+        rot[2].x+position.x, rot[2].y+position.y,
+
+        rot[2].x+position.x, rot[2].y+position.y,
+        rot[1].x+position.x, rot[1].y+position.y,
+        rot[3].x+position.x, rot[3].y+position.y,
+    ]);
 }
 export function ImageModel3D(
     scale: Vec2,
@@ -240,6 +253,12 @@ function rotate3D(v: { x: number; y: number; z: number }, angle: { x: number; y:
 
 
 export const model2d={
+    zero(){
+        return {
+            vertices:new Float32Array(),
+            tex_coords:new Float32Array(),
+        }
+    },
     line(start: Vec2, end: Vec2, width: number): Model2D {
         const dx = end.x - start.x;
         const dy = end.y - start.y;

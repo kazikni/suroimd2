@@ -24,13 +24,13 @@ type ModeConfig struct {
 	Enabled  bool   `json:"enabled"`
 	Gamemode string `json:"gamemode"`
 }
-type GameConfigDebug struct{
-	DebugMenu bool `json:"debug_menu"`
+type GameConfigDebug struct {
+	DebugMenu     bool `json:"debug_menu"`
 	DeenableLobby bool `json:"deenable_lobby"`
 }
 type GameConfig struct {
 	MaxGames int             `json:"max_games"`
-	Debug GameConfigDebug `json"debug"`
+	Debug    GameConfigDebug `json"debug"`
 	Config   GameConfigInner `json:"config"`
 	Host     HostConfig      `json:"host"`
 	Modes    []ModeConfig    `json:"modes"`
@@ -55,11 +55,14 @@ type DatabaseConfig struct {
 type ShopConfig struct {
 	Skins map[int]int `json:"skins"`
 }
-
+type ApiFiles struct {
+	News string `json:"news"`
+}
 type Config struct {
 	API struct {
 		Host   HostConfig `json:"host"`
 		Global string     `json:"global"`
+		Files  ApiFiles   `json:"files"`
 	} `json:"api"`
 	Game     GameConfig           `json:"game"`
 	Regions  map[string]RegionDef `json:"regions"`
@@ -78,6 +81,7 @@ func LoadConfig(path string) (*Config, error) {
 		API struct {
 			Host   HostConfig `json:"host"`
 			Global string     `json:"global"`
+			Files  ApiFiles   `json:"files"`
 		} `json:"api"`
 		Game     GameConfig           `json:"game"`
 		Regions  map[string]RegionDef `json:"regions"`

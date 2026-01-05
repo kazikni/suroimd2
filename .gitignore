@@ -48,3 +48,16 @@ pnpm-lock.yaml
 
 go.sum
 go.work.sum
+
+!/build/.npmkeep
+
+/client/android/app/src/main/assets
+/client/android/app/src/main/assets/*
+app/src/main/release
+/client/android/app/src/main/res
+/client/android/app/src/main/res/*
+!/client/android/app/src/main/resvalues
+!/client/android/app/src/main/resxml/file_paths.xml
+
+__pycache__
+__pycache__/*
