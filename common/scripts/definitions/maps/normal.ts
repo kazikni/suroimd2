@@ -215,9 +215,9 @@ export const NormalMap:MapDef={
     generation:{
         island:{
             size:v2.new(500,500),
-            ground_loot:[{count:80,table:"ground_loot"}],
             spawn:[
                 [
+                    {id:"recorded_tape",count:1},
                     {id:"container_1",count:25},
                     {id:"container_2",count:25},
                     {id:"sillo",count:10},
@@ -229,7 +229,7 @@ export const NormalMap:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:630}, //90% of 700
-                    {id:"recorded_tape",count:1},
+                    {id:"ground_loot",count:80}
                 ]
             ],
             terrain:{
@@ -277,9 +277,10 @@ export const NormalLobby:MapDef={
     generation:{
         island:{
             size:v2.new(100,100),
-            ground_loot:[{count:20,table:"ground_loot"}],
             spawn:[
                 [
+                    {id:"recorded_tape",count:1},
+                    {id:"sillo",count:1},
                     {id:"oak_tree",count:40},
                     {id:"stone",count:30},
                     {id:"bush",count:20},
@@ -287,8 +288,9 @@ export const NormalLobby:MapDef={
                     {id:"copper_crate",count:3},
                     {id:"barrel",count:8},
 
-                    /*{id:"pig",count:10},
-                    {id:"chicken",count:10}*/
+                    {id:"pig",count:10},
+                    {id:"ground_loot",count:10}
+                    //{id:"chicken",count:10}*/
                 ]
             ],
             terrain:{
@@ -365,7 +367,6 @@ export const SnowMap:MapDef={
     generation:{
         island:{
             size:v2.new(500,500),
-            ground_loot:[{count:80,table:"ground_loot"}],
             spawn:[
                 [
                     {id:"christmas_tree",count:3},
@@ -379,6 +380,7 @@ export const SnowMap:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:630}, //90% of 700
+                    {id:"ground_loot",count:80}
                 ]
             ],
             terrain:{

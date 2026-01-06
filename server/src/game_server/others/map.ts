@@ -64,21 +64,20 @@ export const generation={
                             const obj=map.generate_building(def,random,item.spawn,item.layer)
                             if(!obj)break
                         }
-                    }
-                }
-            }
-            for(const l of def.ground_loot??[]){
-                const count=random.irandom1(l.count)
-                const layer=l.layer??Layers.Normal
-                for(let idx=0;idx<count;idx++){
-                    const loot=map.game.loot_tables.get_loot(l.table,{withammo:true})
-                    const pos:Vec2|undefined=map.getRandomPosition(new CircleHitbox2D(v2.new(0,0),0.6),-1,layer,{
-                        type:SpawnModeType.blacklist,
-                        list:[map.def.default_floor??FloorType.Water]
-                    },random)
-                    if(!pos)break
-                    for(const ll of loot){
-                        map.game.add_loot(pos,ll.item,ll.count)
+                    }else if(map.game.loot_tables.tables.has(item.id)){
+                        const count=random.irandom1(item.count)
+                        const layer=item.layer??Layers.Normal
+                        for(let idx=0;idx<count;idx++){
+                            const loot=map.game.loot_tables.get_loot(item.id,{withammo:true})
+                            const pos:Vec2|undefined=map.getRandomPosition(new CircleHitbox2D(v2.new(0,0),0.6),-1,layer,{
+                                type:SpawnModeType.blacklist,
+                                list:[map.def.default_floor??FloorType.Water]
+                            },random)
+                            if(!pos)break
+                            for(const ll of loot){
+                                map.game.add_loot(pos,ll.item,ll.count)
+                            }
+                        }
                     }
                 }
             }

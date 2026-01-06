@@ -23,7 +23,6 @@ import { ABParticle2D, ClientParticle2D } from "../engine/particles.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { type Sound } from "../engine/resources.ts";
 import { FloorKind, Floors, FloorType } from "common/scripts/others/terrain.ts";
-import { log } from "node:console";
 import { CenterHotspot } from "../engine/utils.ts";
 export class Player extends GameObject{
     stringType:string="player"

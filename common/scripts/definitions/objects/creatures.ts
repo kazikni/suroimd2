@@ -1,7 +1,7 @@
 import { Definition, Definitions, FrameDef } from "../../engine/definitions.ts";
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { CircleHitbox2D, Hitbox2D } from "../../engine/hitbox.ts";
-import { type SpawnMode } from "./obstacles.ts";
+import { SpawnMode } from "../../others/constants.ts";
 export interface CreatureDef extends Definition{
     imortal?:boolean
     health:number

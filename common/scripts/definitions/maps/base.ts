@@ -72,7 +72,6 @@ export interface IslandDef{
             floor?:FloorType
         }
     },
-    ground_loot?:{table:string,count:Random1,layer?:Layers}[],
     spawn?:{id:string,count:Random1,layer?:Layers,spawn?:SpawnMode}[][],
 }
 export interface MapDef{

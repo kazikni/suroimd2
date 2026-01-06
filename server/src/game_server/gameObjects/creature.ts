@@ -1,4 +1,4 @@
-import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
+import { v2, v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { ServerGameObject } from "../others/gameObject.ts";
 import { type Player } from "./player.ts";
 import { type CreatureDef } from "common/scripts/definitions/objects/creatures.ts";
@@ -57,8 +57,7 @@ export class Creature extends ServerGameObject{
             this.old_rotation=this.angle
             this.manager.cells.updateObject(this)
         }
-        this.position=v2.add(this.position,v2.scale(this.velocity,dt))
-        
+        v2m.add(this.position,this.position,v2.scale(this.velocity,dt))
         //Collision
         const objs=this.manager.cells.get_objects(this.hb,this.layer)
         for(const obj of objs){
@@ -68,8 +67,8 @@ export class Creature extends ServerGameObject{
                     if((obj as Obstacle).def.no_collision)break
                     if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
                         const ov=this.hb.overlapCollision((obj as Obstacle).hb)
-                        if(ov){
-                            this.position=v2.sub(this.position,v2.scale(ov.dir,ov.pen))
+                        for(const o of ov){
+                            this.position=v2.sub(this.position,v2.scale(o.dir,o.pen))
                         }
                     }
                     break
