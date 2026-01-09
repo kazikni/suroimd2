@@ -1,4 +1,4 @@
-import { CircleHitbox2D, NetStream, random, v2, Vec2 } from "common/scripts/engine/mod.ts"
+import { Angle, CircleHitbox2D, NetStream, random, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { Player } from "./player.ts";
 import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts";
 import { Obstacle } from "./obstacle.ts";
@@ -80,9 +80,12 @@ export class Explosion extends ServerGameObject{
                     case "obstacle":
                         (obj as Obstacle).damage({amount:this.defs.damage,reason:DamageReason.Explosion,source:this.source??this.defs,owner:this.owner,position:v2.duplicate(obj.position),critical:false})
                         break
-                    case "loot":
-                        (obj as Loot).push(Math.min(0,v2.distance(obj.position,this.position)-this.radius)*-6,v2.lookTo(this.position,obj.position))
+                    case "loot":{
+                        const dist=v2.distance(obj.position,this.position)
+                        const angle=v2.lookTo(obj.position,this.position);
+                        (obj as Loot).push(Math.min((this.radius/dist)*-10,9),angle)
                         break
+                    }
                 }
             }
             this.destroy()
@@ -94,7 +97,7 @@ export class Explosion extends ServerGameObject{
         this.defs=args.defs
         this.owner=args.owner
         this.source=args.source
-        this.hb=new CircleHitbox2D(args.position,random.float(this.defs.size.min,this.defs.size.max)*2)
+        this.hb=new CircleHitbox2D(args.position,this.defs.size.end*2)
     }
     override encode(stream: NetStream, full: boolean): void {
         stream.writePosition(this.position)
