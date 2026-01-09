@@ -105,6 +105,26 @@ export interface InventoryItemData{
     type:InventoryItemType
     idNumber:number
 }
+export interface InventoryPresetItem{
+    item:string
+    count:number
+}
+export interface InventoryPreset{
+    helmet?:string[]//Will Choose one of these helmets
+    vest?:string[]//Will Choose one of these vest
+    backpack?:string[]//Will Choose one of these backpacks
+
+    skin?:string[]//Will Choose one of these skins
+
+    melee?:string[]//Will Choose one of these melees
+    gun1?:{id:string,ammo?:number}[]//Will Choose one of these guns
+    gun2?:{id:string,ammo?:number}[]//Will Choose one of these guns
+
+    items?:InventoryPresetItem[][]
+    oitems?:Record<string,number>
+
+    hand?:number
+}
 export function InventoryItemDataEncode(stream:NetStream,data:InventoryItemData){
     stream.writeUint16(data.count)
     stream.writeUint16(data.idNumber)

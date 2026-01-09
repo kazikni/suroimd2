@@ -1,7 +1,7 @@
 import { CircleHitbox2D, Client, NetStream, NullVec2, Numeric, RectHitbox2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
 import { ActionPacket, InputAction, InputActionType } from "common/scripts/packets/action_packet.ts"
 import { ActionsType, GameConstants, PlayerAnimation, PlayerAnimationType } from "common/scripts/others/constants.ts"
-import { GInventory,GunItem,LItem} from "../player/inventory.ts"
+import { GInventory,GunItem} from "../player/inventory.ts"
 import { DamageSplash, UpdatePacket } from "common/scripts/packets/update_packet.ts"
 import { DamageParams } from "../others/utils.ts"
 import { type Obstacle } from "./obstacle.ts"
@@ -13,7 +13,7 @@ import { AccessoriesManager } from "../player/accesories.ts"
 import { ServerGameObject } from "../others/gameObject.ts"
 import { type Loot } from "./loot.ts"
 import { Ammos } from "common/scripts/definitions/items/ammo.ts"
-import { type Group, type Team } from "../others/teams.ts"
+import { type Group, type Team } from "../mode/teams.ts"
 import { KillFeedMessageType } from "common/scripts/packets/killfeed_packet.ts"
 import {SkinDef, Skins} from "common/scripts/definitions/loadout/skins.ts"
 import { type VehicleSeat } from "./vehicle.ts"
@@ -879,7 +879,6 @@ export class Player extends ServerGameObject{
         this.update2()
         if(!this.is_npc){
             let killed_by:number=this.id
-
             if(params.owner&&params.owner instanceof Player){
                 if(params.owner.id!==this.id&&(params.owner.username===""||params.owner.username!==this.username||this.is_bot)&&!this.game.modeManager.is_ally(this,params.owner)){
                     params.owner.status.kills++
@@ -950,6 +949,7 @@ export class Player extends ServerGameObject{
             this.game.update_data()
         }else{
             this.inventory.drop_all()
+            this.game.modeManager.on_player_die(this)
         }
 
         this.game.add_player_body(this,v2.lookTo(params.position,this.position),this.layer)

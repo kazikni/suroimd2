@@ -7,8 +7,8 @@ import { ApiSettingsS } from "common/scripts/config/config.ts";
 import { ShowTab } from "../engine/mod.ts";
 import { SoundManager } from "../engine/sounds.ts";
 import { AccountManager } from "./accountManager.ts";
-import { PlayArgs } from "../others/constants.ts";
-import { random } from "common/scripts/engine/random.ts";
+import { PlayArgs } from "../others/constants.ts";  
+import { LevelDefinition } from "common/scripts/config/level_definition.ts";
 
 export class MenuManager{
     save:GameConsole
@@ -454,7 +454,7 @@ export class MenuManager{
         this.content.settings.sounds_master_volume.value=this.save.get_variable("cv_sounds_master_volume")
         this.sounds.masterVolume=this.save.get_variable("cv_sounds_master_volume")/100
 
-        await this.load_campaign_levels()
+        await this.load_campaign()
         
         /*
         HideElement(this.content.settings_tabs)
@@ -506,23 +506,25 @@ export class MenuManager{
         ShowElement(this.content.menuD)
         HideElement(this.content.gameD)
     }
-    load_campaign_levels():Promise<void>{
-        return new Promise<void>((resolve) => {
-            this.content.campaing_levels.innerHTML = ""
-            for (let i = 0; i < 1; i++) {
-                const level = document.createElement("div")
-                level.className="play-select-item background-menu"
-                level.innerHTML = `
-<h1>Level ${i + 1}</h1>
-<p>Welcome To The Island</p>
-<button id="start-level-${i}" class="btn-green">Start Level</button>`
-                this.content.campaing_levels.appendChild(level)
-                const start_btn = level.querySelector(`#start-level-${i}`) as HTMLButtonElement
+    async load_campaign():Promise<void>{
+        const campaign=await(await fetch("/scripts/campaign.json")).json()
+        this.content.campaing_levels.innerHTML = ""
+        for(const charpter of campaign.charpters){
+            this.content.campaing_levels.innerHTML+=`<h2 class="span">${charpter.name}</h2>`
+            for(const l of charpter.levels){
+                const level:LevelDefinition=await(await fetch(l)).json()
+                const level_div = document.createElement("div")
+                level_div.className="play-select-item background-menu"
+                level_div.innerHTML = `
+    <h1>${level.meta.name}</h1>
+    <p>Welcome To The Island</p>
+    <button class="btn-green">Start Level</button>`
+                this.content.campaing_levels.appendChild(level_div)
+                const start_btn = level_div.querySelector(`.btn-green`) as HTMLButtonElement
                 start_btn.onclick = () => {
-                    if(this.play_callback)this.play_callback({type:"campaign",level:i+1,dificulty:2})
+                    if(this.play_callback)this.play_callback({type:"campaign",level:level,dificulty:2})
                 }
             }
-            resolve()
-        })
+        }
     }
 }

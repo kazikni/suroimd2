@@ -1,4 +1,4 @@
-import { Angle, CircleHitbox2D, NetStream, random, v2, Vec2 } from "common/scripts/engine/mod.ts"
+import { CircleHitbox2D, NetStream, random, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { Player } from "./player.ts";
 import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts";
 import { Obstacle } from "./obstacle.ts";
@@ -99,7 +99,7 @@ export class Explosion extends ServerGameObject{
         this.source=args.source
         this.hb=new CircleHitbox2D(args.position,this.defs.size.end*2)
     }
-    override encode(stream: NetStream, full: boolean): void {
+    override encode(stream: NetStream, _full: boolean): void {
         stream.writePosition(this.position)
             .writeFloat((this.hb as CircleHitbox2D).radius,0,20,3)
             .writeID(this.defs.idNumber!)

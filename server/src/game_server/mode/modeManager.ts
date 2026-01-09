@@ -1,6 +1,6 @@
 import { random } from "common/scripts/engine/random.ts";
 import { type Player } from "../gameObjects/player.ts";
-import { type Game } from "./game.ts";
+import { type Game } from "../others/game.ts";
 import { GroupManager, TeamsManager } from "./teams.ts";
 import { DamageReason } from "common/scripts/definitions/utils.ts";
 import { Vehicle } from "../gameObjects/vehicle.ts";
@@ -17,12 +17,24 @@ export abstract class GamemodeManager{
     abstract can_join():boolean
     abstract can_down(player:Player):boolean
     abstract on_start():void
-    abstract on_finish():void
+    on_finish(){
+        this.game.addTimeout(()=>{
+            for(const p of this.game.livingPlayers){
+                p.earned.win=1
+                p.send_game_over(true)
+            }
+            this.game.killing_game=true
+            console.log(`Game ${this.game.id} Fineshed`)
+        },2)
+    }
     abstract start_rules():boolean
     abstract on_player_join(player:Player):void
     abstract on_player_die(player:Player):void
     abstract is_ally(a:Player,b:Player):boolean
     abstract generate_map(lobby:boolean):void
+    begin_after():void{
+        
+    }
 }
 export class SoloGamemodeManager extends GamemodeManager{
     closed:boolean=false
@@ -66,16 +78,6 @@ export class SoloGamemodeManager extends GamemodeManager{
                 console.log(`Game ${this.game.id} Clossed`)
             },50)
         }
-    }
-    on_finish(){
-        this.game.addTimeout(()=>{
-            for(const p of this.game.livingPlayers){
-                p.earned.win=1
-                p.send_game_over(true)
-            }
-            this.game.killing_game=true
-            console.log(`Game ${this.game.id} Fineshed`)
-        },2)
     }
     start_rules():boolean{
         return this.game.livingPlayers.length>1

@@ -1,6 +1,6 @@
 import { ClientGame2D, ResourcesManager, Renderer, ColorM, InputManager} from "../engine/mod.ts"
 import { LayersL, zIndexes } from "common/scripts/others/constants.ts";
-import { Client, DefaultSignals, Numeric, Vec2, model2d, v2, v2m } from "common/scripts/engine/mod.ts";
+import { Client, DefaultSignals, Numeric, Vec2, v2, v2m } from "common/scripts/engine/mod.ts";
 import { JoinPacket } from "common/scripts/packets/join_packet.ts";
 import { Player } from "../gameObjects/player.ts";
 import { Loot } from "../gameObjects/loot.ts";
@@ -26,7 +26,7 @@ import { Vehicle } from "../gameObjects/vehicle.ts";
 import { Skins } from "common/scripts/definitions/loadout/skins.ts";
 import { ActionEvent, AxisActionEvent, GamepadManagerEvent, Key, MouseEvents } from "../engine/keys.ts";
 import { Creature } from "../gameObjects/creature.ts";
-import { Material, WebglRenderer } from "../engine/renderer.ts";
+import { WebglRenderer } from "../engine/renderer.ts";
 import { Plane } from "./planes.ts";
 import { isMobile } from "../engine/game.ts";
 import { DeadZoneManager } from "../managers/deadZoneManager.ts";

@@ -132,7 +132,7 @@ Obstacles.insert(
         health:100,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.57),
         scale:{
-            destroy:0.68
+            destroy:0.5
         },
         frame_transform:{
             scale:2,

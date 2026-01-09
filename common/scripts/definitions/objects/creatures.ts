@@ -79,4 +79,27 @@ Creatures.insert(
             }
         }
     },
+    {
+        idString:"basic_zombie",
+        health:60,
+        hitbox:new CircleHitbox2D(v2.new(0,0),0.4),
+        parts:[],
+        frame:{
+            main:{
+                image:"zombie_1",
+                scale:1.3333333
+            },
+        },
+        client_side:{
+
+        },    
+        server_side:{
+            update:"offensive_1",
+            update_parameters:{
+                speed:0.4,
+                walk_time:1,
+                walk_time_extension:2,
+            }
+        }
+    },
 )

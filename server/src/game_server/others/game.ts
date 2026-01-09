@@ -8,7 +8,7 @@ import { Bullet } from "../gameObjects/bullet.ts"
 import { Obstacle } from "../gameObjects/obstacle.ts"
 import { GameMap } from "./map.ts"
 import { Explosion } from "../gameObjects/explosion.ts";
-import { Gamemode, Gamemodes } from "./gamemode.ts";
+import { Gamemode, Gamemodes } from "../mode/gamemode.ts";
 import { BulletDef } from "common/scripts/definitions/utils.ts";
 import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts";
 import { ProjectileDef } from "common/scripts/definitions/objects/projectiles.ts";
@@ -28,13 +28,15 @@ import { CreatureDef } from "common/scripts/definitions/objects/creatures.ts";
 import { FloorType } from "common/scripts/others/terrain.ts";
 import { Obstacles } from "common/scripts/definitions/objects/obstacles.ts";
 import { ConfigType, GameConfig, GameDebugOptions } from "common/scripts/config/config.ts";
-import { GamemodeManager, SoloGamemodeManager, TeamsGamemodeManager } from "./modeManager.ts";
+import { GamemodeManager, SoloGamemodeManager } from "../mode/modeManager.ts";
 import { DeadZoneDefinition, DeadZoneManager, DeadZoneMode } from "../gameObjects/deadzone.ts";
 import { GeneralUpdatePacket, PlaneData } from "common/scripts/packets/general_update.ts"
 import {PacketManager} from "common/scripts/packets/packet_manager.ts"
 import { LootTablesManager } from "common/scripts/engine/inventory.ts";
 import { Aditional, loot_table_get_item } from "common/scripts/definitions/maps/base.ts";
 import { Building } from "../gameObjects/building.ts";
+import { LevelDefinition } from "common/scripts/config/level_definition.ts";
+import { LevelPlayer } from "../mode/level_player.ts";
 export interface PlaneDataServer extends PlaneData{
     velocity:Vec2
     target_pos:Vec2
@@ -116,10 +118,24 @@ export class Game extends ServerGame2D<ServerGameObject>{
 
     started_time:number=0
 
-    date:KDate
-    begin_date:KDate
-
-    constructor(config:GameConfig,clients:OfflineClientsManager,id:ID,Config:ConfigType){
+    date:KDate={
+        day:3,
+        hour:9,
+        minute:6,
+        second:30,
+        month:5,
+        year:2000
+    }
+    begin_date:KDate={
+        day:3,
+        hour:9,
+        minute:6,
+        second:30,
+        month:5,
+        year:2000
+    }
+    level_player?:LevelPlayer
+    constructor(_config:GameConfig,clients:OfflineClientsManager,id:ID,Config:ConfigType,level?:LevelDefinition){
         super(Config.game.options.gameTps,id,clients,PacketManager,[
             Player,
             Loot,
@@ -142,7 +158,16 @@ export class Game extends ServerGame2D<ServerGameObject>{
         //Gamemode
         this.gamemode=Gamemodes.normal
         this.map=new GameMap(this)
-        this.modeManager=config.team_size>1?new TeamsGamemodeManager(config.team_size,this):new SoloGamemodeManager(this)
+        if(level){
+            this.level_player=new LevelPlayer(this)
+            this.level_player.begin(level)
+        }else{
+            this.date=cloneDeep(this.gamemode.game.date)
+            this.begin_date=cloneDeep(this.gamemode.game.date)
+        }
+        // deno-lint-ignore ban-ts-comment
+        //@ts-ignore
+        if(!this.modeManager)this.modeManager=new SoloGamemodeManager(this)
         this.modeManager.generate_map(false)
 
         this.deadzone=new DeadZoneManager(this,{
@@ -165,9 +190,8 @@ export class Game extends ServerGame2D<ServerGameObject>{
                 }
             }
         }
-
-        this.date=cloneDeep(this.gamemode.game.date)
-        this.begin_date=cloneDeep(this.gamemode.game.date)
+        if(this.level_player)this.level_player.begin_after()
+        this.modeManager.begin_after()
     }
     ntt:number=0
     override on_update(): void {
@@ -426,10 +450,8 @@ export class Game extends ServerGame2D<ServerGameObject>{
         if(this.started||!this.modeManager.start_rules())return
         this.started=true
         this.modeManager.on_start()
-        this.add_airdrop(v2.random2(v2.new(0,0),this.map.size))
         this.started_time=performance.now()
         if(this.replay)this.replay.start()
-        this.deadzone.start()
         this.update_data()
         console.log(`Game ${this.id} Started`)
     }

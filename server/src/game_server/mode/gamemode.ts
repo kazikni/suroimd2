@@ -8,16 +8,16 @@ import { GameItem } from "common/scripts/definitions/alldefs.ts";
 import { mergeDeep } from "common/scripts/engine/utils.ts";
 import { KDate } from "common/scripts/engine/definitions.ts";
 
-export interface InventoryGiftItem{
+export interface InventorySetupItem{
     item:GameItem,
     count:number
 }
-export interface InventoryGift{
+export interface InventorySetup{
     helmet?:(player:Player)=>HelmetDef|undefined
     vest?:(player:Player)=>VestDef|undefined
     backpack?:(player:Player)=>BackpackDef|undefined
 
-    items?:(player:Player)=>InventoryGiftItem[]
+    items?:(player:Player)=>InventorySetupItem[]
 
     melee?:(player:Player)=>MeleeDef|undefined
     gun1?:(player:Player)=>GunDef|undefined
@@ -55,7 +55,7 @@ export interface Gamemode{
         respawn?:{
             max_respawn?:number
             keep_inventory?:boolean
-            insert_inventory?:InventoryGift
+            insert_inventory?:InventorySetup
         }
         max:number
     }

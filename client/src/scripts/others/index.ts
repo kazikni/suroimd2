@@ -131,8 +131,8 @@ import { isMobile } from "../engine/game.ts";
                                 statistic:false
                             },
                         } as ConfigType,
-                        bots: 99,
                         ping: GameSave.get_variable("cv_game_ping"),
+                        level: join_config.level
                     });
 
                     socket = new WorkerSocket(worker);

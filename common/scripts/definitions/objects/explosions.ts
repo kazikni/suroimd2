@@ -4,8 +4,8 @@ import { BulletDef } from "../utils.ts";
 
 export type ExplosionDef={
     size:{
-        min:number
-        max:number
+        begin:number
+        end:number
     }
     tint:string
     damage:number
@@ -30,8 +30,8 @@ Explosions.insert(
         idString:"barrel_explosion",
         tint:"#445",
         size:{
-            min:2,
-            max:2.5
+            begin:2,
+            end:3
         },
         damage:100,
         bullet:{
@@ -49,8 +49,8 @@ Explosions.insert(
         idString:"rocket_explosion",
         tint:"#445",
         size:{
-            min:1,
-            max:2
+            begin:1,
+            end:2
         },
         sounds:{
             normal:"explosion_1"
@@ -61,8 +61,8 @@ Explosions.insert(
         idString:"frag_grenade_explosion",
         tint:"#355",
         size:{
-            min:1.5,
-            max:2
+            begin:1.5,
+            end:2
         },
         damage:99,
         bullet:{
@@ -83,8 +83,8 @@ Explosions.insert(
         idString:"mirv_grenade_explosion",
         tint:"#09e",
         size:{
-            min:1.6,
-            max:2.2
+            begin:1.6,
+            end:2.2
         },
         damage:110,
         bullet:{
@@ -112,8 +112,8 @@ Explosions.insert(
         idString:"submirv_grenade_explosion",
         tint:"#09e",
         size:{
-            min:0.1,
-            max:0.2
+            begin:0.1,
+            end:0.2
         },
         damage:35,
         bullet:{

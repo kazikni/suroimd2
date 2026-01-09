@@ -2,12 +2,12 @@ import { type Player } from "../gameObjects/player.ts";
 import { Angle, CircleHitbox2D, getPatterningShape, Numeric, random, v2 } from "common/scripts/engine/mod.ts";
 import { FireMode, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
 import { AmmoItemBase, ConsumibleItemBase, GInventoryBase, GunItemBase, MDItem, MeleeItemBase, ProjectileItemBase } from "common/scripts/others/inventory.ts";
-import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryItemType, InventoryPreset } from "common/scripts/definitions/utils.ts";
 import { ConsumingAction, ReloadAction } from "./actions.ts";
 import { AmmoDef } from "common/scripts/definitions/items/ammo.ts";
 import { ConsumibleCondition, ConsumibleDef } from "common/scripts/definitions/items/consumibles.ts";
 import { GameItem, GameItems } from "common/scripts/definitions/alldefs.ts";
-import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
+import { MeleeDef, Melees } from "common/scripts/definitions/items/melees.ts";
 import { BackpackDef, Backpacks } from "common/scripts/definitions/items/backpacks.ts";
 import { type ServerGameObject } from "../others/gameObject.ts";
 import { Obstacle } from "../gameObjects/obstacle.ts";
@@ -15,10 +15,10 @@ import { ProjectileDef, Projectiles } from "common/scripts/definitions/objects/p
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { type Loot } from "../gameObjects/loot.ts";
 import { BoostType } from "common/scripts/definitions/player/boosts.ts";
-import { InventoryGift } from "../others/gamemode.ts";
+import { InventorySetup } from "../mode/gamemode.ts";
 import { SideEffectType } from "common/scripts/definitions/player/effects.ts";
 import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
-import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
+import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { PlayerAnimationType } from "common/scripts/others/constants.ts";
 import { Slot } from "common/scripts/engine/inventory.ts";
 export abstract class LItem extends MDItem{
@@ -566,7 +566,40 @@ export class GInventory extends GInventoryBase<LItem>{
             }
         }
     }
-    gift(g:InventoryGift){
+    load_preset(preset:InventoryPreset){
+        if(preset.helmet)this.owner.helmet=Helmets.getFromString(random.choose(preset.helmet))
+        if(preset.vest)this.owner.vest=Vests.getFromString(random.choose(preset.vest))
+        if(preset.backpack)this.set_backpack(Backpacks.getFromString(random.choose(preset.backpack)))
+
+        if(preset.melee)this.set_weapon(0,Melees.getFromString(random.choose(preset.melee)))
+        if(preset.gun1){
+            const choose=random.choose(preset.gun1)
+            this.set_weapon(1,Guns.getFromString(choose.id))
+            const wep=this.weapons[1] as GunItem
+            if(choose.ammo){
+                wep.ammo=choose.ammo
+            }
+        }
+        if(preset.gun2){
+            const choose=random.choose(preset.gun2)
+            this.set_weapon(2,Guns.getFromString(choose.id))
+            const wep=this.weapons[2] as GunItem
+            if(choose.ammo){
+                wep.ammo=choose.ammo
+            }
+        }
+
+        if(preset.oitems){
+            for(const o of Object.keys(preset.oitems)){
+                this.oitems[o]=preset.oitems[o]
+            }
+        }
+
+        if(preset.hand){
+            this.set_weapon_index(preset.hand)
+        }
+    }
+    gift(g:InventorySetup){
         if(g.vest){
             const v=g.vest(this.owner)
             if(v)this.owner.vest=v
