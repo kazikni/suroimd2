@@ -5,8 +5,9 @@ import { type Player } from "../gameObjects/player.ts";
 import { GamemodeManager, SoloGamemodeManager } from "./modeManager.ts";
 import { Maps } from "common/scripts/definitions/maps/base.ts";
 import { Gamemodes } from "./gamemode.ts";
-import { EnemyNPCBotAi, SimpleBotAi } from "../player/simple_bot_ai.ts";
+import { SimpleBotAi } from "../player/simple_bot_ai.ts";
 import { v2m } from "common/scripts/engine/geometry.ts";
+import { EnemyNPCBotAi } from "../player/enemy_npc_ai.ts";
 export class CampaignGamemodeManager extends GamemodeManager{
     player:LevelPlayer
     level:LevelDefinition

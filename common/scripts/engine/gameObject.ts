@@ -85,7 +85,7 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
         return `${x}:${y}`;
     }
 
-    private cellPos(pos: Vec2) {
+    cell_pos(pos: Vec2) {
         v2m.dscale(pos,pos,this.cellSize)
         v2m.floor(pos)
     }
@@ -131,8 +131,8 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
         this.removeObjectFromCells(obj)
 
         const rect = obj.hb.to_rect()
-        this.cellPos(rect.min)
-        this.cellPos(rect.max)
+        this.cell_pos(rect.min)
+        this.cell_pos(rect.max)
 
         const layer = obj.layer
         const layerMap = this.getLayerMap(layer)
@@ -156,8 +156,8 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
     }
     get_objects(hitbox: Hitbox2D, layer: number): GameObject[] {
         const rect = hitbox.to_rect()
-        this.cellPos(rect.min)
-        this.cellPos(rect.max)
+        this.cell_pos(rect.min)
+        this.cell_pos(rect.max)
 
         const results:GameObject[] = []
         const layerMap = this.cells.get(layer);

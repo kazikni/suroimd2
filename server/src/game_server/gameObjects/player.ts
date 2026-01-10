@@ -39,6 +39,8 @@ export class Player extends ServerGameObject{
     velocity:Vec2=v2.new(0,0)
     recoil?:{speed:number,delay:number}
 
+    base_hb!:CircleHitbox2D
+
     skin:SkinDef=Skins.getFromString("default_skin")
     loadout={
         skin:"default_skin",
@@ -145,6 +147,7 @@ export class Player extends ServerGameObject{
         this.actions=new ActionsManager(this)
 
         this.accessories=new AccessoriesManager(this,3)
+        this.base_hb=new CircleHitbox2D(v2.random(0,0),GameConstants.player.playerRadius)
     }
     interact(user: Player): void {
         if(!this.downed||user.teamId===undefined||(user.teamId!==this.teamId&&(user.groupId===undefined||user.groupId!==this.groupId)))return
@@ -312,7 +315,6 @@ export class Player extends ServerGameObject{
         proj.fuse_delay=this.projectile_holding.time
         this.projectile_holding=undefined
     }
-
     update(dt:number): void {
         if(this.dead)return
         //Movement
@@ -609,7 +611,7 @@ export class Player extends ServerGameObject{
         this.input.aim_speed=action.aim_speed
     }
     create(_args: Record<string, void>): void {
-        this.hb=new CircleHitbox2D(v2.random(0,this.game.map.size.x),GameConstants.player.playerRadius)
+        this.hb=this.base_hb.clone()
         if(this.game.gamemode.player.respawn?.max_respawn){
             this.respawn_count=this.game.gamemode.player.respawn.max_respawn
         }

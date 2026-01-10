@@ -1,7 +1,7 @@
 import { Numeric } from "common/scripts/engine/utils.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { random } from "common/scripts/engine/random.ts";
-import { v2, v2m } from "common/scripts/engine/geometry.ts";
+import { v2, v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { BehaviourTree, Default_Tree_Settings } from "common/scripts/engine/AI/behaviour_tree.ts";
 import { bots_actions, BotSettings, BotWorld, EaseBotBRTree } from "../defs/bot_ia_tree.ts";
 import { Emotes } from "common/scripts/definitions/loadout/emotes.ts";
@@ -17,6 +17,8 @@ export abstract class BotAi{
 
     }
     abstract AI(player:Player,dt:number):void
+    on_sound(distance:number,origin:Vec2,sound_type:string):void{
+    }
 }
 export class SimpleBotAi extends BotAi{
     constructor(){
@@ -46,68 +48,6 @@ export class SimpleBotAi extends BotAi{
         }
         if(Math.random()<=0.003){
             player.input.actions.push({type:InputActionType.emote,emote:random.choose(this.emotes)})
-        }
-    }
-}
-export class EnemyNPCBotAi extends BotAi {
-    state: "random" = "random"
-
-    private subState: "move" | "idle" = "idle"
-    private stateTime = 0
-
-    private moveDir = v2.new(0,0)
-    private rotTarget = 0
-
-    override params:{speed:number}={speed:0.6}
-
-    constructor() {
-        super()
-        this.resetIdle()
-    }
-
-    private resetIdle() {
-        this.subState = "idle"
-        this.stateTime = random.float(2, 4)
-    }
-
-    private resetMove() {
-        this.subState = "move"
-        this.stateTime = random.float(2, 3)
-        this.moveDir = v2.from_RadAngle(random.rad())
-        v2m.rotate_RadAngle(this.moveDir, random.float(0.7,1))
-        this.rotTarget = Math.atan2(this.moveDir.y, this.moveDir.x)
-    }
-
-    override AI(player: Player, dt: number): void {
-        v2m.zero(player.input.movement)
-        player.input.using_item = false
-        player.input.using_item_down = false
-        player.input.interaction = false
-
-        this.stateTime -= dt
-        if (this.subState === "idle") {
-            player.input.rotation = Numeric.lerp_rad(
-                player.rotation,
-                this.rotTarget,
-                1/(1+dt*1200)
-            )
-            if (this.stateTime <= 0) {
-                this.resetMove()
-            }
-        }else if (this.subState === "move") {
-            v2m.scale(player.input.movement, this.moveDir, this.params.speed)
-            player.input.rotation = Numeric.lerp_rad(
-                player.rotation,
-                this.rotTarget,
-                1/(1+dt*1200)
-            )
-            if (this.stateTime <= 0) {
-                this.resetIdle()
-            }
-        }
-
-        if (Math.random() < 0.002) {
-            player.input.interaction = true
         }
     }
 }
