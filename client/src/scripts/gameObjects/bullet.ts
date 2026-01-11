@@ -87,21 +87,21 @@ export class Bullet extends GameObject{
                     if(this.dying)break
                     switch((obj as BaseGameObject2D).stringType){
                         case "player":
-                            if((obj as Player).hitbox&&!(obj as Player).dead&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)&&!(obj as Player).parachute){
+                            if((obj as Player).hitbox&&!(obj as Player).dead&&(this.hitbox.collidingWith(obj.hitbox)||obj.hitbox.colliding_with_line(this.old_position,this.position))&&!(obj as Player).parachute){
                                 (obj as Player).on_hitted(this.position,this.critical)
                                 this.dying=true
                                 s=SubSteps
                             }
                             break
                         case "creature":
-                            if((obj as Creature).hitbox&&!(obj as Creature).dead&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                            if((obj as Creature).hitbox&&!(obj as Creature).dead&&(this.hitbox.collidingWith(obj.hitbox)||obj.hitbox.colliding_with_line(this.old_position,this.position))){
                                 this.dying=true
                                 s=SubSteps
                             }
                             break
                         case "obstacle":
                             if((obj as Obstacle).def.no_bullet_collision||(obj as Obstacle).dead)break
-                            if(obj.hitbox&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                            if(obj.hitbox&&(this.hitbox.collidingWith(obj.hitbox)||obj.hitbox.colliding_with_line(this.old_position,this.position))){
                                 (obj as Obstacle).on_hitted(this.position)
                                 this.dying=true
                                 s=SubSteps

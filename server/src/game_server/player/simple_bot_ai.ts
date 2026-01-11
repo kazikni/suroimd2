@@ -17,7 +17,7 @@ export abstract class BotAi{
 
     }
     abstract AI(player:Player,dt:number):void
-    on_sound(distance:number,origin:Vec2,sound_type:string):void{
+    on_sound(player:Player,origin:Vec2,sound_type:string):void{
     }
 }
 export class SimpleBotAi extends BotAi{

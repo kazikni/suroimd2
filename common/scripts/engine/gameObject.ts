@@ -190,6 +190,103 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
         }
         return results
     }
+    ray(
+        origin: Vec2,
+        dest: Vec2,
+        layer?: number,
+        stopOnFirst: boolean = false
+    ): GameObject[] {
+        const results: GameObject[] = []
+        const tested = new Set<GameObject>()
+
+        const dir = v2.sub(dest, origin)
+        const maxDist = v2.length(dir)
+
+        if (maxDist < 1e-6) return results
+
+        v2m.normalizeSafe(dir)
+
+        const currentCell = v2.duplicate(origin)
+        this.cell_pos(currentCell)
+
+        const endCell = v2.duplicate(dest)
+        this.cell_pos(endCell)
+
+        const cellSize = this.cellSize
+        const stepX = dir.x >= 0 ? 1 : -1
+        const stepY = dir.y >= 0 ? 1 : -1
+
+        const nextBoundaryX = (currentCell.x + (stepX > 0 ? 1 : 0)) * cellSize
+        const nextBoundaryY = (currentCell.y + (stepY > 0 ? 1 : 0)) * cellSize
+
+        let tMaxX = (dir.x !== 0) ? (nextBoundaryX - origin.x) / dir.x : Infinity
+        let tMaxY = (dir.y !== 0) ? (nextBoundaryY - origin.y) / dir.y : Infinity
+
+        const tDeltaX = (dir.x !== 0) ? cellSize / Math.abs(dir.x) : Infinity
+        const tDeltaY = (dir.y !== 0) ? cellSize / Math.abs(dir.y) : Infinity
+
+        while (true) {
+            const cellHits: GameObject[] = []
+
+            const processLayer = (layerId: number) => {
+                const layerMap = this.cells.get(layerId)
+                if (!layerMap) return
+
+                const key = `${currentCell.x}:${currentCell.y}`
+                const set = layerMap.get(key)
+                
+                if (set) {
+                    for (const obj of set) {
+                        if (tested.has(obj)) continue
+                        tested.add(obj)
+
+                        if (obj.hitbox.colliding_with_line(origin, dest)) {
+                            cellHits.push(obj)
+                        }
+                    }
+                }
+            }
+
+            if (layer !== undefined) {
+                processLayer(layer)
+            } else {
+                for (const [id] of this.cells) {
+                    processLayer(id)
+                }
+            }
+
+            if (cellHits.length > 0) {
+                if (stopOnFirst) {
+                    cellHits.sort((a, b) => {
+                        const d1 = v2.distanceSquared(origin, a.position)
+                        const d2 = v2.distanceSquared(origin, b.position)
+                        return d1 - d2
+                    })
+
+                    results.push(cellHits[0])
+                    return results
+                } else {
+                    results.push(...cellHits)
+                }
+            }
+
+            if (currentCell.x === endCell.x && currentCell.y === endCell.y) break
+
+            if (tMaxX < tMaxY) {
+                if (tMaxX > maxDist + 1e-5) break
+                
+                currentCell.x += stepX
+                tMaxX += tDeltaX
+            } else {
+                if (tMaxY > maxDist + 1e-5) break
+                
+                currentCell.y += stepY
+                tMaxY += tDeltaY
+            }
+        }
+
+        return results
+    }
 }
 export class GameObjectManager2D<GameObject extends BaseObject2D>{
     cells:CellsManager2D<GameObject>

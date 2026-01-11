@@ -135,6 +135,8 @@ export class Game extends ServerGame2D<ServerGameObject>{
         year:2000
     }
     level_player?:LevelPlayer
+
+    npcs:Player[]=[]
     constructor(_config:GameConfig,clients:OfflineClientsManager,id:ID,Config:ConfigType,level?:LevelDefinition){
         super(Config.game.options.gameTps,id,clients,PacketManager,[
             Player,
@@ -436,6 +438,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
         const p=this.add_player(undefined,"",new JoinPacket(name),layer,false)
         p.is_npc=true
         p.connected=true
+        this.npcs.push(p)
         return p
     }
     add_bot(name?:string,layer?:number):Player{
@@ -444,6 +447,11 @@ export class Game extends ServerGame2D<ServerGameObject>{
         p.is_bot=true
         p.is_npc=false
         return p
+    }
+    play_sound(position:Vec2,layer:number,sound:string){
+        for(const n of this.npcs){
+            n.ai?.on_sound(n,position,sound)
+        }
     }
     fineshed:boolean=false
     start(){

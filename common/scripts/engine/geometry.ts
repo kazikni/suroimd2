@@ -913,6 +913,16 @@ export const Angle=Object.freeze({
             case RotationMode.full:
                 return random.float(-3.141592,3.141592)
         }
+    },
+    delta_rad(a:number,b:number):number{
+        let delta = a - b;
+        while (delta > Math.PI) {
+            delta -= 2 * Math.PI;
+        }
+        while (delta < -Math.PI) {
+            delta += 2 * Math.PI;
+        }
+        return delta;
     }
 })
 

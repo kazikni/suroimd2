@@ -88,6 +88,8 @@ export class Explosion extends ServerGameObject{
                     }
                 }
             }
+            
+            this.game.play_sound(this.position,this.layer,"explosion")
             this.destroy()
         }else{
             this.delay--

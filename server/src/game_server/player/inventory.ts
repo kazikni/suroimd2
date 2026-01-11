@@ -79,7 +79,7 @@ export class GunItem extends GunItemBase implements LItem{
     }
     reload(user:Player){
         if(!this.def.reload||user.downed)return
-        if(this.ammo>=this.def.reload.capacity||!user.inventory.oitems[this.def.ammoType]||this.use_delay>0){
+        if(this.ammo>=this.def.reload.capacity||(!this.inventory.infinity_ammo&&!user.inventory.oitems[this.def.ammoType])||this.use_delay>0){
             this.reloading=false
             return
         }
@@ -144,6 +144,8 @@ export class GunItem extends GunItemBase implements LItem{
 
         user.dirty=true
         user.privateDirtys.current_weapon=true
+
+        user.game.play_sound(position,user.layer,"shot")
     }
     update(user:Player){
         if(this.use_delay>0)this.use_delay-=user.game.dt
@@ -348,6 +350,7 @@ export class MeleeItem extends MeleeItemBase implements LItem{
 }
 export class GInventory extends GInventoryBase<LItem>{
     owner:Player
+    infinity_ammo:boolean=false
     constructor(owner:Player){
         super({
             0:MeleeItem as (new(item:GameItem)=>LItem),

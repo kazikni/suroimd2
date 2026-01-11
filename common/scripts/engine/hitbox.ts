@@ -160,30 +160,25 @@ export class CircleHitbox2D extends BaseHitbox2D{
     override pointInside(point: Vec2): boolean {
       return v2.distance(this.position,point)<this.radius
     }
-    override colliding_with_line(a:Vec2,b:Vec2):boolean{
-        let d = v2.sub(b, a);
-        const len = Numeric.max(v2.length(d), 0.000001);
-        d = v2.normalizeSafe(d);
+    override colliding_with_line(a: Vec2, b: Vec2): boolean {
+        const ab = v2.sub(b, a)
+        const abLenSq = v2.dot(ab, ab)
+        if (abLenSq < 0.000001) return false
 
-        const m = v2.sub(a, this.position);
-        const b2 = v2.dot(m, d);
-        const c = v2.dot(m, m) - this.radius * this.radius;
+        const t = v2.dot(
+            v2.sub(this.position, a),
+            ab
+        ) / abLenSq
 
-        if (c > 0 && b2 > 0) return false;
+        const clampedT = Math.max(0, Math.min(1, t))
 
-        const discSq = b2 * b2 - c;
-        if (discSq < 0) return false;
-
-        const disc = Math.sqrt(discSq);
-        const t = -b2 < disc
-            ? disc - b2
-            : -b2 - disc;
-
-        if (t <= len) {
-            return true
+        const closest = {
+            x: a.x + ab.x * clampedT,
+            y: a.y + ab.y * clampedT
         }
 
-        return false
+        const distSq = v2.distanceSquared(closest, this.position)
+        return distSq <= this.radius * this.radius
     }
     override overlapLine(a_p:Vec2,b_p:Vec2): IntersectionRes {
         let d = v2.sub(b_p, a_p)
@@ -385,7 +380,7 @@ export class RectHitbox2D extends BaseHitbox2D{
             tmin = Numeric.max(tmin, Numeric.min(tx1, tx2))
             tmax = Numeric.min(tmax, Numeric.max(tx1, tx2))
 
-            if (tmin > tmax) return false
+            if (tmax > 0 && tmin < dist) return false
         }
 
         if (absDy > eps) {
@@ -395,10 +390,10 @@ export class RectHitbox2D extends BaseHitbox2D{
             tmin = Numeric.max(tmin, Numeric.min(ty1, ty2))
             tmax = Numeric.min(tmax, Numeric.max(ty1, ty2))
 
-            if (tmin > tmax) return false
+            if (tmax > 0 && tmin < dist) return false
         }
 
-        return tmin <= dist
+        return tmax >= 0 && tmin <= dist
     }
     override overlapLine(a_point:Vec2,b_point:Vec2): IntersectionRes {
         let tmin = 0

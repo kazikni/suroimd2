@@ -14,6 +14,7 @@ type AStarNode = {
     f: number
     parent?: AStarNode
 }
+
 export function astar_path2d(
     object: BaseObject2D,
     baseHitbox: Hitbox2D,
@@ -25,21 +26,36 @@ export function astar_path2d(
         cellY: number,
         layer: number
     ) => boolean,
-    heuristic = defaultHeuristic,
-    dirs: readonly [number, number][] = [
-        [1, 0], [-1, 0],
-        [0, 1], [0, -1],
-    ]
+    options: {
+        cellSize?: number
+        heuristic?: (ax: number, ay: number, bx: number, by: number) => number
+        dirs?: readonly [number, number][]
+        maxIterations?: number
+    } = {}
 ): Vec2[] {
     const manager = object.manager
     const layer = object.layer
-    const cellSize = manager.cells.cellSize
 
-    const startCell = v2.duplicate(object.position)
-    const goalCell  = v2.duplicate(destWorld)
+    const cellSize = options.cellSize ?? 1
+    const heuristic = options.heuristic ?? defaultHeuristic
+    const dirs = options.dirs ?? [
+        [1, 0], [-1, 0],
+        [0, 1], [0, -1],
+    ]
+    const maxIterations = options.maxIterations ?? 10_000
 
-    manager.cells.cell_pos(startCell)
-    manager.cells.cell_pos(goalCell)
+    const worldToCell = (p: Vec2) => ({
+        x: Math.floor(p.x / cellSize),
+        y: Math.floor(p.y / cellSize),
+    })
+
+    const cellToWorld = (x: number, y: number): Vec2 => ({
+        x: (x + 0.5) * cellSize,
+        y: (y + 0.5) * cellSize,
+    })
+
+    const startCell = worldToCell(object.position)
+    const goalCell  = worldToCell(destWorld)
 
     const start: AStarNode = {
         x: startCell.x,
@@ -58,23 +74,21 @@ export function astar_path2d(
 
     const key = (x: number, y: number) => `${x}:${y}`
 
+    let iterations = 0
+
     while (open.length > 0) {
+        if (++iterations > maxIterations) break
+
         open.sort((a, b) => a.f - b.f)
         const current = open.shift()!
         openMap.delete(key(current.x, current.y))
 
-        if (
-            current.x === goalCell.x &&
-            current.y === goalCell.y
-        ) {
+        if (current.x === goalCell.x && current.y === goalCell.y) {
             const path: Vec2[] = []
             let n: AStarNode | undefined = current
 
             while (n) {
-                path.push({
-                    x: (n.x + 0.5) * cellSize,
-                    y: (n.y + 0.5) * cellSize,
-                })
+                path.push(cellToWorld(n.x, n.y))
                 n = n.parent
             }
 
@@ -92,12 +106,7 @@ export function astar_path2d(
             if (closed.has(k)) continue
 
             const testHB = baseHitbox.clone()
-
-            const worldPos = {
-                x: (nx + 0.5) * cellSize,
-                y: (ny + 0.5) * cellSize,
-            }
-
+            const worldPos = cellToWorld(nx, ny)
             testHB.translate(v2.sub(worldPos, baseHitbox.position))
 
             if (isBlocked(manager, testHB, nx, ny, layer)) continue
@@ -125,6 +134,5 @@ export function astar_path2d(
             }
         }
     }
-
     return []
 }

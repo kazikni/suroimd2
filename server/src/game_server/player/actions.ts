@@ -38,12 +38,16 @@ export class ReloadAction extends Action<Player>{
             }
         }
         if(consumed+this.item.ammo>this.item.def.reload!.capacity){
-            consumed=this.item.def.reload!.capacity-this.item.ammo
+            consumed=cap-this.item.ammo
         }
         if(consumed>user.inventory.oitems[def.ammoType]){
             consumed=user.inventory.oitems[def.ammoType]
         }
-        this.item.ammo+=user.inventory.consume_oitem(def.ammoType,consumed)
+        if(this.item.inventory.infinity_ammo){
+            this.item.ammo=cap
+        }else{
+            this.item.ammo+=user.inventory.consume_oitem(def.ammoType,consumed)
+        }
         user.privateDirtys.current_weapon=true
         user.privateDirtys.inventory=true
         user.current_animation=undefined

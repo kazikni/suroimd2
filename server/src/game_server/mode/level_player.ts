@@ -57,6 +57,7 @@ export class CampaignGamemodeManager extends GamemodeManager{
                 for(const e of this.level.objective.enemies){
                     const npc=this.game.add_npc(e.name)
                     npc.ai=new EnemyNPCBotAi()
+                    npc.inventory.infinity_ammo=true
                     v2m.set(npc.position,e.position.x,e.position.y)
                     if(e.inventory)npc.inventory.load_preset(e.inventory)
                     this.npcs_count++
