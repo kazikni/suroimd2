@@ -7,7 +7,7 @@ import { Maps } from "common/scripts/definitions/maps/base.ts";
 import { Gamemodes } from "./gamemode.ts";
 import { SimpleBotAi } from "../player/simple_bot_ai.ts";
 import { v2m } from "common/scripts/engine/geometry.ts";
-import { EnemyNPCBotAi } from "../player/enemy_npc_ai.ts";
+import { EnemyNPCAI } from "../player/enemy_npc_ai.ts";
 export class CampaignGamemodeManager extends GamemodeManager{
     player:LevelPlayer
     level:LevelDefinition
@@ -56,7 +56,7 @@ export class CampaignGamemodeManager extends GamemodeManager{
             case "kill_all_enemies":{
                 for(const e of this.level.objective.enemies){
                     const npc=this.game.add_npc(e.name)
-                    npc.ai=new EnemyNPCBotAi()
+                    npc.ai=new EnemyNPCAI(npc)
                     npc.inventory.infinity_ammo=true
                     v2m.set(npc.position,e.position.x,e.position.y)
                     if(e.inventory)npc.inventory.load_preset(e.inventory)
@@ -100,7 +100,7 @@ export class LevelPlayer {
             case "battle_royale":
                 for(let i=0;i<level.objective.players.count;i++){
                     const pp=this.game.add_bot()
-                    const ai=new SimpleBotAi()
+                    const ai=new SimpleBotAi(pp)
                     pp.ai=ai
                 }
                 break

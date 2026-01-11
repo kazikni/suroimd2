@@ -511,7 +511,7 @@ export class Player extends ServerGameObject{
             })
         }
         
-        if(this.ai)this.ai.AI(this,dt)
+        if(this.ai)this.ai.AI(dt)
     }
     override net_update(): void {
         this.input.emote=undefined

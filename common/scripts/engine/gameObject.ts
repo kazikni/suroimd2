@@ -198,94 +198,77 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
     ): GameObject[] {
         const results: GameObject[] = []
         const tested = new Set<GameObject>()
-
-        const dir = v2.sub(dest, origin)
-        const maxDist = v2.length(dir)
-
+        
+        const diff = v2.sub(dest, origin)
+        const maxDist = v2.length(diff)
         if (maxDist < 1e-6) return results
-
-        v2m.normalizeSafe(dir)
-
+        const dir = v2.new(diff.x / maxDist, diff.y / maxDist)
         const currentCell = v2.duplicate(origin)
         this.cell_pos(currentCell)
-
         const endCell = v2.duplicate(dest)
         this.cell_pos(endCell)
-
         const cellSize = this.cellSize
         const stepX = dir.x >= 0 ? 1 : -1
         const stepY = dir.y >= 0 ? 1 : -1
-
-        const nextBoundaryX = (currentCell.x + (stepX > 0 ? 1 : 0)) * cellSize
-        const nextBoundaryY = (currentCell.y + (stepY > 0 ? 1 : 0)) * cellSize
-
-        let tMaxX = (dir.x !== 0) ? (nextBoundaryX - origin.x) / dir.x : Infinity
-        let tMaxY = (dir.y !== 0) ? (nextBoundaryY - origin.y) / dir.y : Infinity
-
-        const tDeltaX = (dir.x !== 0) ? cellSize / Math.abs(dir.x) : Infinity
-        const tDeltaY = (dir.y !== 0) ? cellSize / Math.abs(dir.y) : Infinity
-
+        const tDeltaX = Math.abs(cellSize / dir.x)
+        const tDeltaY = Math.abs(cellSize / dir.y)
+        let tMaxX: number, tMaxY: number
+        if (dir.x === 0) {
+            tMaxX = Infinity
+        } else {
+            const boundaryX = (currentCell.x + (dir.x > 0 ? 1 : 0)) * cellSize
+            tMaxX = (boundaryX - origin.x) / dir.x
+        }
+        if (dir.y === 0) {
+            tMaxY = Infinity
+        } else {
+            const boundaryY = (currentCell.y + (dir.y > 0 ? 1 : 0)) * cellSize
+            tMaxY = (boundaryY - origin.y) / dir.y
+        }
         while (true) {
-            const cellHits: GameObject[] = []
-
             const processLayer = (layerId: number) => {
                 const layerMap = this.cells.get(layerId)
-                if (!layerMap) return
-
-                const key = `${currentCell.x}:${currentCell.y}`
+                if (!layerMap) return;
+                const key = this.key(currentCell.x, currentCell.y)
                 const set = layerMap.get(key)
-                
                 if (set) {
                     for (const obj of set) {
                         if (tested.has(obj)) continue
                         tested.add(obj)
-
                         if (obj.hitbox.colliding_with_line(origin, dest)) {
-                            cellHits.push(obj)
+                            results.push(obj)
                         }
                     }
                 }
             }
-
             if (layer !== undefined) {
                 processLayer(layer)
             } else {
-                for (const [id] of this.cells) {
+                for (const id of this.cells.keys()) {
                     processLayer(id)
                 }
             }
 
-            if (cellHits.length > 0) {
-                if (stopOnFirst) {
-                    cellHits.sort((a, b) => {
-                        const d1 = v2.distanceSquared(origin, a.position)
-                        const d2 = v2.distanceSquared(origin, b.position)
-                        return d1 - d2
-                    })
-
-                    results.push(cellHits[0])
-                    return results
-                } else {
-                    results.push(...cellHits)
-                }
+            if (stopOnFirst && results.length > 0) {
+                results.sort((a, b) => 
+                    v2.distanceSquared(origin, a.position) - v2.distanceSquared(origin, b.position)
+                );
+                return [results[0]];
             }
 
-            if (currentCell.x === endCell.x && currentCell.y === endCell.y) break
+            if (currentCell.x === endCell.x && currentCell.y === endCell.y) break;
 
             if (tMaxX < tMaxY) {
-                if (tMaxX > maxDist + 1e-5) break
-                
+                if (tMaxX > maxDist) break
                 currentCell.x += stepX
                 tMaxX += tDeltaX
             } else {
-                if (tMaxY > maxDist + 1e-5) break
-                
+                if (tMaxY > maxDist) break
                 currentCell.y += stepY
                 tMaxY += tDeltaY
             }
         }
-
-        return results
+        return results;
     }
 }
 export class GameObjectManager2D<GameObject extends BaseObject2D>{

@@ -21,6 +21,26 @@
                     "hand":1,
                     "gun1":[{"id":"m9","ammo":15}]
                 }
+            },
+            {
+                "ia":{
+                    "action":"random"
+                },
+                "position":{ "x": 50, "y":50 },
+                "inventory":{
+                    "hand":1,
+                    "gun1":[{"id":"ak47","ammo":30}]
+                }
+            },
+            {
+                "ia":{
+                    "action":"random"
+                },
+                "position":{ "x": 70, "y":60 },
+                "inventory":{
+                    "hand":1,
+                    "gun1":[{"id":"m870","ammo":5}]
+                }
             }
         ]
     }
