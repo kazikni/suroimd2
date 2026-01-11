@@ -1,4 +1,4 @@
-import { Hitbox2D, NetStream, NullHitbox2D, NullVec2, PolygonHitbox2D, RectHitbox2D, SeededRandom, Vec2, jaggedRectangle, random, v2 } from "common/scripts/engine/mod.ts";
+import { CircleHitbox2D, Hitbox2D, NetStream, NullHitbox2D, NullVec2, PolygonHitbox2D, RectHitbox2D, SeededRandom, Vec2, jaggedRectangle, random, v2 } from "common/scripts/engine/mod.ts";
 import { type Game } from "./game.ts";
 import { Obstacle } from "../gameObjects/obstacle.ts";
 import { ObstacleDef, Obstacles } from "common/scripts/definitions/objects/obstacles.ts"
@@ -6,10 +6,9 @@ import { IslandDef, MapDef } from "common/scripts/definitions/maps/base.ts"
 import { MapPacket,MapObjectEncode } from "common/scripts/packets/map_packet.ts"
 import { FloorType, generate_rivers, TerrainManager } from "common/scripts/others/terrain.ts"
 import { Layers, SpawnMode, SpawnModeType } from "common/scripts/others/constants.ts"
-import { CircleHitbox2D } from "common/scripts/engine/hitbox.ts"
-import { Creatures } from "common/scripts/definitions/objects/creatures.ts"
 import {BuildingDef, Buildings} from "common/scripts/definitions/objects/buildings_base.ts"
 import { Building } from "../gameObjects/building.ts";
+import { Creatures } from "common/scripts/definitions/objects/creatures.ts";
 export type map_gen_algorithm=(map:GameMap,random:SeededRandom)=>void
 export const generation={
     island:(def:IslandDef)=>{
@@ -42,7 +41,7 @@ export const generation={
                         const def=Creatures.getFromString(item.id)
                         for(let idx=0;idx<count;idx++){
                             const obj=map.game.add_creature(v2.new(0,0),def,item.layer)
-                            const pos=map.getRandomPosition(obj.hb,obj.id,obj.layer,item.spawn??def.spawn??{
+                            const pos=map.getRandomPosition(obj.hitbox,obj.id,obj.layer,item.spawn??def.spawn??{
                                 type:SpawnModeType.whitelist,
                                 list:[FloorType.Grass,FloorType.Ice]
                             },random)
@@ -103,7 +102,8 @@ export class GameMap{
             valid=(hitbox:Hitbox2D,id:number,layer:number,map:GameMap)=>{
                 const objs=map.game.scene.objects.cells.get_objects(hitbox,layer)
                 for(const o of objs){
-                    if(!(o.id===id&&o.layer===layer)&&hb.collidingWith((o as Obstacle).spawnHitbox??o.hb)){
+                    if(!(o.id===id&&o.layer===layer)){
+                        if((o.stringType==="obstacle"||o.stringType==="building")&&hitbox.collidingWith((o as Obstacle).spawn_hitbox??o.hitbox))
                         return false
                     }
                 }
@@ -111,12 +111,11 @@ export class GameMap{
                     case SpawnModeType.any:
                         break
                     case SpawnModeType.blacklist:{
-                        const floor=this.terrain.get_floor_type(hb.center(),layer,FloorType.Water)
+                        const floor=this.terrain.get_floor_type(hitbox.position,layer,FloorType.Water)
                         return !mode.list.includes(floor)
                     }
-                        
                     case SpawnModeType.whitelist:{
-                        const floor=this.terrain.get_floor_type(hb.center(),layer,FloorType.Water)
+                        const floor=this.terrain.get_floor_type(hitbox.position,layer,FloorType.Water)
                         return mode.list.includes(floor)
                     }
                 }
@@ -128,13 +127,12 @@ export class GameMap{
                 return v2.random2_s(NullVec2,map.size,random)
             }
         }
-        const hb=hitbox.clone()
-        const hc=hitbox.clone()
+        const hb=hitbox
         while(!pos){
             if(attempt>=maxAttempts)break
-            pos=gp!(hc,this)
-            hb.translate(pos)
-            if(!valid!(hb,id,layer,this)){
+            pos=gp!(hb,this)
+            const hh=hb.transform(pos)
+            if(!valid!(hh,id,layer,this)){
                 pos=undefined
             }
             attempt++
@@ -149,17 +147,17 @@ export class GameMap{
         this.objects.push(o)
         return o
     }
-    clamp_hitbox(hb:Hitbox2D){
-        hb.clamp(v2.new(0,0),this.size)
+    clamp_hitbox(position:Vec2,hb:Hitbox2D):Vec2{
+        return hb.clamp(position,v2.new(0,0),this.size)
     }
     generate_obstacle(def:ObstacleDef,random:SeededRandom,spawn?:SpawnMode,layer?:Layers):Obstacle|undefined{
         const o=this.add_obstacle(def)
-        const p=this.getRandomPosition(def.spawnHitbox?def.spawnHitbox.clone():(def.hitbox?def.hitbox.clone():new NullHitbox2D(v2.new(0,0))),o.id,layer??o.layer,spawn??o.def.spawnMode,random)
+        const p=this.getRandomPosition(o.spawn_hitbox,o.id,layer??o.layer,spawn??o.def.spawnMode,random)
         if(!p){
             o.destroy()
             return undefined
         }
-        o.set_position(p)
+        o.set_position(p,0)
         o.manager.cells.updateObject(o)
         return o
     }

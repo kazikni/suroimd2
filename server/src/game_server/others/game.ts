@@ -203,7 +203,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
                 case 0:
                     if(!p.called&&v2.distance(p.pos,p.target_pos)<=4){
                         const obs=this.map.add_obstacle(Obstacles.getFromString("copper_crate"))
-                        obs.set_position(v2.duplicate(p.pos))
+                        obs.set_position(p.pos,0)
                         obs.manager.cells.updateObject(obs)
                         p.called=true
                     }
@@ -330,7 +330,7 @@ export class Game extends ServerGame2D<ServerGameObject>{
 
         p.username=username
 
-        const pos=this.map.getRandomPosition(p.hb,p.id,p.layer,{
+        const pos=this.map.getRandomPosition(p.base_hitbox,p.id,p.layer,{
             type:SpawnModeType.whitelist,
             list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
         },this.map.random)

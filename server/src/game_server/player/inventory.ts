@@ -308,7 +308,7 @@ export class MeleeItem extends MeleeItemBase implements LItem{
         const collidibles:ServerGameObject[]=user.manager.cells.get_objects(hb,user.layer)
         user.current_animation=undefined
         for(const c of collidibles){
-            if(!hb.collidingWith(c.hb))continue
+            if(!hb.collidingWith(c.hitbox))continue
                 if(c instanceof Obstacle){
                     if((this.def.resistence_damage??0)>=(c.def.resistence??0)&&!c.def.imortal){
                         c.damage({
@@ -643,7 +643,7 @@ export class GInventory extends GInventoryBase<LItem>{
         for(const s of Object.keys(this.oitems)){
             const def=Ammos.getFromString(s)
             const dir=random.float(-3.141592,3.141592)
-            const r=(this.owner.hb as CircleHitbox2D).radius
+            const r=(this.owner.hitbox as CircleHitbox2D).radius
             const pos=v2.add(this.owner.position,v2.new((Math.cos(dir)*r),(Math.sin(dir)*r)))
             while(this.oitems[s]>0){
                 const rc=Math.min(this.oitems[s],60)

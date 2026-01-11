@@ -1,13 +1,13 @@
 import { CircleHitbox2D, NetStream, random, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { Player } from "./player.ts";
-import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts";
-import { Obstacle } from "./obstacle.ts";
-import { DamageReason } from "common/scripts/definitions/utils.ts";
-import { ServerGameObject } from "../others/gameObject.ts";
-import { DamageSourceDef } from "common/scripts/definitions/alldefs.ts";
-import { Creature } from "./creature.ts";
-import { Loot } from "./loot.ts";
-import { Projectiles } from "common/scripts/definitions/objects/projectiles.ts";
+import { ExplosionDef } from "common/scripts/definitions/objects/explosions.ts"
+import { Obstacle } from "./obstacle.ts"
+import { DamageReason } from "common/scripts/definitions/utils.ts"
+import { ServerGameObject } from "../others/gameObject.ts"
+import { DamageSourceDef } from "common/scripts/definitions/alldefs.ts"
+import { Creature } from "./creature.ts"
+import { Loot } from "./loot.ts"
+import { Projectiles } from "common/scripts/definitions/objects/projectiles.ts"
 
 export class Explosion extends ServerGameObject{
     stringType:string="explosion"
@@ -36,33 +36,33 @@ export class Explosion extends ServerGameObject{
             }
             if(this.defs.projectiles){
                 for(let i=0;i<this.defs.projectiles.count;i++){
-                    const p=this.game.add_projectile(v2.duplicate(this.position),Projectiles.getFromString(this.defs.projectiles.def),this.owner,this.layer)
+                    const p=this.game.add_projectile(this.position,Projectiles.getFromString(this.defs.projectiles.def),this.owner,this.layer)
                     p.velocity=v2.random(-this.defs.projectiles.speed,this.defs.projectiles.speed)
                     p.angularVelocity=this.defs.projectiles.angSpeed+(Math.random()*this.defs.projectiles.randomAng)
                 }
             }
 
-            const objs=this.manager.cells.get_objects(this.hb,this.layer)
+            const objs=this.manager.cells.get_objects(this.hitbox,this.layer)
             const damageCollisions:ServerGameObject[]=[]
             for(const obj of objs){
                 switch((obj as ServerGameObject).stringType){
                     case "player":
-                        if(obj.hb&&this.hb.collidingWith(obj.hb)){
+                        if(this.hitbox.collidingWith(obj.hitbox)){
                             damageCollisions.push(obj)
                         }
                         break
                     case "creature":
-                        if(obj.hb&&this.hb.collidingWith(obj.hb)){
+                        if(this.hitbox.collidingWith(obj.hitbox)){
                             damageCollisions.push(obj)
                         }
                         break
                     case "loot":
-                        if(obj.hb.collidingWith(this.hb)){
+                        if(obj.hitbox.collidingWith(this.hitbox)){
                             damageCollisions.push(obj)
                         }
                         break
                     case "obstacle":
-                        if(obj.hb&&this.hb.collidingWith(obj.hb)){
+                        if(this.hitbox.collidingWith(obj.hitbox)){
                             damageCollisions.push(obj)
                         }
                         break
@@ -97,11 +97,12 @@ export class Explosion extends ServerGameObject{
         this.defs=args.defs
         this.owner=args.owner
         this.source=args.source
-        this.hb=new CircleHitbox2D(args.position,this.defs.size.end*2)
+        this.base_hitbox=new CircleHitbox2D(v2.new(0,0),this.defs.size.end*2)
+        this.position=args.position
     }
     override encode(stream: NetStream, _full: boolean): void {
         stream.writePosition(this.position)
-            .writeFloat((this.hb as CircleHitbox2D).radius,0,20,3)
+            .writeFloat((this.base_hitbox as CircleHitbox2D).radius,0,20,3)
             .writeID(this.defs.idNumber!)
     }
 }

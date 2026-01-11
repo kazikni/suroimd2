@@ -12,10 +12,10 @@ export type ExplosionDef={
     bullet?:{
         def:BulletDef
         count:number
-    }
-    sounds?:{
-        normal:string
-    }
+    },
+    assets:{
+        sound:string
+    },
     projectiles?:{
         def:string
         count:number
@@ -43,7 +43,10 @@ Explosions.insert(
                 tracer:tracers.black_projectile
             },
             count:6
-        }
+        },
+        assets:{
+            sound:"explosion_1"
+        },
     },
     {
         idString:"rocket_explosion",
@@ -52,10 +55,10 @@ Explosions.insert(
             begin:1,
             end:2
         },
-        sounds:{
-            normal:"explosion_1"
-        },
         damage:90,
+        assets:{
+            sound:"explosion_1"
+        },
     },
     {
         idString:"frag_grenade_explosion",
@@ -75,8 +78,8 @@ Explosions.insert(
             },
             count:5
         },
-        sounds:{
-            normal:"explosion_1"
+        assets:{
+            sound:"explosion_1"
         },
     },
     {
@@ -104,8 +107,8 @@ Explosions.insert(
             angSpeed:9,
             randomAng:1
         },
-        sounds:{
-            normal:"explosion_1"
+        assets:{
+            sound:"explosion_1"
         },
     },
     {
@@ -125,6 +128,9 @@ Explosions.insert(
                 tracer:tracers.mirv
             },
             count:5
+        },
+        assets:{
+            sound:"explosion_1"
         },
     },
 )

@@ -16,7 +16,7 @@
                 "ia":{
                     "action":"random"
                 },
-                "position":{ "x": 30, "y": 30 },
+                "position":{ "x": 40, "y":70 },
                 "inventory":{
                     "hand":1,
                     "gun1":[{"id":"m9","ammo":15}]

@@ -9,7 +9,7 @@ import { InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { DualAdditional, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
 import { ClientGame2D } from "../engine/game.ts";
 import { ColorM } from "../engine/renderer.ts";
-import { SoundInstance } from "../engine/sounds.ts";
+import { SoundInstance, SoundOptions } from "../engine/sounds.ts";
 import { BackpackDef, Backpacks } from "common/scripts/definitions/items/backpacks.ts";
 import {SkinDef, Skins} from "common/scripts/definitions/loadout/skins.ts"
 import { DefaultFistRig } from "common/scripts/others/item.ts";
@@ -122,14 +122,11 @@ export class Player extends GameObject{
             }))
         }
         
-        this.game.sounds.play(this.game.resources.get_audio(
+        this.play_sound(this.game.resources.get_audio(
             critical?
             "player_headshot":
             `player_hit_${random.int(1,2)}`
-        ),{
-            position:this.position,
-            max_distance:10,
-        },"player")
+        ))
     }
 
     on_die(){
@@ -284,15 +281,11 @@ export class Player extends GameObject{
             const sound=this.game.resources.get_audio(`${def.idString}_switch`)
             if(this.sound_animation.weapon.switch)this.sound_animation.weapon.switch.stop()
             if(sound){
-                this.sound_animation.weapon.switch=this.game.sounds.play(sound,{
+                this.sound_animation.weapon.switch=this.play_sound(sound,{
                     on_complete:()=>{
                         this.sound_animation.weapon.switch=undefined
                     },
-                    volume:0.4,
-                    position:this.position,
-                    delay:400,
-                    max_distance:10
-                },"players")
+                })
             }
             this.attacking=false
             // deno-lint-ignore ban-ts-comment
@@ -363,7 +356,7 @@ export class Player extends GameObject{
         this.update_weapon(false)
     }
     create(_args: Record<string, void>): void {
-        this.hb=new CircleHitbox2D(v2.new(0,0),GameConstants.player.playerRadius)
+        this.base_hitbox=new CircleHitbox2D(v2.new(0,0),GameConstants.player.playerRadius)
         this.container=new AnimatedContainer2D(this.game as unknown as ClientGame2D)
         //#region AA
         this.sprites={
@@ -392,7 +385,7 @@ export class Player extends GameObject{
                     image:this.anims.consumible_particle,
                 },
                 life_time:random.float(2,3),
-                position:v2.add(this.position,v2.new(random.float((this.hb as CircleHitbox2D).radius*-0.8,(this.hb as CircleHitbox2D).radius*0.8),0)),
+                position:v2.add(this.position,v2.new(random.float((this.hitbox as CircleHitbox2D).radius*-0.8,(this.hitbox as CircleHitbox2D).radius*0.8),0)),
                 speed:1,
                 scale:2,
                 to:{
@@ -459,16 +452,7 @@ export class Player extends GameObject{
             if(this.distance_since_last_footstep>=2){
                 this.distance_since_last_footstep=0
                 if(this.assets.footstep_sounds){
-                    this.sound_animation.footsteps = this.game.sounds.play(
-                        this.game.resources.get_audio(random.choose(this.assets.footstep_sounds)),
-                        {
-                            rolloffFactor:0.5,
-                            position:this.position,
-                            max_distance: 40,
-                            volume:0.7
-                        },
-                        "players"
-                    )
+                    this.sound_animation.footsteps=this.play_sound(this.game.resources.get_audio(random.choose(this.assets.footstep_sounds)))
                 }
                 if(Floors[f].floor_kind===FloorKind.Liquid){
                     this.game.particles.add_particle(new ABParticle2D({
@@ -549,9 +533,7 @@ export class Player extends GameObject{
     }
     emote_time:number=0
     add_emote(emote:GameObjectDef){
-        this.game.sounds.play(this.game.resources.get_audio("emote_play"),{
-            max_distance:30
-        },"players")
+        this.play_sound(this.game.resources.get_audio("emote_play"))
         if(!this.sprites.emote_container.visible)this.game.camera.addObject(this.sprites.emote_container)
         this.sprites.emote_container.visible=true
         this.emote_time=0
@@ -580,14 +562,11 @@ export class Player extends GameObject{
                 const sound=this.game.resources.get_audio((d.reload?.reload_alt&&this.current_animation.alt_reload)?`${d.idString}_reload_alt`:`${d.idString}_reload`)
                 if(sound){
                     if(this.sound_animation.animation)this.sound_animation.animation.stop()
-                    this.sound_animation.animation=this.game.sounds.play(sound,{
+                    this.sound_animation.animation=this.play_sound(sound,{
                         on_complete:()=>{
                             this.reset_anim()
                         },
-                        position:this.position,
-                        max_distance:20,
-                        volume:0.4
-                    },"players")
+                    })
                 }
                 break
             }
@@ -599,14 +578,11 @@ export class Player extends GameObject{
                         this.sprites.mounth.frames=undefined
                         this.sprites.mounth.frame=this.game.resources.get_sprite(this.anims.mount_open)
                     }
-                    this.sound_animation.animation=this.game.sounds.play(sound,{
-                        position:this.position,
-                        max_distance:10,
-                        volume:0.7,
+                    this.sound_animation.animation=this.play_sound(sound,{
                         on_complete:()=>{
                             this.update_weapon(false)
                         }
-                    },"players")
+                    })
                 }
                 if(def.assets?.using_particle){
                     this.anims.consumible_particle=def.assets.using_particle
@@ -691,14 +667,11 @@ export class Player extends GameObject{
             //Cycle Sound
             if(this.assets.weapon_cycle_sound){
                 this.sound_animation.weapon.switch?.stop()
-                this.sound_animation.weapon.switch=this.game.sounds.play(this.assets.weapon_cycle_sound,{
+                this.sound_animation.weapon.switch=this.play_sound(this.assets.weapon_cycle_sound,{
                     on_complete:()=>{
                         this.sound_animation.weapon.switch=undefined
                     },
-                    volume:0.4,
-                    position:this.position,
-                    max_distance:10
-                },"players")
+                })
             }
         },d.fireDelay*0.25)
         if(this.game.save.get_variable("cv_graphics_particles")>=GraphicsDConfig.Advanced){
@@ -751,11 +724,7 @@ export class Player extends GameObject{
             }
         }
         if(this.assets.weapon_fire_sound){
-            this.game.sounds.play(this.assets.weapon_fire_sound,{
-                volume:0.4,
-                position:this.position,
-                max_distance:30
-            },"players")
+            this.play_sound(this.assets.weapon_fire_sound)
         }
     }
     set_helmet(helmet:number){
@@ -840,15 +809,37 @@ export class Player extends GameObject{
         }
         const sound=this.game.resources.get_audio(`shield_break`)
         if(sound){
-            this.game.sounds.play(sound,{
-                volume:0.4,
-                position:this.position,
-                max_distance:7
-            },"players")
+            this.play_sound(sound)
         }
     }
     dest_pos?:Vec2
     dest_rot?:number
+    play_sound(sound: Sound, params: SoundOptions = {}): SoundInstance | undefined {
+        if (!sound) return
+
+        const {
+            position = this.position,
+            volume = 1,
+            max_distance = 60,
+            rolloffFactor = 0.5,
+            delay,
+            on_complete,
+        } = params
+
+        return this.game.sounds.play(
+            sound,
+            {
+                position,
+                volume,
+                max_distance,
+                rolloffFactor,
+                delay,
+                on_complete,
+            },
+            "players"
+        )
+    }
+
     override decode(stream: NetStream, full: boolean): void {
         const position=stream.readPosition()
         const rotation=stream.readRad()

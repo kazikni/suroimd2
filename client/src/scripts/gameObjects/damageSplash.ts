@@ -16,7 +16,7 @@ export class DamageSplashOBJ extends GameObject{
     async create(args: DamageSplash): Promise<void> {
         const color = args.shield
             ? (args.critical ? "#114e" : "#0f9e")
-            : (args.critical ? "#f00e" : "#ff0e")
+            : (args.critical ? "#ff0e" : "#fffe")
 
         
         const player = this.manager.get_object(args.taker,args.taker_layer) as Player|undefined

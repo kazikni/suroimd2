@@ -39,8 +39,6 @@ export class Player extends ServerGameObject{
     velocity:Vec2=v2.new(0,0)
     recoil?:{speed:number,delay:number}
 
-    base_hb!:CircleHitbox2D
-
     skin:SkinDef=Skins.getFromString("default_skin")
     loadout={
         skin:"default_skin",
@@ -141,13 +139,16 @@ export class Player extends ServerGameObject{
     ai?:BotAi
     constructor(){
         super()
-        this.oldPosition=this.position
+        this.oldPosition=v2.duplicate(this.position)
         this.inventory=new GInventory(this)
 
         this.actions=new ActionsManager(this)
 
         this.accessories=new AccessoriesManager(this,3)
-        this.base_hb=new CircleHitbox2D(v2.random(0,0),GameConstants.player.playerRadius)
+        this.base_hitbox = new CircleHitbox2D(
+            v2.new(0,0),
+            GameConstants.player.playerRadius
+        )
     }
     interact(user: Player): void {
         if(!this.downed||user.teamId===undefined||(user.teamId!==this.teamId&&(user.groupId===undefined||user.groupId!==this.groupId)))return
@@ -404,7 +405,8 @@ export class Player extends ServerGameObject{
         }else{
             const move=v2.scale(this.input.movement,speed)
             v2m.lerp(this.velocity,move,acceleration)
-            v2m.add(this.position,this.position,v2.scale(this.velocity,dt))
+            const pos=v2.add(this.position,v2.scale(this.velocity,dt))
+            this.position=this.game.map.clamp_hitbox(pos,this.hitbox)
             this.rotation=this.input.rotation
             if(this.parachute){
                 speed*=1.7+(0.5+this.parachute.value)
@@ -417,12 +419,10 @@ export class Player extends ServerGameObject{
         }
         if(!v2.is(this.position,this.oldPosition)){
             this.oldPosition=v2.duplicate(this.position)
-            this.game.map.clamp_hitbox(this.hb)
             this.current_floor=this.game.map.terrain.get_floor_type(this.position,this.layer,this.game.map.def.default_floor??FloorType.Water)
             this.manager.cells.updateObject(this)
         }
 
-        
         //Hand Use
         if(this.downed){
             this.piercingDamage({
@@ -457,19 +457,19 @@ export class Player extends ServerGameObject{
                 s.item.update(this)
             }
             //Collision
-            const objs=this.manager.cells.get_objects(this.hb,this.layer)
+            const objs=this.manager.cells.get_objects(this.hitbox,this.layer)
             let can_interact=this.game.debug.deenable_lobby||this.game.pvpEnabled
             for(const obj of objs){
                 if(obj.id===this.id)continue
                 switch(obj.stringType){
                     case "obstacle":
                         if((obj as Obstacle).def.no_collision)break
-                        if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
+                        if((obj as Obstacle).hitbox&&!(obj as Obstacle).dead){
                             if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                                 (obj as Loot).interact(this)
                                 can_interact=false
                             }
-                            const ov=this.hb.overlapCollision((obj as Obstacle).hb)
+                            const ov=this.hitbox.overlapCollision((obj as Obstacle).hitbox)
                             for(const c of ov){
                                 this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
                             }
@@ -478,7 +478,7 @@ export class Player extends ServerGameObject{
                     case "building":
                         if((obj as Building).def.no_collisions)break
                         if(obj.hb){
-                            const ov=this.hb.overlapCollision(obj.hb)
+                            const ov=this.hitbox.overlapCollision(obj.hb)
                             for(const c of ov){
                                 this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
                             }
@@ -611,7 +611,6 @@ export class Player extends ServerGameObject{
         this.input.aim_speed=action.aim_speed
     }
     create(_args: Record<string, void>): void {
-        this.hb=this.base_hb.clone()
         if(this.game.gamemode.player.respawn?.max_respawn){
             this.respawn_count=this.game.gamemode.player.respawn.max_respawn
         }

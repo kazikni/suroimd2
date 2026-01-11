@@ -59,7 +59,7 @@ export class Creature extends ServerGameObject{
         }
         v2m.add(this.position,this.position,v2.scale(this.velocity,dt))
         //Collision
-        const objs=this.manager.cells.get_objects(this.hb,this.layer)
+        const objs=this.manager.cells.get_objects(this.hitbox,this.layer)
         for(const obj of objs){
             if(obj.id===this.id)continue
             switch(obj.stringType){

@@ -3,6 +3,7 @@
 __                                                                                                      __
 ### Mains
 * Campaign LEVELS!!!
+* Bullet Whiz Sounds
 __                                                                                                      __
 ### Menu
 
@@ -20,6 +21,8 @@ __                                                                              
 __                                                                                                      __
 ### Others
 * Explosions Physics
+* Metal Sound
+* Change Damage Indicator Color
 __                                                                                                      __
 ## Fixes
 

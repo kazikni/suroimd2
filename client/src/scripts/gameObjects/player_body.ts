@@ -5,6 +5,7 @@ import { ColorM } from "../engine/renderer.ts";
 import { GameObject } from "../others/gameObject.ts";
 import { Badges } from "common/scripts/definitions/loadout/badges.ts";
 import { NetStream } from "common/scripts/engine/stream.ts";
+import { NullHitbox2D } from "common/scripts/engine/hitbox.ts";
 export class PlayerBody extends GameObject{
     stringType:string="player_body"
     numberType: number=8
@@ -16,6 +17,7 @@ export class PlayerBody extends GameObject{
 
     // deno-lint-ignore no-explicit-any
     create(_args: any) {
+        this.base_hitbox=new NullHitbox2D(v2.new(0,0))
         this.game.camera.addObject(this.container)
         this.sprite.frame=this.game.resources.get_sprite("player_body")
         this.updatable=false

@@ -353,6 +353,7 @@ export class Game extends ClientGame2D<GameObject>{
         this.fake_crosshair.position=v2.add(this.activePlayer.position,v2.scale(v2.from_RadAngle(this.activePlayer.rotation),2/this.camera.zoom))
         this.fake_crosshair.scale=v2.new(1/this.camera.zoom,1/this.camera.zoom)
       }
+      this.ambient.update_camera()
     }
   }
   planes:Map<number,Plane>=new Map()

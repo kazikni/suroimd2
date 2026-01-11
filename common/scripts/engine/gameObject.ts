@@ -1,11 +1,26 @@
-import { v2, v2m, Vec2 } from "./geometry.ts"
+import { v2, v2m, Vec2, Vec2M } from "./geometry.ts"
 import { type Hitbox2D, NullHitbox2D } from "./hitbox.ts"
 import { type ID } from "./utils.ts"
 import { NetStream } from "./stream.ts";
 import { random } from "./random.ts";
 export type GameObjectID=ID
 export abstract class BaseObject2D{
-    public hb:Hitbox2D
+    public hitbox:Hitbox2D
+    public _base_hitbox:Hitbox2D
+    get base_hitbox():Hitbox2D{
+        return this._base_hitbox
+    }
+    set base_hitbox(v:Hitbox2D){
+        this._base_hitbox=v
+        this.update_hitbox()
+    }
+    public _position:Vec2M
+    get position():Vec2{
+        return this._position
+    }
+    set position(v:Vec2){
+        this._position.set(v.x,v.y)
+    }
     public destroyed:boolean
     public id!:GameObjectID
     public layer!:number
@@ -19,14 +34,14 @@ export abstract class BaseObject2D{
     updatable=true
     // deno-lint-ignore no-explicit-any
     public manager!:GameObjectManager2D<any>
-    public get position():Vec2{
-        return this.hb.position
-    }
-    set position(val:Vec2){
-        this.hb.translate(val)
+
+    update_hitbox():void{
+        this.hitbox=this.base_hitbox.transform(this._position)
     }
     constructor(){
-        this.hb=new NullHitbox2D(v2.new(0,0))
+        this._position=new Vec2M(0,0,this.update_hitbox.bind(this))
+        this._base_hitbox=new NullHitbox2D(v2.new(0,0))
+        this.hitbox=this.base_hitbox.transform(this._position)
         this.destroyed=false
     }
     encode(stream:NetStream,full:boolean):void{}
@@ -130,7 +145,7 @@ export class CellsManager2D<GameObject extends BaseObject2D = BaseObject2D> {
     updateObject(obj: GameObject) {
         this.removeObjectFromCells(obj)
 
-        const rect = obj.hb.to_rect()
+        const rect = obj.hitbox.to_rect()
         this.cell_pos(rect.min)
         this.cell_pos(rect.max)
 

@@ -1,0 +1,33 @@
+{
+    "name":"client",
+    "version":"1.0",
+    "task":{
+        "dev":{
+            "childs":{
+                "game":{
+                    "task":"cd server & deno run --watch -A ./src/game_server/main.ts"
+                },
+                "api":{
+                    "task":"cd server & go run src/api/main.go"
+                },
+                "client":{
+                    "task":"cd client & smde run vite"
+                }
+            }
+        },
+        "run": {
+            "task":"smde run",
+            "childs":{
+                "game":{
+                    "task":"cd server & deno run --watch -A ./src/game_server/main.ts"
+                },
+                "api":{
+                    "task":"cd server & go run src/api/main.go"
+                },
+                "client":{
+                    "task":"cd client & smde run vite"
+                }
+            }
+        }
+    }
+}

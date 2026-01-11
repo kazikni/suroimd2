@@ -30,15 +30,16 @@ export class PlayerBody extends ServerGameObject{
             this.manager.cells.updateObject(this)
             this.dirtyPart=true
             this.old_pos=v2.duplicate(this.position)
-            this.game.map.clamp_hitbox(this.hb)
+            
         }
-        this.position=v2.add(this.position,v2.scale(this.velocity,dt))
+        const pos=v2.add(this.position,v2.scale(this.velocity,dt))
+        this.position=this.game.map.clamp_hitbox(pos,this.base_hitbox)
         this.velocity=v2.scale(this.velocity,1/(1+dt*3))
     }
     override interact(_user: Player): void {
     }
     create(args: {position:Vec2,owner_name:string,owner_badge:string}): void {
-        this.hb=new CircleHitbox2D(args.position,0.4)
+        this.base_hitbox=new CircleHitbox2D(v2.new(0,0),0.3)
         this.player_name=args.owner_name
         this.player_badge=args.owner_badge
         this.dirty=true

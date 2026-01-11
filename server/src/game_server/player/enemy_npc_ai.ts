@@ -50,19 +50,17 @@ export class EnemyNPCBotAi extends BotAi {
         const objs = manager.cells.get_objects(hb, layer)
 
         for (const obj of objs) {
-            if (!obj.hb) continue
-
             switch (obj.stringType) {
                 case "obstacle": {
                     const o = obj as Obstacle
                     if (o.def.no_collision || o.dead) break
-                    if (hb.collidingWith(o.hb)) return true
+                    if (hb.collidingWith(o.hitbox)) return true
                     break
                 }
                 case "building": {
                     const b = obj as Building
                     if (b.def.no_collisions) break
-                    if (hb.collidingWith(obj.hb)) return true
+                    if (hb.collidingWith(obj.hitbox)) return true
                     break
                 }
             }
@@ -81,7 +79,7 @@ export class EnemyNPCBotAi extends BotAi {
     tryPathTo(player: Player, target: Vec2) {
         if (this.pathCooldown > 0) return
 
-        const path = astar_path2d(player,player.base_hb, target,this.isBlockedForPath.bind(this))
+        const path = astar_path2d(player,player.base_hitbox, target,this.isBlockedForPath.bind(this))
 
         if (path.length > 0) {
             this.followPath(path)

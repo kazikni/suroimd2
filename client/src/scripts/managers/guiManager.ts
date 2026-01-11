@@ -641,7 +641,7 @@ export class GuiManager{
         if (!player) {
             return
         }
-        const objs = this.game.scene.objects.cells.get_objects(player.hb, player.layer)
+        const objs = this.game.scene.objects.cells.get_objects(player.hitbox, player.layer)
         for (const o of objs) {
             if(!o.can_interact(player)) continue
             this.current_interaction = o

@@ -88,7 +88,7 @@ export const Materials:Record<string,MaterialDef>={
     },
     metal:{
         sounds:"metal",
-        hit_variations:2
+        hit_variations:3
     },
     wood:{
         sounds:"wood",
@@ -107,7 +107,7 @@ Obstacles.insert(
         health:170,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.82),
         scale:{
-            destroy:0.7,
+            destroy:0.65,
         },
         frame:{
             particle:"stone_particle",
@@ -132,7 +132,7 @@ Obstacles.insert(
         health:100,
         hitbox:new CircleHitbox2D(v2.new(0,0),0.57),
         scale:{
-            destroy:0.5
+            destroy:0.6
         },
         frame_transform:{
             scale:2,
@@ -200,7 +200,7 @@ Obstacles.insert(
         },
         frame_transform:{
             scale:2,
-            hotspot:v2.new(0,0)
+            hotspot:v2.new(0.5,0.5)
         },
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
@@ -218,13 +218,13 @@ Obstacles.insert(
     {
         idString:"copper_crate",
         health:160,
-        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),//new HitboxGroup2D(new RectHitbox2D(v2.new(-0.6,-0.6),v2.new(0.6,0.6))),//
+        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
         scale:{
             destroy:0.6,
         },
         frame_transform:{
             scale:2,
-            hotspot:v2.new(0,0)
+            hotspot:v2.new(0.5,0.5)
         },
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
@@ -247,7 +247,7 @@ Obstacles.insert(
             destroy:0.8,
         },
         frame_transform:{
-            hotspot:v2.new(0,0),
+            hotspot:v2.new(0.5,0.5),
             scale:2,
         },
         rotationMode:RotationMode.null,
@@ -267,7 +267,7 @@ Obstacles.insert(
         idString:"gold_crate", //Gold Airdrop
         health:180,
         frame_transform:{
-            hotspot:v2.new(0,0),
+            hotspot:v2.new(0.5,0.5),
             scale:2,
         },
         hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
@@ -356,12 +356,12 @@ Obstacles.insert(
         imortal:true,
         hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.26,0.48)),
         frame_transform:{
-            hotspot:v2.new(0,0),
+            hotspot:v2.new(0.5,0.5),
             scale:1.5,
         },
         rotationMode:RotationMode.null,
         zIndex:zIndexes.Obstacles3,
-        material:"iron",
+        material:"metal",
         reflect_bullets:true,
         expanded_behavior:{
             type:1,

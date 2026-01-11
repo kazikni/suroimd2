@@ -34,11 +34,11 @@ export abstract class BaseHitbox2D{
     abstract scale(scale:number):void
     abstract randomPoint():Vec2
     abstract to_rect():Rect
-    abstract transform(position?:Vec2,scale?:number,orientation?:Orientation):Hitbox2D
+    abstract transform(position?:Vec2,scale?:number):Hitbox2D
     abstract clone():Hitbox2D
     abstract readonly position:Vec2
-    abstract translate(position:Vec2,orientation?:Orientation):void
-    abstract clamp(min:Vec2,max:Vec2):void
+    abstract translate(position:Vec2):void
+    abstract clamp(position:Vec2,min:Vec2,max:Vec2):Vec2 // returns clamped position
     abstract encode(stream:NetStream):void
 
     constructor(){
@@ -87,17 +87,17 @@ export class NullHitbox2D extends BaseHitbox2D{
         return true
     }
 
-    override transform(position:Vec2=v2.new(0,0),_scale:number=1,orientation:Orientation=0):Hitbox2D{
-        return new NullHitbox2D(position?v2.add_with_orientation(this.position,position,orientation):this.position)
+    override transform(position:Vec2=v2.new(0,0),_scale:number=1):Hitbox2D{
+        return new NullHitbox2D(position?v2.add(this.position,position):this.position)
     }
-    override translate(position: Vec2,orientation:Orientation=0): void {
-      this.position=v2.add_with_orientation(this.position,position,orientation)
+    override translate(position: Vec2): void {
+        v2m.add(this.position,this.position,position)
     }
     override clone():Hitbox2D{
         return new NullHitbox2D(this.position)
     }
-    override clamp(min:Vec2,max:Vec2){
-        this.position=v2.clamp2(this.position,min,max)
+    override clamp(position:Vec2,min:Vec2,max:Vec2){
+        return v2.clamp2(position,min,max)
     }
     override encode(stream:NetStream){
         stream.writePosition(this.position)
@@ -234,25 +234,29 @@ export class CircleHitbox2D extends BaseHitbox2D{
             max:v2.add(this.position,size)
         }
     }
-    override transform(position?:Vec2,scale?:number,orientation:Orientation=0):CircleHitbox2D{
+    override transform(position?:Vec2,scale?:number):CircleHitbox2D{
         const ret=this.clone() as CircleHitbox2D
         if(scale){
             ret.radius*=scale
         }
         if(position){
-            v2m.mul(ret.position,position,v2_sides[orientation])
+            v2m.add(ret.position,this.position,position)
         }
         return ret
     }
-    override translate(position: Vec2,orientation:Orientation=0): void {
-        v2m.mul(this.position,position,v2_sides[orientation])
+    override translate(position: Vec2): void {
+        v2m.add(this.position,this.position,position)
     }
     override clone():CircleHitbox2D{
         return new CircleHitbox2D(v2.duplicate(this.position),this.radius)
     }
-    override clamp(min:Vec2,max:Vec2){
-        const vv=v2.new(this.radius,this.radius)
-        v2m.clamp2(this.position,v2.add(min,vv),v2.sub(max,vv))
+    override clamp(position: Vec2, min: Vec2, max: Vec2): Vec2 {
+        const r = v2.new(this.radius, this.radius)
+        return v2.clamp2(
+            position,
+            v2.add(min, r),
+            v2.sub(max, r)
+        )
     }
     override encode(stream:NetStream){
         stream.writePosition(this.position)
@@ -486,27 +490,9 @@ export class RectHitbox2D extends BaseHitbox2D{
 
         return new RectHitbox2D(min, max);
     }
-
-    override translate(position: Vec2, orientation: Orientation = 0): void {
-        const size = v2.sub(this.max, this.min)
-
-        let finalSize: Vec2
-        switch (orientation) {
-            case 0:
-            case 2:
-                finalSize = size;
-                break;
-            case 1:
-            case 3:
-                finalSize = v2.new(size.y, size.x);
-                break;
-            default:
-                finalSize = size;
-                break;
-        }
-
-        v2m.set(this.min,position.x,position.y)
-        v2m.add(this.max,position, finalSize) 
+    override translate(position: Vec2): void {
+        v2m.add(this.min,this.min,position)
+        v2m.add(this.max,this.max,position)
     }
     override clone():RectHitbox2D{
         return new RectHitbox2D(this.min,this.max)
@@ -518,8 +504,13 @@ export class RectHitbox2D extends BaseHitbox2D{
     static decode(stream:NetStream):RectHitbox2D{
         return new RectHitbox2D(stream.readPosition(),stream.readPosition())
     }
-    override clamp(min: Vec2, max: Vec2): void {
-        this.translate(v2.clamp2(this.position,min,v2.sub(max,v2.sub(this.min,this.max))))
+    override clamp(position: Vec2, min: Vec2, max: Vec2): Vec2 {
+        const size = v2.sub(this.max, this.min);
+        return v2.clamp2(
+            position,
+            min,
+            v2.sub(max, size)
+        );
     }
     override is_null(): boolean {
       return false
@@ -601,10 +592,14 @@ export class HitboxGroup2D extends BaseHitbox2D{
     override clone(deep:boolean=true): HitboxGroup2D {
         return new HitboxGroup2D(...(deep?this.hitboxes.map(hitbox => hitbox.clone(true)):this.hitboxes));
     }
-    override clamp(min:Vec2,max:Vec2){
-        for(const hb of this.hitboxes){
-            hb.clamp(min,max)
-        }
+    override clamp(position: Vec2, min: Vec2, max: Vec2): Vec2 {
+        const rect = this.to_rect();
+        const size = v2.sub(rect.max, rect.min);
+        return v2.clamp2(
+            position,
+            min,
+            v2.sub(max, size)
+        );
     }
     override encode(stream:NetStream){
         stream.writePosition(this.position)
@@ -798,13 +793,15 @@ export class PolygonHitbox2D extends BaseHitbox2D {
     override clone(): PolygonHitbox2D {
         return new PolygonHitbox2D(this.points, this.position);
     }
-
-    override clamp(min: Vec2, max: Vec2): void {
+    override clamp(position: Vec2, min: Vec2, max: Vec2): Vec2 {
         const rect = this.to_rect();
-        const move = v2.clamp2(rect.min, min, max);
-        this.translate(move);
+        const size = v2.sub(rect.max, rect.min);
+        return v2.clamp2(
+            position,
+            min,
+            v2.sub(max, size)
+        );
     }
-
     override encode(stream: NetStream): void {
         stream.writeUint24(this.points.length)
         for (const p of this.points) {

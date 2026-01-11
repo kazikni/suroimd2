@@ -1,4 +1,4 @@
-import { Angle, Hitbox2D, HitboxType2D, LootTableItemRet, NetStream, Numeric, Orientation, RotationMode, v2, Vec2 } from "common/scripts/engine/mod.ts"
+import { Angle, Hitbox2D, LootTableItemRet, NetStream, Numeric, Orientation, RotationMode, v2, Vec2 } from "common/scripts/engine/mod.ts"
 import { ObstacleDef, ObstacleDoorStatus } from "common/scripts/definitions/objects/obstacles.ts";
 import { DamageParams } from "../others/utils.ts";
 import { random } from "common/scripts/engine/random.ts";
@@ -13,7 +13,7 @@ export class Obstacle extends ServerGameObject{
     numberType: number=4
 
     def!:ObstacleDef
-    spawnHitbox!:Hitbox2D
+    spawn_hitbox!:Hitbox2D
     skin:number=0
 
     health:number=0
@@ -28,7 +28,6 @@ export class Obstacle extends ServerGameObject{
     rotation:number=0
     side:Orientation=0
     actived:boolean=false
-    m_position:Vec2=v2.new(0,0)
 
     dead:boolean=false
 
@@ -49,7 +48,7 @@ export class Obstacle extends ServerGameObject{
                 critical:false
             })
         }
-        if(this.door!==undefined){
+        /*if(this.door!==undefined){
             this.door!.open=this.door!.open===0?1:0
             const dd=this.def.expanded_behavior!
             if(dd.open_delay!==undefined&&dd.open_delay>0){
@@ -62,10 +61,10 @@ export class Obstacle extends ServerGameObject{
                 this.door_change_hb()
             }
             this.dirtyPart=true
-        }
+        }*/
     }
     override can_interact(user: Player): boolean {
-        return user.hb.collidingWith(this.hb)&&(this.def.interactDestroy||this.def.expanded_behavior) as boolean&&!this.destroyed
+        return (this.def.interactDestroy||this.def.expanded_behavior) as boolean&&!this.destroyed&&user.hitbox.collidingWith(this.hitbox)
     }
 
     door_change_hb(){
@@ -74,7 +73,10 @@ export class Obstacle extends ServerGameObject{
     
     create(args: {def:ObstacleDef,rotation?:number,variation?:number,skin?:number}): void {
         this.def=args.def
-        
+
+        if(this.def.hitbox)this.base_hitbox=this.def.hitbox.clone()
+        if(this.def.spawnHitbox)this.spawn_hitbox=this.def.spawnHitbox.clone()
+        else this.spawn_hitbox=this.base_hitbox.clone()
         if(args.variation){
             this.variation=args.variation
         }else if(this.def.variations){
@@ -124,20 +126,9 @@ export class Obstacle extends ServerGameObject{
                 this.updatable=false
         }
     }
-    set_position(position:Vec2){
-        if(this.def.hitbox){
-            this.hb=this.def.hitbox.transform(position,undefined,0)
-        }else{
-            this.position=position
-        }
-
-        if(this.def.spawnHitbox){
-            this.spawnHitbox=this.def.spawnHitbox.transform(position,undefined,0)
-        }else{
-            this.spawnHitbox=this.hb.clone()
-        }
-        this.m_position=v2.duplicate(position)
-        this.reset_scale()
+    set_position(position: Vec2, side: number) {
+        this.position = position
+        this.side = side as Orientation
         this.manager.cells.updateObject(this)
     }
     override encode(stream: NetStream, full: boolean): void {
@@ -152,7 +143,7 @@ export class Obstacle extends ServerGameObject{
             stream.writeRad(this.rotation)
             .writeUint8(this.side)
             .writeUint8(this.variation)
-            .writePosition(this.m_position)
+            .writePosition(this.position)
             .writeUint8(this.skin)
             .writeUint16(this.def.idNumber!)
         }
@@ -161,8 +152,9 @@ export class Obstacle extends ServerGameObject{
         if(this.def.hitbox&&this.def.scale){
             const destroyScale = (this.def.scale.destroy ?? 1)*this.maxScale;
             this.scale=Math.max(this.health / this.def.health*(this.maxScale - destroyScale) + destroyScale,0)
-            this.hb=this.def.hitbox.transform(this.m_position,this.scale,0)
+            this.base_hitbox=this.def.hitbox.transform(undefined,this.scale)
             this.dirty=true
+            this.manager.cells.updateObject(this)
         }
     }
     damage(params:DamageParams){
@@ -179,10 +171,10 @@ export class Obstacle extends ServerGameObject{
         if(this.dead)return
         if(this.def.onDestroyExplosion){
             const ex=Explosions.getFromString(this.def.onDestroyExplosion)
-            this.game.add_explosion(this.hb.center(),ex,params.owner,this.def)
+            this.game.add_explosion(this.hitbox.center(),ex,params.owner,this.def)
         }
         for(const l of this.loot){
-            this.game.add_loot(this.hb.randomPoint(),l.item,l.count)
+            this.game.add_loot(this.hitbox.randomPoint(),l.item,l.count)
         }
 
         this.dirtyPart=true

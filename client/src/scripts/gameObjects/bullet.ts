@@ -35,6 +35,8 @@ export class Bullet extends GameObject{
     sprite_projectile?:Sprite2D=new Sprite2D()
     container:Container2D=new Container2D()
 
+    _play_bullet_whiz = true;
+    owner_id:number=0
     create(_args: Record<string, void>) {
         this.sprite_trail.frame=this.game.resources.get_sprite("base_trail")
         this.game.camera.addObject(this.container)
@@ -67,29 +69,39 @@ export class Bullet extends GameObject{
             this.old_position=v2.duplicate(this.position)
 
             for(let s=0;s<SubSteps;s++){
-                v2m.add(this.hb.position,this.hb.position,dst)
+                v2m.add(this._position,this._position,dst)
                 this.manager.cells.updateObject(this)
 
-                const objs=this.manager.cells.get_objects(this.hb,this.layer)
+                const objs=this.manager.cells.get_objects(this.hitbox,this.layer)
+                if(this._play_bullet_whiz&&this.owner_id!==this.game.activePlayerId){
+                    if(this.game.ambient.bullet_whiz_hitbox&&this.game.ambient.bullet_whiz_hitbox.collidingWith(this.hitbox)){
+                        this.game.sounds.play(this.game.resources.get_audio("bullet_whiz_"+random.int(1,3).toString()),{
+                            position: this.position,
+                            max_distance: 60,
+                            volume:0.5
+                        })
+                        this._play_bullet_whiz=false
+                    }
+                }
                 for(const obj of objs){
                     if(this.dying)break
                     switch((obj as BaseGameObject2D).stringType){
                         case "player":
-                            if((obj as Player).hb&&!(obj as Player).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)&&!(obj as Player).parachute){
+                            if((obj as Player).hitbox&&!(obj as Player).dead&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)&&!(obj as Player).parachute){
                                 (obj as Player).on_hitted(this.position,this.critical)
                                 this.dying=true
                                 s=SubSteps
                             }
                             break
                         case "creature":
-                            if((obj as Creature).hb&&!(obj as Creature).dead&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                            if((obj as Creature).hitbox&&!(obj as Creature).dead&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
                                 this.dying=true
                                 s=SubSteps
                             }
                             break
                         case "obstacle":
                             if((obj as Obstacle).def.no_bullet_collision||(obj as Obstacle).dead)break
-                            if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                            if(obj.hitbox&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
                                 (obj as Obstacle).on_hitted(this.position)
                                 this.dying=true
                                 s=SubSteps
@@ -97,7 +109,7 @@ export class Bullet extends GameObject{
                             break
                         case "building":
                             if((obj as Building).def.no_bullet_collision)break
-                            if(obj.hb&&(this.hb.collidingWith(obj.hb)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
+                            if(obj.hitbox&&(this.hitbox.collidingWith(obj.hitbox)/*||obj.hb.colliding_with_line(this.old_position,this.position)*/)){
                                 (obj as Building).on_hitted(this.position)
                                 this.dying=true
                                 s=SubSteps
@@ -166,7 +178,7 @@ export class Bullet extends GameObject{
         if(full){
             this.initialPosition=stream.readPosition()
             this.maxDistance=stream.readFloat32()
-            this.hb=new CircleHitbox2D(this.position,stream.readFloat(0,2,2))
+            this.base_hitbox=new CircleHitbox2D(v2.new(0,0),stream.readFloat(0,2,2))
             this.speed=stream.readFloat32()
             this.container.rotation=stream.readRad()
             this.reflection_count=stream.readUint8()
@@ -198,6 +210,7 @@ export class Bullet extends GameObject{
             this.particles=stream.readUint8()
             this.container.visible=true
             this.critical=stream.readBooleanGroup()[0]
+            this.owner_id=stream.readID()
         }
     }
 }

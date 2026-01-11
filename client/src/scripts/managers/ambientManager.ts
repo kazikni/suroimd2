@@ -10,6 +10,7 @@ import { Tween } from "../engine/utils.ts";
 import { Lights2D } from "../engine/container_2d.ts";
 import { ColorM } from "../engine/renderer.ts";
 import { KDate } from "common/scripts/engine/definitions.ts";
+import { CircleHitbox2D } from "common/scripts/engine/hitbox.ts";
 
 export class AmbientManager{
     game:Game
@@ -34,6 +35,8 @@ export class AmbientManager{
         month:3,
         year:2000
     }
+
+    bullet_whiz_hitbox?:CircleHitbox2D
 
     constructor(game:Game){
         this.game=game
@@ -211,7 +214,9 @@ export class AmbientManager{
         const ambient = (1 - t) * 0.6
         this.game.light_map.ambient = ambient
     }
-
+    update_camera(){
+        this.bullet_whiz_hitbox=new CircleHitbox2D(this.game.activePlayer!.position,(this.game.activePlayer!.base_hitbox as CircleHitbox2D).radius*6)
+    }
     update(dt:number){
         this.date.second+=dt
         if(this.date.second>=1){
