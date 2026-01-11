@@ -2,23 +2,35 @@ import { Numeric } from "common/scripts/engine/utils.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { random } from "common/scripts/engine/random.ts";
 import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
-import { BehaviourTree, Default_Tree_Settings } from "common/scripts/engine/AI/behaviour_tree.ts";
+import { BehaviourTree, Default_Tree_Settings } from "../../../../common/scripts/engine/AI/behaviour_tree.ts";
 import { bots_actions, BotSettings, BotWorld, EaseBotBRTree } from "../defs/bot_ia_tree.ts";
 import { Emotes } from "common/scripts/definitions/loadout/emotes.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { Consumibles } from "common/scripts/definitions/items/consumibles.ts";
 import { GameObjectDef } from "common/scripts/definitions/alldefs.ts";
-
+import { DamageParams } from "../others/utils.ts";
+import { type Game } from "../others/game.ts";
+export type AIMessage<T = any> = {
+    type: string
+    origin: Vec2
+    sender?: BotAi
+    data: T
+}
 export abstract class BotAi{
     // deno-lint-ignore no-explicit-any
     params:any
     player:Player
+
+    deliveries:Record<string,(bot:BotAi,msg:AIMessage)=>void>={}
     constructor(player:Player){
         this.player=player
     }
     abstract AI(dt:number):void
-    on_sound(origin:Vec2,sound_type:string):void{
+    on_sound(origin:Vec2,sound_type:string,owner?:Player):void{
+    }
+    on_hitted(params:DamageParams):void{
+
     }
 }
 export type BotStateHandler<T extends string> = (self: Player,begin:boolean,dt: number) => void
@@ -98,6 +110,47 @@ export class SimpleBotAi extends BotAi{
         }
         if(Math.random()<=0.003){
             this.player.input.actions.push({type:InputActionType.emote,emote:random.choose(this.emotes)})
+        }
+    }
+}
+export class AINetworkBase {
+    baseRadius = 12
+    baseDelay = 0.15
+
+    bots = new Set<BotAi>()
+    game:Game
+    constructor(game:Game){
+        this.game=game
+    }
+    register(bot: BotAi) {
+        this.bots.add(bot)
+    }
+    unregister(bot: BotAi) {
+        this.bots.delete(bot)
+    }
+    broadcast(msg: AIMessage) {
+        for (const bot of this.bots) {
+            if (bot === msg.sender) continue
+            if (!this.can_receive(bot, msg)) continue
+
+            const delay = this.baseDelay
+            if (delay > 0) {
+                setTimeout(() => this.deliver(bot, msg), delay * 1000)
+            } else {
+                this.deliver(bot, msg)
+            }
+        }
+    }
+    /* =======================
+       INTERNAL
+    ======================= */
+    private can_receive(bot: BotAi, msg: AIMessage): boolean {
+        return this.baseRadius >= v2.distance(bot.player.position, msg.origin)
+    }
+    private deliver(bot: BotAi, msg: AIMessage) {
+        const handler = bot.deliveries[msg.type]
+        if (handler) {
+            handler(bot, msg)
         }
     }
 }

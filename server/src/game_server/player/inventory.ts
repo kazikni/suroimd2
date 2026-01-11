@@ -145,7 +145,7 @@ export class GunItem extends GunItemBase implements LItem{
         user.dirty=true
         user.privateDirtys.current_weapon=true
 
-        user.game.play_sound(position,user.layer,"shot")
+        user.game.play_sound(position,user.layer,"shot",user)
     }
     update(user:Player){
         if(this.use_delay>0)this.use_delay-=user.game.dt

@@ -2,6 +2,7 @@ import { v2 } from "../../engine/geometry.ts";
 import { CircleHitbox2D,Hitbox2D,Definitions,Definition, RotationMode, FrameTransform } from "../../engine/mod.ts";
 import { Spawn, SpawnMode, zIndexes } from "../../others/constants.ts";
 import { RectHitbox2D } from "../../engine/hitbox.ts";
+import { DeepPartial, mergeDeep } from "../../engine/utils.ts";
 
 export interface ObstacleBehaviorDoor{
     type:0,
@@ -65,6 +66,8 @@ export interface ObstacleDef extends Definition{
         hit_variations?:number
     }
 
+    height?:0|1|2 // 0 = Invisible | 1 = Mayble | 2 = All
+
     expanded_behavior?:(
         ObstacleBehaviorDoor|ObstacleBehaviorPlaySound
     )
@@ -99,13 +102,11 @@ export const Materials:Record<string,MaterialDef>={
         hit_variations:2
     },
 }
-
-export const Obstacles=new Definitions<ObstacleDef,null>((_v)=>{})
-Obstacles.insert(
-    {
-        idString:"stone",
+function CreateStone(id:string,hitbox:Hitbox2D=new CircleHitbox2D(v2.new(0,0),0.82),o:DeepPartial<ObstacleDef>={}):ObstacleDef{
+    return mergeDeep({
+        idString:id,
         health:170,
-        hitbox:new CircleHitbox2D(v2.new(0,0),0.82),
+        hitbox:hitbox,
         scale:{
             destroy:0.65,
         },
@@ -125,8 +126,41 @@ Obstacles.insert(
             variations:2
         },
         spawnMode:Spawn.grass,
-        variations:2,
-    },
+        height:1,
+    },o)
+}
+function CreateCrate(id:string,tint:number,o:DeepPartial<ObstacleDef>={},particle:string="metal_particle",interactDestroy:boolean=false):ObstacleDef{
+    return mergeDeep({
+        idString:id,
+        health:70,
+        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
+        scale:{
+            destroy:0.6,
+        },
+        frame_transform:{
+            scale:2,
+            hotspot:v2.new(0.5,0.5)
+        },
+        rotationMode:RotationMode.null,
+        zIndex:zIndexes.Obstacles3,
+        material:"wood",
+        interactDestroy:interactDestroy,
+        lootTable:id,
+        frame:{
+            particle:particle
+        },
+        particles:{
+            tint:tint
+        },
+        spawnMode:Spawn.grass,
+        height:1,
+    },o)
+}
+export const Obstacles=new Definitions<ObstacleDef,null>((_v)=>{})
+Obstacles.insert(
+    CreateStone("stone",undefined,{
+        variations:2
+    }),
     {
         idString:"barrel",
         health:100,
@@ -191,102 +225,22 @@ Obstacles.insert(
         },
         spawnMode:Spawn.grass
     },
-    {
-        idString:"wood_crate",
-        health:70,
-        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
-        scale:{
-            destroy:0.6,
-        },
-        frame_transform:{
-            scale:2,
-            hotspot:v2.new(0.5,0.5)
-        },
-        rotationMode:RotationMode.null,
-        zIndex:zIndexes.Obstacles3,
-        material:"wood",
-        interactDestroy:true,
-        lootTable:"wood_crate",
-        frame:{
-            particle:"plank_particle"
-        },
-        particles:{
-            tint:0x583b08
-        },
-        spawnMode:Spawn.grass
-    },
-    {
-        idString:"copper_crate",
+    CreateCrate("wood_crate",0x583b08,{},"plank_particle",true),
+    CreateCrate("copper_crate",0xcc742d,{
         health:160,
-        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
-        scale:{
-            destroy:0.6,
-        },
-        frame_transform:{
-            scale:2,
-            hotspot:v2.new(0.5,0.5)
-        },
-        rotationMode:RotationMode.null,
-        zIndex:zIndexes.Obstacles3,
-        material:"iron", //TODO Copper Material
+        material:"iron",
         reflect_bullets:true,
-        lootTable:"copper_crate",
-        frame:{
-            particle:"metal_particle"
-        },
-        particles:{
-            tint:0xcc742d
-        },
-        spawnMode:Spawn.grass
-    },
-    {
-        idString:"iron_crate", //Airdrop
+    }),
+    CreateCrate("iron_crate",0x656877,{
         health:170,
-        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
-        scale:{
-            destroy:0.8,
-        },
-        frame_transform:{
-            hotspot:v2.new(0.5,0.5),
-            scale:2,
-        },
-        rotationMode:RotationMode.null,
-        zIndex:zIndexes.Obstacles3,
         material:"iron",
         reflect_bullets:true,
-        lootTable:"iron_crate",
-        frame:{
-            particle:"metal_particle"
-        },
-        particles:{
-            tint:0x656877
-        },
-        spawnMode:Spawn.grass
-    },
-    {
-        idString:"gold_crate", //Gold Airdrop
+    }),
+    CreateCrate("gold_crate",0xffd92b,{
         health:180,
-        frame_transform:{
-            hotspot:v2.new(0.5,0.5),
-            scale:2,
-        },
-        hitbox:new RectHitbox2D(v2.new(-0.71,-0.71),v2.new(0.71,0.71)),
-        scale:{
-            destroy:0.8
-        },
-        rotationMode:RotationMode.null,
-        zIndex:zIndexes.Obstacles3,
         material:"iron",
         reflect_bullets:true,
-        lootTable:"gold_crate",
-        frame:{
-            particle:"metal_particle"
-        },
-        particles:{
-            tint:0xffd92b
-        },
-        spawnMode:Spawn.grass
-    },
+    }),
     {
         idString:"bush",
         health:70,
@@ -305,7 +259,8 @@ Obstacles.insert(
             particle:"leaf_01_particle_1"
         },
         biome_skins:["snow"],
-        spawnMode:Spawn.grass
+        spawnMode:Spawn.grass,
+        height:2
     },
     {
         idString:"wood_door",

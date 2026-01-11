@@ -814,6 +814,8 @@ export class Player extends ServerGameObject{
                 this.kill(params)
             }
         }
+
+        if(this.ai)this.ai.on_hitted(params)
     }
 
     down(params:DamageParams){

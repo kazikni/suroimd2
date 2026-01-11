@@ -1,4 +1,4 @@
-import { ActionDefinition, ActionTreeDef, ConditionNode, DoActionNode, NodeStatus, SelectorNode, SequenceNode } from "common/scripts/engine/AI/behaviour_tree.ts";
+import { ActionDefinition, ActionTreeDef, ConditionNode, DoActionNode, NodeStatus, SelectorNode, SequenceNode } from "../../../../common/scripts/engine/AI/behaviour_tree.ts";
 import { Player } from "../gameObjects/player.ts";
 import { v2, Vec2 } from "common/scripts/engine/geometry.ts";
 import { ServerGameObject } from "../others/gameObject.ts";

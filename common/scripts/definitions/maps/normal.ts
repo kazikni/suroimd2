@@ -286,6 +286,8 @@ export const NormalLobby:MapDef={
                     {id:"bush",count:20},
                     {id:"wood_crate",count:15},
                     {id:"copper_crate",count:3},
+                    {id:"iron_crate",count:1},
+                    {id:"gold_crate",count:1},
                     {id:"barrel",count:8},
                     {id:"ground_loot",count:10}
 

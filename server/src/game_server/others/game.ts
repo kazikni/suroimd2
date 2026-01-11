@@ -448,9 +448,9 @@ export class Game extends ServerGame2D<ServerGameObject>{
         p.is_npc=false
         return p
     }
-    play_sound(position:Vec2,layer:number,sound:string){
+    play_sound(position:Vec2,layer:number,sound:string,owner?:Player){
         for(const n of this.npcs){
-            n.ai?.on_sound(position,sound)
+            n.ai?.on_sound(position,sound,owner)
         }
     }
     fineshed:boolean=false

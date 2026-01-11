@@ -11,6 +11,7 @@ import { GunItem } from "./inventory.ts"
 import { StatedBotAi } from "./simple_bot_ai.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { Emotes } from "common/scripts/definitions/loadout/emotes.ts";
+import { DamageParams } from "../others/utils.ts";
 
 type EnemyState =
     | "idle"
@@ -43,12 +44,18 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
         vision_distance: 10,
 
         shoot_angle_epsilon: 0.12,
+
+        bravery: random.float(0, 1),
+        accuracy: random.float(0.8, 1.2),
+        greed: random.float(0, 1)
     }
     constructor(player:Player) {
         super(player)
-        /* =======================
+        /*
+        =======================
            STATE REGISTRATION
-        ======================= */
+        =======================
+        */
         this.stateHandlers = {
             idle: this.state_idle.bind(this),
             walking: this.state_walking.bind(this),
@@ -73,11 +80,14 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
         ) <= this.params.shoot_angle_epsilon
     }
     protected isPlayerVisible(self: Player, other: Player): boolean {
-        if (other.dead || other.is_npc) return false
-        if (
-            v2.distance(self.position, other.position) >
-            this.params.vision_distance
-        ) return false
+        const dist=v2.distance(self.position, other.position)
+        if(other.dead || other.is_npc) return false
+        if(dist>this.params.vision_distance) return false
+
+        const angleToPlayer = v2.lookTo(self.position, other.position)
+        const diff = Math.abs(Angle.delta_rad(self.rotation, angleToPlayer))
+        if (diff > Math.PI / 2) return false
+
         const ray = self.manager.cells.ray(
             self.position,
             other.position,
@@ -86,9 +96,17 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
         for (const o of ray) {
             if(o === other)continue
             switch(o.stringType){
-                case "obstacle":
-                    if((o as Obstacle).def.no_collision||(o as Obstacle).dead)break
-                    return false
+                case "obstacle":{
+                    const obs = o as Obstacle
+                    const h = obs.def.height ?? 0
+
+                    if (h===0)return false// High Wall
+                    if (h===1){
+                        if(dist>this.params.vision_distance*0.1)return false // Medium Wall
+                    }
+                    if (h===2)break// Small Wall
+                    break
+                }
                 case "building":
                     if((o as Building).def.no_collisions)break
                     return false
@@ -137,7 +155,7 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
     }
     protected state_walking(self: Player,begin:boolean, dt: number) {
         this.updateDetection(self, dt)
-        if (this.seenPlayer) {
+        if(this.seenPlayer) {
             this.setState("detecting")
             return
         }
@@ -154,26 +172,34 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
     }
     protected state_detecting(self: Player,begin:boolean, dt: number) {
         if (!this.seenPlayer) {
-            this.setState("idle")
+            this.setState("walking")
             return
         }
-        this.rot_target=v2.lookTo(self.position,this.seenPlayer.position)
-        this.rot_speed=15
-
+        this.rot_speed=1
         if (this.stateTime >= this.params.detection_time) {
             this.setState("engaged")
         }
     }
     protected state_engaged(self: Player,begin:boolean, dt: number) {
-        this.updateDetection(self, dt)
+        this.updateDetection(self, dt);
         if (!this.seenPlayer) {
-            this.setState("go_last_seen")
-            return
+            this.setState("go_last_seen");
+            return;
         }
 
-        this.rot_target=v2.lookTo(self.position,this.seenPlayer.position)
-        this.rot_speed=1
-        this.move_dir=v2.new(0,0)
+        const dist = v2.distance(self.position, this.seenPlayer.position);
+        this.rot_target = v2.lookTo(self.position, this.seenPlayer.position);
+
+        const idealDist = this.params.bravery > 0.5 ? 4 : 8;
+
+        if (dist > idealDist + 1) {
+            v2m.scale(self.input.movement, v2.from_RadAngle(this.rot_target), this.params.path_speed);
+        } else if (dist < idealDist - 1) {
+            v2m.scale(self.input.movement, v2.from_RadAngle(this.rot_target), -this.params.path_speed);
+        } else {
+            const strafeDir = v2.from_RadAngle(this.rot_target + Math.PI / 2);
+            v2m.scale(self.input.movement, strafeDir, this.params.random_speed);
+        }
 
         self.input.reload =
             self.inventory.hand_item?.item_type === InventoryItemType.gun &&
@@ -250,7 +276,8 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
         }
         return false
     }
-    override on_sound(origin: Vec2, sound_type: string): void {
+    override on_sound(origin: Vec2, sound_type: string,owner?:Player): void {
+        if(owner?.is_npc)return
         const dist = v2.distance(this.player.position, origin)
         if (
             ((sound_type === "shot" && dist <= 14) ||
@@ -260,5 +287,10 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
             this.path.length = 0
             this.setState("go_last_seen")
         }
+    }
+    override on_hitted(params:DamageParams): void {
+        if(this.seenPlayer||!params.owner)return
+        this.rot_target=v2.lookTo(params.owner.position,params.position)
+        this.setState("detecting")
     }
 }
