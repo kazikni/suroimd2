@@ -109,10 +109,11 @@ export class Player extends ServerGameObject{
 
     boost_t:number=0
 
-    friendly_fire:boolean=true
+    friendly_fire:boolean=false
     alternative_vehicle_control:boolean=true
 
     input={
+        speed:1,
         movement:v2.new(0,0),
         rotation:0,
         using_item:false,
@@ -332,6 +333,7 @@ export class Player extends ServerGameObject{
                   * (this.downed?0.4:1)
                   * (this.parachute?1:((current_floor.speed_mult??1)))
                   * (this.projectile_holding?0.7:1)
+                  * (this.input.speed)
         if(this.recoil){
             this.recoil.delay-=dt
             this.current_animation=undefined

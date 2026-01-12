@@ -4,10 +4,11 @@ import { type Game } from "../others/game.ts";
 import { GroupManager, TeamsManager } from "./teams.ts";
 import { DamageReason } from "common/scripts/definitions/utils.ts";
 import { Vehicle } from "../gameObjects/vehicle.ts";
-import { Angle, v2 } from "common/scripts/engine/geometry.ts";
+import { Angle, v2, Vec2 } from "common/scripts/engine/geometry.ts";
 import { Vehicles } from "common/scripts/definitions/objects/vehicles.ts";
-import { Layers } from "common/scripts/others/constants.ts";
+import { Layers, SpawnModeType } from "common/scripts/others/constants.ts";
 import { Maps } from "common/scripts/definitions/maps/base.ts";
+import { FloorType } from "common/scripts/others/terrain.ts";
 export abstract class GamemodeManager{
     game:Game
     kill_leader?:Player
@@ -30,6 +31,12 @@ export abstract class GamemodeManager{
     abstract start_rules():boolean
     abstract on_player_join(player:Player):void
     abstract on_player_die(player:Player):void
+    get_player_spawn_position(player:Player):Vec2|undefined{
+        return this.game.map.getRandomPosition(player.base_hitbox,player.id,player.layer,{
+            type:SpawnModeType.whitelist,
+            list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
+        },this.game.map.random)
+    }
     abstract is_ally(a:Player,b:Player):boolean
     abstract generate_map(lobby:boolean):void
     begin_after():void{

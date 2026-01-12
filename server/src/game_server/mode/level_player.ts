@@ -1,13 +1,15 @@
-import { cloneDeep, SignalManager } from "common/scripts/engine/utils.ts";
+import { cloneDeep, mergeDeep, SignalManager } from "common/scripts/engine/utils.ts";
 import { Game } from "../others/game.ts";
-import { LevelDefinition } from "common/scripts/config/level_definition.ts";
+import { EnemyDef, LevelDefinition } from "common/scripts/config/level_definition.ts";
 import { type Player } from "../gameObjects/player.ts";
 import { GamemodeManager, SoloGamemodeManager } from "./modeManager.ts";
-import { Maps } from "common/scripts/definitions/maps/base.ts";
+import { MapDef, Maps } from "common/scripts/definitions/maps/base.ts";
 import { Gamemodes } from "./gamemode.ts";
-import { SimpleBotAi } from "../player/simple_bot_ai.ts";
-import { v2m } from "common/scripts/engine/geometry.ts";
+import { v2m, Vec2 } from "common/scripts/engine/geometry.ts";
 import { EnemyNPCAI } from "../player/enemy_npc_ai.ts";
+import { BattleRoyaleBot } from "../player/enemy_bot_ai.ts";
+import { FloorType } from "common/scripts/others/terrain.ts";
+import { SpawnModeType } from "common/scripts/others/constants.ts";
 export class CampaignGamemodeManager extends GamemodeManager{
     player:LevelPlayer
     level:LevelDefinition
@@ -23,6 +25,7 @@ export class CampaignGamemodeManager extends GamemodeManager{
     }
     can_down(player:Player):boolean{
         return false
+        //return player.is_npc
     }
     on_start():void{
 
@@ -30,8 +33,20 @@ export class CampaignGamemodeManager extends GamemodeManager{
     start_rules():boolean{
         return true
     }
-    on_player_join(player:Player):void{
+    override get_player_spawn_position(player: Player): Vec2 | undefined {
+        if(!player.is_npc){
+            if(this.level.player.start_position)return this.level.player.start_position
+        }
+        return super.get_player_spawn_position(player)
 
+    }
+    on_player_join(player:Player):void{
+        if(!player.is_npc){
+            if(this.level.player.name)player.name=this.level.player.name
+            if(this.level.player.inventory){
+                player.inventory.load_preset(this.level.player.inventory)
+            }
+        }
     }
     on_player_die(player:Player):void{
         if(player.is_npc){
@@ -48,20 +63,43 @@ export class CampaignGamemodeManager extends GamemodeManager{
         }else if(typeof this.level.map.def==="string"){
             this.game.map.generate(Maps[this.level.map.def],this.level.map.seed)
         }else{
-            this.game.map.generate(this.level.map.def,this.level.map.seed)
+            const def=mergeDeep({},this.level.map.def,Maps[this.level.map.def.base]) as MapDef
+            this.game.map.generate(def,this.level.map.seed)
         }
+    }
+    generate_enemy(def:EnemyDef,name?:string){
+        const npc=this.game.add_npc(name)
+        npc.ai=new EnemyNPCAI(npc)
+
+        if(def.inventory)npc.inventory.load_preset(def.inventory)
+        this.npcs_count++
+        if(def.ia.params)npc.ai.params=cloneDeep(def.ia.params)
+        return npc
     }
     override begin_after():void{
         switch(this.level.objective.type){
             case "kill_all_enemies":{
                 for(const e of this.level.objective.enemies){
-                    const npc=this.game.add_npc(e.name)
-                    npc.ai=new EnemyNPCAI(npc)
-                    npc.inventory.infinity_ammo=true
-                    v2m.set(npc.position,e.position.x,e.position.y)
-                    if(e.inventory)npc.inventory.load_preset(e.inventory)
-                    this.npcs_count++
-                    if(e.ia.params)npc.ai.params=cloneDeep(e.ia.params)
+                    const count=e.count??1
+                    
+                    let def:EnemyDef|undefined
+                    if(typeof e.def==="string"){
+                        def=(this.level.definitions?.enemies)?(this.level.definitions?.enemies[e.def].normal):undefined
+                    }else{
+                        def=e.def
+                    }
+                    if(!def)continue
+                    for(let i=0;i<count;i++){
+                        const npc=this.generate_enemy(def,e.name)
+                        if(e.position)v2m.set(npc.position,e.position.x,e.position.y)
+                        else{
+                            const pos=this.game.map.getRandomPosition(npc.base_hitbox,npc.id,npc.layer,{
+                                type:SpawnModeType.whitelist,
+                                list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
+                            },this.game.map.random)
+                            if(pos)npc.position=pos
+                        }
+                    }
                 }
                 break
             }
@@ -100,7 +138,7 @@ export class LevelPlayer {
             case "battle_royale":
                 for(let i=0;i<level.objective.players.count;i++){
                     const pp=this.game.add_bot()
-                    const ai=new SimpleBotAi(pp)
+                    const ai=new BattleRoyaleBot(pp)
                     pp.ai=ai
                 }
                 break

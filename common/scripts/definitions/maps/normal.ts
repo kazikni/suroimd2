@@ -276,20 +276,20 @@ export const NormalLobby:MapDef={
     loot_tables:NormalMap.loot_tables,
     generation:{
         island:{
-            size:v2.new(100,100),
+            size:v2.new(150,150),
             spawn:[
                 [
                     {id:"recorded_tape",count:1},
-                    {id:"sillo",count:1},
-                    {id:"oak_tree",count:40},
-                    {id:"stone",count:30},
-                    {id:"bush",count:20},
-                    {id:"wood_crate",count:15},
-                    {id:"copper_crate",count:3},
+                    {id:"sillo",count:3},
+                    {id:"oak_tree",count:110},
+                    {id:"stone",count:80},
+                    {id:"bush",count:60},
+                    {id:"wood_crate",count:50},
+                    {id:"copper_crate",count:6},
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
-                    {id:"barrel",count:8},
-                    {id:"ground_loot",count:10}
+                    {id:"barrel",count:20},
+                    {id:"ground_loot",count:40}
 
                     //{id:"pig",count:10},
                     //{id:"chicken",count:10}

@@ -332,11 +332,6 @@ export class Game extends ServerGame2D<ServerGameObject>{
 
         p.username=username
 
-        const pos=this.map.getRandomPosition(p.base_hitbox,p.id,p.layer,{
-            type:SpawnModeType.whitelist,
-            list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
-        },this.map.random)
-        if(pos)p.position=pos
         p.manager.cells.updateObject(p)
 
         this.living_count_dirty=true
@@ -364,6 +359,10 @@ export class Game extends ServerGame2D<ServerGameObject>{
         const p=this.add_player(client.ID,username,packet) as Player;
             p.client=client;
             p.update2()
+
+        const pos=this.modeManager.get_player_spawn_position(p)
+        if(pos)p.position=pos
+
         this.connectedPlayers[p.id]=p
         p.connected=true
         if(this.Config.database.enabled){
@@ -446,6 +445,10 @@ export class Game extends ServerGame2D<ServerGameObject>{
         p.connected=true
         p.is_bot=true
         p.is_npc=false
+
+        const pos=this.modeManager.get_player_spawn_position(p)
+        if(pos)p.position=pos
+
         return p
     }
     play_sound(position:Vec2,layer:number,sound:string,owner?:Player){

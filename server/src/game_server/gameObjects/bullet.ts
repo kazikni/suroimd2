@@ -69,7 +69,11 @@ export class Bullet extends ServerGameObject{
                 if(this.destroyed)break
                 switch(obj.stringType){
                     case "player":{
-                        if((obj as Player).hitbox&&!(obj as Player).dead&&(!this.owner||((obj as Player).id===this.owner.id&&this.reflectionCount>0)||(obj as Player).id!==this.owner.id)&&(this.hitbox.collidingWith(obj.hitbox)||obj.hitbox.colliding_with_line(this.old_position,this.position))&&!(obj as Player).parachute){
+                        if(!(obj as Player).dead&&(!this.owner||((obj as Player).id===this.owner.id&&this.reflectionCount>0)||(obj as Player).id!==this.owner.id)&&!(obj as Player).parachute){
+                            const col1=(obj as Obstacle).hitbox.overlapCollision(this.hitbox)
+                            const main_col:OverlapCollision2D[]=[...col1]
+                            if(main_col.length===0)continue
+
                             const dmg:number=this.damage
                             *(this.defs.falloff?Numeric.lerp(1,this.defs.falloff,disT):1)
                             *(this.critical?(this.defs.criticalMult??1.25):1);
@@ -84,6 +88,10 @@ export class Bullet extends ServerGameObject{
                                         effect:e.id
                                     })
                                 }
+                            }
+
+                            if((obj as Player).vest&&(obj as Player).vest?.reflect_bullets){
+                                this.reflect(main_col[0].dir)
                             }
                             break
                         }

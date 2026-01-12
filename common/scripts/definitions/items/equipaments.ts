@@ -10,6 +10,7 @@ export interface VestDef extends Definition{
     level:number
     tint:number
     quality:ItemQuality
+    reflect_bullets?:boolean
     item_type?:InventoryItemType.vest
 }
 export interface HelmetDef extends Definition{
@@ -52,6 +53,14 @@ Helmets.insert(
         position:v2.new(0,0),
         quality:ItemQuality.Rare
     },
+    {
+        idString:"lastman_helmet",
+        defence:0,
+        level:4,
+        reduction:0.25,
+        position:v2.new(0,0),
+        quality:ItemQuality.Legendary
+    },
 )
 Vests.insert(
     //Normals Vest
@@ -78,6 +87,15 @@ Vests.insert(
         reduction:0.20,
         tint:0x010011,
         quality:ItemQuality.Rare
+    },
+    {
+        idString:"elite_vest",
+        defence:0,
+        level:4,
+        reflect_bullets:true,
+        reduction:0.25,
+        tint:0x5C322E,
+        quality:ItemQuality.Mythic
     },
 )
 export interface AccessorieDef extends Definition{

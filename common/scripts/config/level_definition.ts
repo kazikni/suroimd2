@@ -4,22 +4,28 @@ import { Vec2 } from "../engine/geometry.ts";
 import { PlayerModifiers } from "../others/constants.ts";
 
 export type LevelPlayerDefinition={
-    start_position:Vec2
-    insert_inventory?:InventoryPreset
+    name?:string
+    start_position?:Vec2
+    inventory?:InventoryPreset
     modifiers:Partial<PlayerModifiers>
 }
-export type LevelMapDefinition=string|(MapDef)
+export type LevelMapDefinition=string|(MapDef&{base:string})
+export type EnemyDef={
+    ia:{
+        kind?:string
+        action?:string
+        params?:Record<string,any>
+    }
+    inventory:InventoryPreset
+}
 export type LevelObjective=({
     type:"kill_all_enemies",
     enemies:{
-        ia:{
-            kind?:string
-            action?:string
-            params?:Record<string,any>
-        }
+        def:EnemyDef|string
         name?:string
-        position:Vec2
-        inventory:InventoryPreset
+
+        position?:Vec2
+        count?:number
     }[]
 }|{
     type:"battle_royale"
@@ -49,5 +55,12 @@ export interface LevelDefinition{
             before_level?:string[]
             after_level?:string[]
         }
+    }
+    definitions?:{
+        enemies?:Record<string,{
+            easy:EnemyDef,
+            normal:EnemyDef,
+            hard:EnemyDef
+        }>
     }
 }

@@ -96,6 +96,7 @@ export type GunDef={
     gasParticles?:GasParticle
     dual?:DeepPartial<GunDef>&DualAdditional
     item_type?:InventoryItemType.gun
+    supresed?:boolean
 }&({
     dual_from?:undefined
 }|{
@@ -718,6 +719,7 @@ Guns.insert(
         assets:{
             cycle_sound:true,
         },
+        supresed:true
     },
     {
         idString:"m870",
@@ -830,7 +832,7 @@ Guns.insert(
         fireMode:FireMode.Auto,
         bullet:{
             def:{
-                damage:5,
+                damage:4,
                 radius:0.01,
                 speed:25,
                 falloff:0.7,
@@ -838,7 +840,7 @@ Guns.insert(
                 criticalMult:1.2,
                 tracer:tracers.tiny
             },
-            count:14
+            count:11
         },
         reload:{
             delay:0.8,
@@ -862,6 +864,45 @@ Guns.insert(
             cycle_sound:true,
         },
         muzzleFlash:MuzzleFlash.normal,
+    },
+    {
+        idString:"pkp",
+        fireDelay:0.1,
+        switchDelay:0.6,
+        spread:6,
+        lenght:1.5,
+        size:4,
+        ammoType:"762mm",
+        ammoSpawnAmount:200,
+        class:GunClasses.Assault,
+        quality:ItemQuality.Rare,
+        bullet:{
+            def:{
+                damage:10,
+                obstacleMult:2,
+                radius:0.014,
+                range:170,
+                speed:45,
+                tracer:tracers.medium
+            }
+        },
+        reload:{
+            delay:5,
+            capacity:200
+        },
+        recoil:{
+            duration:0.12,
+            speed:0.35
+        },
+        speed_mod:0.8,
+        gasParticles:GasParticles.automatic,
+        muzzleFlash:MuzzleFlash.normal,
+        arms:WeaponsArmRig[0],
+        image:WeaponsRig[0],
+        assets:{
+            world:"weapon_medium_world",
+            world_tint:0x12111f,
+        },
     },
     {
         idString:"rpg7",

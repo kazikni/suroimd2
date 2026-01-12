@@ -9,7 +9,7 @@ export class Decal extends GameObject{
 
     sprite:Sprite2D=new Sprite2D()
 
-    lifetime:number=30
+    lifetime:number=15
 
     // deno-lint-ignore no-explicit-any
     create(_args: any) {

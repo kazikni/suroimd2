@@ -206,11 +206,12 @@ export class ResourcesManager{
         }
         return this.sources[id] as Frame
     }
-    async load_spritesheet(idPrefix: string, json: SpritesheetJSON, imagePathOverride?: string, group:string="") {
+    async load_spritesheet(idPrefix: string, json: SpritesheetJSON, imagePathOverride?: string, group:string="",load_msg?:(msg:string)=>void) {
         const image = await this.load_image(imagePathOverride ?? json.meta.image);
         const tex = loadTexture(this.gl, image);
 
         for (const [id, frame] of Object.entries(json.frames)) {
+            if(load_msg)load_msg(frame.file??id)
             const iw = image.width;
             const ih = image.height;
             const rect = {
@@ -279,7 +280,8 @@ export class ResourcesManager{
     get_audio(id:string):Sound{
         return this.sources[id] as Sound
     }
-    load_audio(id:string,def:SoundDef,group:string=""):Promise<Sound|undefined>{
+    load_audio(id:string,def:SoundDef,group:string="",load_msg?:(msg:string)=>void):Promise<Sound|undefined>{
+        if(load_msg)load_msg(def.src)
         return new Promise<Sound|undefined>((resolve, reject) => {
             if (this.sources[id] != undefined) {
                 resolve(this.sources[id] as Sound)
@@ -340,9 +342,10 @@ export class ResourcesManager{
             delete this.sources[id]
         }
     }
-    async load_group(path:string,name:string=""){
+    async load_group(path:string,name:string="",load_msg?:(msg:string)=>void){
         const files=await(await fetch(path)).json()
         for(const f of Object.keys(files.files)){
+            if(load_msg)load_msg(files.files[f])
             await this.load_source(f,files.files[f],undefined,name)
         }
     }

@@ -2,7 +2,7 @@ import { type Player } from "../gameObjects/player.ts";
 import { Angle, CircleHitbox2D, getPatterningShape, Numeric, random, v2 } from "common/scripts/engine/mod.ts";
 import { FireMode, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
 import { AmmoItemBase, ConsumibleItemBase, GInventoryBase, GunItemBase, MDItem, MeleeItemBase, ProjectileItemBase } from "common/scripts/others/inventory.ts";
-import { DamageReason, InventoryItemType, InventoryPreset } from "common/scripts/definitions/utils.ts";
+import { DamageReason, InventoryDroppable, InventoryItemType, InventoryPreset } from "common/scripts/definitions/utils.ts";
 import { ConsumingAction, ReloadAction } from "./actions.ts";
 import { AmmoDef } from "common/scripts/definitions/items/ammo.ts";
 import { ConsumibleCondition, ConsumibleDef } from "common/scripts/definitions/items/consumibles.ts";
@@ -14,7 +14,7 @@ import { Obstacle } from "../gameObjects/obstacle.ts";
 import { ProjectileDef, Projectiles } from "common/scripts/definitions/objects/projectiles.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
 import { type Loot } from "../gameObjects/loot.ts";
-import { BoostType } from "common/scripts/definitions/player/boosts.ts";
+import { Boosts, BoostType } from "common/scripts/definitions/player/boosts.ts";
 import { InventorySetup } from "../mode/gamemode.ts";
 import { SideEffectType } from "common/scripts/definitions/player/effects.ts";
 import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
@@ -145,7 +145,7 @@ export class GunItem extends GunItemBase implements LItem{
         user.dirty=true
         user.privateDirtys.current_weapon=true
 
-        user.game.play_sound(position,user.layer,"shot",user)
+        if(!this.def.supresed)user.game.play_sound(position,user.layer,"shot",user)
     }
     update(user:Player){
         if(this.use_delay>0)this.use_delay-=user.game.dt
@@ -351,6 +351,11 @@ export class MeleeItem extends MeleeItemBase implements LItem{
 export class GInventory extends GInventoryBase<LItem>{
     owner:Player
     infinity_ammo:boolean=false
+    droppable:InventoryDroppable={
+        backpack:true,
+        helmet:true,
+        vest:true
+    }
     constructor(owner:Player){
         super({
             0:MeleeItem as (new(item:GameItem)=>LItem),
@@ -570,36 +575,71 @@ export class GInventory extends GInventoryBase<LItem>{
         }
     }
     load_preset(preset:InventoryPreset){
-        if(preset.helmet)this.owner.helmet=Helmets.getFromString(random.choose(preset.helmet))
-        if(preset.vest)this.owner.vest=Vests.getFromString(random.choose(preset.vest))
-        if(preset.backpack)this.set_backpack(Backpacks.getFromString(random.choose(preset.backpack)))
-
-        if(preset.melee)this.set_weapon(0,Melees.getFromString(random.choose(preset.melee)))
-        if(preset.gun1){
-            const choose=random.choose(preset.gun1)
-            this.set_weapon(1,Guns.getFromString(choose.id))
-            const wep=this.weapons[1] as GunItem
-            if(choose.ammo){
-                wep.ammo=choose.ammo
+        if(preset.helmet){
+            const choose=random.weight2(preset.helmet)
+            if(choose){
+                this.owner.helmet=Helmets.getFromString(choose.item)
+                if(choose.drop_chance)this.droppable.helmet=(Math.random()<=choose.drop_chance)
+                else if(choose.droppable!==undefined)this.droppable.helmet=choose.droppable
             }
+        }
+        if(preset.vest){
+            const choose=random.weight2(preset.vest)
+            if(choose){
+                this.owner.vest=Vests.getFromString(choose.item)
+                if(choose.drop_chance)this.droppable.vest=(Math.random()<=choose.drop_chance)
+                else if(choose.droppable!==undefined)this.droppable.vest=choose.droppable
+            }
+        }
+        if(preset.backpack){
+            const choose=random.weight2(preset.backpack)
+            if(choose){
+                this.set_backpack(Backpacks.getFromString(choose.item))
+                if(choose.drop_chance)this.droppable.vest=(Math.random()<=choose.drop_chance)
+                else if(choose.droppable!==undefined)this.droppable.vest=choose.droppable
+            }
+        }
+
+        if(preset.melee)this.set_weapon(0,Melees.getFromString(random.weight2(preset.melee)?.item!))
+        if(preset.gun1){
+            const choose=random.weight2(preset.gun1)!
+            this.set_weapon(1,Guns.getFromString(choose.item))
+            const wep=this.weapons[1] as GunItem
+            wep.ammo=wep.def.reload?.capacity??0
         }
         if(preset.gun2){
-            const choose=random.choose(preset.gun2)
-            this.set_weapon(2,Guns.getFromString(choose.id))
+            const choose=random.weight2(preset.gun2)!
+            this.set_weapon(2,Guns.getFromString(choose.item))
             const wep=this.weapons[2] as GunItem
-            if(choose.ammo){
-                wep.ammo=choose.ammo
-            }
+            wep.ammo=wep.def.reload?.capacity??0
         }
-
         if(preset.oitems){
             for(const o of Object.keys(preset.oitems)){
                 this.oitems[o]=preset.oitems[o]
             }
         }
-
         if(preset.hand){
             this.set_weapon_index(preset.hand)
+        }
+        if(preset.infinity_ammo!==undefined)this.infinity_ammo=preset.infinity_ammo
+        if(preset.droppables){
+            if(preset.droppables.helmet!==undefined)this.droppable.helmet=preset.droppables.helmet
+            if(preset.droppables.vest!==undefined)this.droppable.vest=preset.droppables.vest
+            if(preset.droppables.backpack!==undefined)this.droppable.backpack=preset.droppables.backpack
+        }
+        if(preset.boosts){
+            const choose=random.weight2(preset.boosts)
+            if(choose){
+                this.owner.boost_def=Boosts[choose.boost_type]
+                this.owner.boost=this.owner.maxBoost*choose.boost
+            }
+        }
+        for(const slot of preset.items??[]){
+            const choose=random.weight2(slot)
+            if(choose&&GameItems.valueString[choose.item]){
+                const item=GameItems.valueString[choose.item]
+                this.give_item(item,choose.count??1,false)
+            }
         }
     }
     gift(g:InventorySetup){
@@ -657,15 +697,15 @@ export class GInventory extends GInventoryBase<LItem>{
             }
             delete this.oitems[s]
         }
-        if(this.owner.vest){
-            this.owner.game.add_loot(this.owner.position,this.owner.vest,1)
-            this.owner.vest=undefined
-        }
-        if(this.owner.helmet){
+        if(this.owner.helmet&&this.droppable.helmet){
             this.owner.game.add_loot(this.owner.position,this.owner.helmet,1)
             this.owner.helmet=undefined
         }
-        if(this.backpack&&this.backpack.level){
+        if(this.owner.vest&&this.droppable.vest){
+            this.owner.game.add_loot(this.owner.position,this.owner.vest,1)
+            this.owner.vest=undefined
+        }
+        if(this.backpack&&this.backpack.level&&this.droppable.backpack){
             this.owner.game.add_loot(this.owner.position,this.backpack,1)
             this.set_backpack()
         }

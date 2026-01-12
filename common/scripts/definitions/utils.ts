@@ -1,6 +1,8 @@
 import { type NetStream } from "../engine/stream.ts";
 import { Definition } from "../engine/definitions.ts";
 import { ItemQuality } from "../others/item.ts";
+import { WeightDefinition } from "../engine/random.ts";
+import { BoostType } from "./player/boosts.ts";
 export enum BulletReflection{
     All=0,
     Only_Reflective=1,
@@ -105,25 +107,40 @@ export interface InventoryItemData{
     type:InventoryItemType
     idNumber:number
 }
+export interface InventoryDroppable{
+    helmet:boolean
+    vest:boolean
+    backpack:boolean
+}
 export interface InventoryPresetItem{
     item:string
-    count:number
+    weight:number
+    droppable?:boolean
+    drop_chance?:number
+    count?:number
 }
 export interface InventoryPreset{
-    helmet?:string[]//Will Choose one of these helmets
-    vest?:string[]//Will Choose one of these vest
-    backpack?:string[]//Will Choose one of these backpacks
+    helmet?:InventoryPresetItem[]//Will Choose one of these helmets
+    vest?:InventoryPresetItem[]//Will Choose one of these vest
+    backpack?:InventoryPresetItem[]//Will Choose one of these backpacks
 
-    skin?:string[]//Will Choose one of these skins
+    skin?:InventoryPresetItem[]//Will Choose one of these skins
 
-    melee?:string[]//Will Choose one of these melees
-    gun1?:{id:string,ammo?:number}[]//Will Choose one of these guns
-    gun2?:{id:string,ammo?:number}[]//Will Choose one of these guns
+    melee?:InventoryPresetItem[]//Will Choose one of these melees
+    gun1?:InventoryPresetItem[]//Will Choose one of these guns
+    gun2?:InventoryPresetItem[]//Will Choose one of these guns
 
     items?:InventoryPresetItem[][]
     oitems?:Record<string,number>
 
     hand?:number
+    infinity_ammo?:boolean
+    droppables?:Partial<InventoryDroppable>
+
+    boosts?:(WeightDefinition&{
+        boost:number
+        boost_type:BoostType
+    })[]
 }
 export function InventoryItemDataEncode(stream:NetStream,data:InventoryItemData){
     stream.writeUint16(data.count)

@@ -12,7 +12,23 @@ import { StatedBotAi } from "./simple_bot_ai.ts";
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { Emotes } from "common/scripts/definitions/loadout/emotes.ts";
 import { DamageParams } from "../others/utils.ts";
-
+export function isBlockedForPath(
+    manager: GameObjectManager2D<BaseObject2D>,
+    hb: Hitbox2D,
+    _x: number,
+    _y: number,
+    layer: number
+): boolean {
+    for (const obj of manager.cells.get_objects(hb, layer)) {
+        if (
+            (obj.stringType === "obstacle" && !(obj as Obstacle).def.no_collision) ||
+            (obj.stringType === "building" && !(obj as Building).def.no_collisions)
+        ) {
+            if (hb.collidingWith(obj.hitbox)) return true
+        }
+    }
+    return false
+}
 type EnemyState =
     | "idle"
     | "walking"
@@ -28,6 +44,7 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
 
     protected path: Vec2[] = []
     protected pathIndex = 0
+    protected path_urgency:number=0
 
     protected seenPlayer?: Player
     protected lastSeenPos?: Vec2
@@ -36,19 +53,23 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
 
     override params = {
         random_speed: 0.35,
-        path_speed: 1.0,
-
-        detection_time: 0.25,
-        reaction_time: 0.15,
-        lose_time: 0.4,
-        vision_distance: 10,
+        path_speed: 1,
+        urgent_path_speed: 1.5,
+        engaged_speed:1.3,
 
         shoot_angle_epsilon: 0.12,
 
         bravery: random.float(0, 1),
         accuracy: random.float(0.8, 1.2),
-        greed: random.float(0, 1)
+        greed: random.float(0, 1),
+
+        vision_distance:10,    // 6 = Easy, 10 = Normal, 15 = Hard
+        shoot_distance:25,     // 15 = Easy, 20 = Normal, 25 = Hard
+        explosion_distance:25, // 20 = Easy, 25 = Normal, 30 = Hard
+
+        detection_time: 0.5, // Easy = 1, Normal = 0.5, Hard = 0.25
     }
+    pathfinding_quality:number=0.5
     constructor(player:Player) {
         super(player)
         /*
@@ -86,7 +107,7 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
 
         const angleToPlayer = v2.lookTo(self.position, other.position)
         const diff = Math.abs(Angle.delta_rad(self.rotation, angleToPlayer))
-        if (diff > Math.PI / 2) return false
+        if (diff > Math.PI / 1.8) return false
 
         const ray = self.manager.cells.ray(
             self.position,
@@ -147,8 +168,10 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
             return
         }
         this.move_dir = v2.new(0,0)
+        this.move_speed=this.params.random_speed
         if(begin) {
             this.state_duration=random.float(2,3)
+            this.path_urgency=0
         }else if(this.stateTime>this.state_duration){
             this.setState("walking")
         }
@@ -164,11 +187,12 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
             this.rot_target=rot
             this.rot_speed=12
             this.state_duration=random.float(2,3)
+            this.path_urgency=0
         }else if(this.stateTime>this.state_duration){
             this.setState("idle")
         }
         this.move_dir = v2.from_RadAngle(this.rot_target)
-        v2m.scale(self.input.movement, this.move_dir, this.params.random_speed)
+        this.move_speed=this.params.random_speed
     }
     protected state_detecting(self: Player,begin:boolean, dt: number) {
         if (!this.seenPlayer) {
@@ -192,13 +216,13 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
 
         const idealDist = this.params.bravery > 0.5 ? 4 : 8;
 
+        this.move_speed=this.params.engaged_speed
         if (dist > idealDist + 1) {
-            v2m.scale(self.input.movement, v2.from_RadAngle(this.rot_target), this.params.path_speed);
+            this.move_dir=v2.from_RadAngle(this.rot_target)
         } else if (dist < idealDist - 1) {
-            v2m.scale(self.input.movement, v2.from_RadAngle(this.rot_target), -this.params.path_speed);
+            v2m.scale(this.move_dir,v2.from_RadAngle(this.rot_target), -1)
         } else {
-            const strafeDir = v2.from_RadAngle(this.rot_target + Math.PI / 2);
-            v2m.scale(self.input.movement, strafeDir, this.params.random_speed);
+            this.move_dir=v2.from_RadAngle(this.rot_target + Math.PI / 2)
         }
 
         self.input.reload =
@@ -230,7 +254,10 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
                 self,
                 self.base_hitbox,
                 this.lastSeenPos,
-                this.isBlockedForPath.bind(this)
+                isBlockedForPath.bind(this),
+                {
+                    cellSize:this.pathfinding_quality
+                }
             )
             this.pathIndex=0
             this.rot_speed=7
@@ -245,7 +272,9 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
                     return
                 }
             }
-            v2m.scale(self.input.movement, to, this.params.path_speed)
+            this.move_dir=to
+            //this.move_speed=this.path_urgency>=0.7?this.params.urgent_path_speed:this.params.path_speed
+            this.move_speed=this.params.urgent_path_speed
             this.rot_target=Math.atan2(to.y,to.x)
         }else{
             this.enemy_not_founded()
@@ -258,38 +287,21 @@ export class EnemyNPCAI extends StatedBotAi<EnemyState> {
     /* =======================
        PATH BLOCK
     ======================= */
-
-    protected isBlockedForPath(
-        manager: GameObjectManager2D<BaseObject2D>,
-        hb: Hitbox2D,
-        _x: number,
-        _y: number,
-        layer: number
-    ): boolean {
-        for (const obj of manager.cells.get_objects(hb, layer)) {
-            if (
-                (obj.stringType === "obstacle" && !(obj as Obstacle).def.no_collision) ||
-                (obj.stringType === "building" && !(obj as Building).def.no_collisions)
-            ) {
-                if (hb.collidingWith(obj.hitbox)) return true
-            }
-        }
-        return false
-    }
     override on_sound(origin: Vec2, sound_type: string,owner?:Player): void {
-        if(owner?.is_npc)return
+        if(owner?.is_npc||this.lastSeenPos||this.seenPlayer)return
         const dist = v2.distance(this.player.position, origin)
         if (
-            ((sound_type === "shot" && dist <= 14) ||
-            (sound_type === "explosion" && dist <= 20))&&!this.seenPlayer
+            (sound_type === "shot" && dist <= this.params.shoot_distance) ||
+            (sound_type === "explosion" && dist <= this.params.explosion_distance)
         ) {
             this.lastSeenPos = v2.duplicate(origin)
             this.path.length = 0
+            this.path_urgency+=dist/this.params.explosion_distance
             this.setState("go_last_seen")
         }
     }
     override on_hitted(params:DamageParams): void {
-        if(this.seenPlayer||!params.owner)return
+        if(this.seenPlayer||this.lastSeenPos||!params.owner)return
         this.rot_target=v2.lookTo(params.owner.position,params.position)
         this.setState("detecting")
     }

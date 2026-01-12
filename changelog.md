@@ -6,7 +6,8 @@ __                                                                              
 * Bullet Whiz Sounds
 __                                                                                                      __
 ### Menu
-
+* Loading Screen Now Show The Current Asset
+* Initial Screen
 __                                                                                                      __
 ### Items
 

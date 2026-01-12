@@ -123,9 +123,14 @@ export class Player extends GameObject{
         }
         
         this.play_sound(this.game.resources.get_audio(
-            critical?
-            "player_headshot":
-            `player_hit_${random.int(1,2)}`
+            (this.vest&&this.vest.reflect_bullets)?
+                (
+                    "player_metal_hit"
+                ):
+                (critical?
+                    "player_headshot":
+                    `player_hit_${random.int(1,2)}`
+                )
         ))
     }
 

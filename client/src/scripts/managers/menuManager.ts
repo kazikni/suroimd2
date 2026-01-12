@@ -87,7 +87,10 @@ export class MenuManager{
         insert_name:document.body.querySelector("#insert-name") as HTMLInputElement,
         menu_p:document.body.querySelector("#menu-options") as HTMLDivElement,
 
+        initial_screen:document.body.querySelector("#initial-screen") as HTMLDivElement,
+
         loading_screen:document.body.querySelector("#loading-screen") as HTMLDivElement,
+        loading_screen_current:document.body.querySelector("#loading-current") as HTMLDivElement,
 
         select_region:document.body.querySelector("#select-region") as HTMLButtonElement,
 
@@ -206,14 +209,24 @@ export class MenuManager{
         
         HideElement(this.content.gameD)
         ShowElement(this.content.menuD)
+
         HideElement(this.content.loading_screen)
         this.content.loading_screen.style.opacity="0"
+        this.set_loading_current=this.set_loading_current.bind(this)
+
         this.reload_close_btn()
         for(const btn of this.content.submenus.open_buttons){
             btn.addEventListener("click",this.open_button_func.bind(this))
         }
         this.load_resources(["main"])
         this.update_api()
+
+        setTimeout(()=>{
+            HideElement(this.content.initial_screen,true)
+        },1000)
+    }
+    set_loading_current(text="",unloading:boolean=false){
+        this.content.loading_screen_current.innerHTML=`<p class="span-medium">${unloading?"Unloading":"Loading"}: ${text}</p>`
     }
     reload_close_btn(){
         document.querySelectorAll(".submenu-close-btn").forEach((v,_k)=>{
@@ -266,26 +279,28 @@ export class MenuManager{
         if(!this.resources||(this.loaded_textures.length==textures.length&&textures==this.loaded_textures))return
         ShowElement(this.content.loading_screen,true)
         this.loaded=false
+        this.set_loading_current("Somethings",true)
         this.resources.clear([
             "button_click",
             "essentials",
             ...textures
         ])
         for(const tt of textures){
-            const spg=await(await fetch(`atlases/atlas-${tt}-data.json`)).json()
+            const at=`atlases/atlas-${tt}-data.json`
+            const spg=await(await fetch(at)).json()
             for(const s of spg[this.save.get_variable("cv_graphics_resolution")]){
-                await this.resources.load_spritesheet("",s,undefined,tt)
+                await this.resources.load_spritesheet("",s,undefined,tt,this.set_loading_current)
             }
         }
 
-        await this.resources.load_group("/sounds/game/main.json","main")
-        await this.resources.load_audio("rain_ambience",{src:"/sounds/ambience/rain_ambience.mp3",volume:1},"essentials")
-        await this.resources.load_audio("storm_ambience",{src:"/sounds/ambience/storm_ambience.mp3",volume:1},"essentials")
-        await this.resources.load_audio("snowstorm_ambience",{src:"/sounds/ambience/snowstorm_ambience.mp3",volume:1},"essentials")
-
-        await this.resources.load_audio("thunder_1",{src:"/sounds/ambience/thunder_1.mp3",volume:1},"essentials")
-        await this.resources.load_audio("thunder_2",{src:"/sounds/ambience/thunder_2.mp3",volume:1},"essentials")
-        await this.resources.load_audio("thunder_3",{src:"/sounds/ambience/thunder_3.mp3",volume:1},"essentials")
+        //Load Sfx
+        await this.resources.load_group("/sounds/game/main.json","main",this.set_loading_current)
+        await this.resources.load_audio("rain_ambience",{src:"/sounds/ambience/rain_ambience.mp3",volume:1},"essentials",this.set_loading_current)
+        await this.resources.load_audio("storm_ambience",{src:"/sounds/ambience/storm_ambience.mp3",volume:1},"essentials",this.set_loading_current)
+        await this.resources.load_audio("snowstorm_ambience",{src:"/sounds/ambience/snowstorm_ambience.mp3",volume:1},"essentials",this.set_loading_current)
+        await this.resources.load_audio("thunder_1",{src:"/sounds/ambience/thunder_1.mp3",volume:1},"essentials",this.set_loading_current)
+        await this.resources.load_audio("thunder_2",{src:"/sounds/ambience/thunder_2.mp3",volume:1},"essentials",this.set_loading_current)
+        await this.resources.load_audio("thunder_3",{src:"/sounds/ambience/thunder_3.mp3",volume:1},"essentials",this.set_loading_current)
         this.loaded=true
         HideElement(this.content.loading_screen,true)
     }
