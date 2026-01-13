@@ -12,6 +12,7 @@ import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
 import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments.ts";
 import { Floors, FloorType } from "common/scripts/others/terrain.ts";
 import { Building } from "./building.ts";
+import { ScopeDef } from "common/scripts/definitions/items/scopes.ts";
 
 export class Loot extends ServerGameObject{
     velocity:Vec2
@@ -97,6 +98,14 @@ export class Loot extends ServerGameObject{
             case InventoryItemType.accessorie:
                 break
             case InventoryItemType.scope:
+                if(!user.inventory.scopes.includes(this.item.idNumber!)){
+                    user.inventory.scopes.push(this.item.idNumber!)
+                    this.reduce_count(1)
+                    if(this.item.idNumber!>user.scope.idNumber!){
+                        user.scope=this.item as ScopeDef
+                    }
+                    user.inventory.dirty("scopes")
+                }
                 break
             case InventoryItemType.skin:
                 if(user.skin.idString!==this.item.idString){

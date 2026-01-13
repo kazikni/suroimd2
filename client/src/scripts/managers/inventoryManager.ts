@@ -5,10 +5,12 @@ import { InventoryItemData, InventoryItemType, ItemQualitySettings } from "commo
 import { InputActionType } from "common/scripts/packets/action_packet.ts";
 import { GunDef } from "common/scripts/definitions/items/guns.ts";
 import { Ammos } from "common/scripts/definitions/items/ammo.ts";
+import { ScopeDef, Scopes } from "common/scripts/definitions/items/scopes.ts";
 
 export class InventoryManager{
     inventory:GInventory
     game:Game
+    scope?:ScopeDef
     constructor(game:Game){
         this.game=game
         this.inventory=new GInventory({
@@ -24,6 +26,7 @@ export class InventoryManager{
         weapons:document.querySelector("#gui-weapons") as HTMLDivElement,
         oitems:document.querySelector("#gui-oitems") as HTMLDivElement,
         items: document.querySelector("#gui-items") as HTMLDivElement,
+        scopes:document.querySelector("#gui-scopes") as HTMLDivElement,
         hand_info:{
             count:document.querySelector("#hand-info-count") as HTMLSpanElement,
             consume_type:document.querySelector("#hand-info-consume-type")as HTMLImageElement,
@@ -184,6 +187,38 @@ export class InventoryManager{
             "item-maximized",
             count >= this.inventory.item_limit(def)
         )
+    }
+    update_scopes(scopes:number[]){
+        scopes.sort((a, b) => a - b)
+        this.inventory.scopes=scopes
+        this.content.scopes.innerHTML=""
+        for(const s of scopes){
+            const def=Scopes.getFromNumber(s)
+            const div=document.createElement("div")
+            div.className="scope-slot"
+            if(def==this.scope){
+                div.classList.add("scope-slot-selected")
+            }
+            div.id="scope-"+def.idString
+            div.innerHTML=`<img class="icon" src="${this.game.resources.get_sprite(def.idString).src}" draggable="false" width="30" height="30"/>`
+            this.content.scopes.appendChild(div)
+        }
+    }
+    update_current_scope(scope:number){
+        if(!this.scope||this.scope.idNumber!==scope){
+            if(this.scope){
+                const old_s=document.querySelector(`#scope-${this.scope?.idString}`)
+                if(old_s){
+                    old_s.classList.remove("scope-slot-selected")
+                }
+            }
+            this.scope=Scopes.getFromNumber(scope)
+            const sc=document.querySelector(`#scope-${this.scope!.idString}`)
+            if(sc){
+                sc.classList.add("scope-slot-selected")
+            }
+            this.game.set_scope(this.scope)
+        }
     }
     items_cache: HTMLDivElement[] = []
     items_map: Record<string, number> = {}

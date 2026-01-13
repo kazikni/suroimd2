@@ -29,6 +29,7 @@ import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments
 import { GameOverPacket } from "common/scripts/packets/gameOver.ts";
 import { Building } from "./building.ts";
 import { MeleeDef } from "common/scripts/definitions/items/melees.ts";
+import { ScopeDef, Scopes } from "common/scripts/definitions/items/scopes.ts";
 
 export class Player extends ServerGameObject{
     oldPosition:Vec2
@@ -138,6 +139,8 @@ export class Player extends ServerGameObject{
     }
 
     ai?:BotAi
+
+    scope:ScopeDef
     constructor(){
         super()
         this.oldPosition=v2.duplicate(this.position)
@@ -150,6 +153,8 @@ export class Player extends ServerGameObject{
             v2.new(0,0),
             GameConstants.player.playerRadius
         )
+
+        this.scope=Scopes.getFromNumber(0)
     }
     interact(user: Player): void {
         if(!this.downed||user.teamId===undefined||(user.teamId!==this.teamId&&(user.groupId===undefined||user.groupId!==this.groupId)))return
@@ -188,6 +193,7 @@ export class Player extends ServerGameObject{
         current_weapon:true,
         action:true,
         oitems:true,
+        scopes:true
     }
 
     apply_modifiers(mods:Partial<PlayerModifiers>){
@@ -674,12 +680,17 @@ export class Player extends ServerGameObject{
                     up.priv.oitems[Ammos.getFromString(a).idNumber!]=this.inventory.oitems[a]
                 }
             }
+            up.priv.current_scope=this.scope.idNumber!
+            if(this.privateDirtys.scopes){
+                up.priv.scopes=this.inventory.scopes
+            }
             this.privateDirtys={
                 inventory:false,
                 weapons:false,
                 current_weapon:false,
                 action:false,
                 oitems:false,
+                scopes:false
             }
 
             if(this.actions.current_action){
@@ -693,11 +704,13 @@ export class Player extends ServerGameObject{
         }
     }
     get_objects(){
-        this.camera_hb.min.x=this.position.x-20
-        this.camera_hb.min.y=this.position.y-20
+        const sz_w=10/this.scope.scope_view
+        const sz_h=7.6/this.scope.scope_view
+        this.camera_hb.min.x=this.position.x-sz_w
+        this.camera_hb.min.y=this.position.y-sz_h
 
-        this.camera_hb.max.x=this.position.x+20
-        this.camera_hb.max.y=this.position.y+20
+        this.camera_hb.max.x=this.position.x+sz_w
+        this.camera_hb.max.y=this.position.y+sz_h
         /*const objs=[
             ...Object.values(this.manager.objects[this.layer].objects),
         ]*/

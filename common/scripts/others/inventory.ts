@@ -93,6 +93,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
     hand_def?:GameItem
 
     oitems:Record<string,number>={}
+    scopes:number[]=[0]
 
     backpack!:BackpackDef
     default_backpack:BackpackDef
@@ -186,6 +187,7 @@ export class GInventoryBase<IT extends MDItem=MDItem> extends Inventory<IT>{
     }
     clear(){
         this.oitems={}
+        this.scopes.length=1
         this.set_backpack()
         for(const s of this.slots){
           s.clear()

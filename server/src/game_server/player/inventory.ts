@@ -21,6 +21,7 @@ import { SkinDef } from "common/scripts/definitions/loadout/skins.ts";
 import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/items/equipaments.ts";
 import { PlayerAnimationType } from "common/scripts/others/constants.ts";
 import { Slot } from "common/scripts/engine/inventory.ts";
+import { Scopes } from "common/scripts/definitions/items/scopes.ts";
 export abstract class LItem extends MDItem{
     declare inventory:GInventory
     abstract on_use(user:Player,slot?:Slot<LItem>):void
@@ -381,6 +382,9 @@ export class GInventory extends GInventoryBase<LItem>{
             case "oitems":
                 this.owner.privateDirtys.oitems=true
                 break
+            case "scopes":
+                this.owner.privateDirtys.scopes=true
+                break
             case "items":
                 this.owner.privateDirtys.inventory=true
                 break
@@ -551,8 +555,17 @@ export class GInventory extends GInventoryBase<LItem>{
             }
             case InventoryItemType.accessorie:
                 break
-            case InventoryItemType.scope:
+            case InventoryItemType.scope:{
+                if(!this.scopes.includes(def.idNumber!)){
+                    this.scopes.push(def.idNumber!)
+                    count-=1
+                    if(def.idNumber!>this.owner.scope.idNumber!){
+                        this.owner.scope=def
+                    }
+                    this.dirty("scopes")
+                }
                 break
+            }
         }
         this.owner.privateDirtys.inventory=true
         return count
@@ -679,6 +692,7 @@ export class GInventory extends GInventoryBase<LItem>{
         }
     }
     drop_all(){
+        const layer=this.owner.layer
         for(const w of Object.keys(this.weapons)){
             this.drop_weapon(w as unknown as number)
         }
@@ -698,25 +712,29 @@ export class GInventory extends GInventoryBase<LItem>{
             delete this.oitems[s]
         }
         if(this.owner.helmet&&this.droppable.helmet){
-            this.owner.game.add_loot(this.owner.position,this.owner.helmet,1)
+            this.owner.game.add_loot(this.owner.position,this.owner.helmet,1,layer)
             this.owner.helmet=undefined
         }
         if(this.owner.vest&&this.droppable.vest){
-            this.owner.game.add_loot(this.owner.position,this.owner.vest,1)
+            this.owner.game.add_loot(this.owner.position,this.owner.vest,1,layer)
             this.owner.vest=undefined
         }
         if(this.backpack&&this.backpack.level&&this.droppable.backpack){
-            this.owner.game.add_loot(this.owner.position,this.backpack,1)
+            this.owner.game.add_loot(this.owner.position,this.backpack,1,layer)
             this.set_backpack()
         }
         if(this.owner.skin.idString!==this.owner.loadout.skin){
-            this.owner.game.add_loot(this.owner.position,this.owner.skin,1)
+            this.owner.game.add_loot(this.owner.position,this.owner.skin,1,layer)
         }
         for(const s of this.slots){
             if(s.item&&s.quantity>0){
-                this.owner.game.add_loot(this.owner.position,s.item.def as GameItem,s.quantity)
+                this.owner.game.add_loot(this.owner.position,s.item.def as GameItem,s.quantity,layer)
                 s.remove(s.quantity)
             }
+        }
+        for(const s of this.scopes){
+            const def=Scopes.getFromNumber(s)
+            if(def.droppable)this.owner.game.add_loot(this.owner.position,def,1,layer)
         }
         for(const loot of l){
             loot.is_new=true

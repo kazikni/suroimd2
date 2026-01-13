@@ -186,6 +186,16 @@ export class Loot extends GameObject{
                     this.pickup_sound=this.game.resources.get_audio(`backpack_pickup`)
                     radius=GameConstants.loot.radius.equipament
                     break
+                case InventoryItemType.scope:
+                    this.sprite_main.frame=this.game.resources.get_sprite(this.item.idString)
+                    this.sprite_main.visible=true
+                    this.sprite_outline.frame=this.game.resources.get_sprite(`null_outline`)
+                    this.sprite_outline.visible=true;
+                    this.sprite_main.scale=v2.new(0.8,0.8);
+                    this.sprite_outline.scale=v2.new(0.9,0.9);
+                    (this.base_hitbox as CircleHitbox2D).radius=GameConstants.loot.radius.equipament
+                    this.pickup_sound=this.game.resources.get_audio(`scope_pickup`)
+                    break
                 case InventoryItemType.projectile:
                     this.sprite_main.frame=this.game.resources.get_sprite(this.item.idString)
                     this.sprite_main.visible=true

@@ -66,7 +66,6 @@ export type GunDef={
         sequence:number
     }
     speed_mod?:number
-    size:number
     ammoType:string
     class:GunClasses
     quality:ItemQuality
@@ -200,7 +199,6 @@ Guns.insert(
         fireDelay:0.2,
         spread:0.7,
         lenght:0.8,
-        size:6,
         ammoType:"9mm",
         fireMode:FireMode.Single,
         class:GunClasses.Pistol,
@@ -248,7 +246,6 @@ Guns.insert(
         fireDelay:0.2,
         spread:0.7,
         lenght:0.8,
-        size:6,
         ammoType:"9mm",
         fireMode:FireMode.Single,
         class:GunClasses.Pistol,
@@ -297,7 +294,6 @@ Guns.insert(
         fireDelay:1.4,
         spread:0.7,
         lenght:0.8,
-        size:6,
         ammoType:"308sub",
         fireMode:FireMode.Single,
         class:GunClasses.Pistol,
@@ -341,7 +337,6 @@ Guns.insert(
         switchDelay:0.6,
         spread:5,
         lenght:1.2,
-        size:4,
         ammoType:"762mm",
         ammoSpawnAmount:90,
         class:GunClasses.Assault,
@@ -375,7 +370,6 @@ Guns.insert(
         switchDelay:0.7,
         spread:8,
         lenght:0.7,
-        size:4,
         ammoType:"556mm",
         ammoSpawnAmount:90,
         class:GunClasses.Assault,
@@ -422,7 +416,6 @@ Guns.insert(
         },
         spread:1.5,
         lenght:0.7,
-        size:4,
         ammoType:"556mm",
         ammoSpawnAmount:90,
         class:GunClasses.Assault,
@@ -463,7 +456,6 @@ Guns.insert(
         switchDelay:0.7,
         spread:2,
         lenght:0.87,
-        size:4,
         ammoType:"9mm",
         ammoSpawnAmount:96,
         class:GunClasses.Assault,
@@ -501,7 +493,6 @@ Guns.insert(
         switchDelay:0.7,
         spread:2,
         lenght:0.6,
-        size:4,
         ammoType:"9mm",
         ammoSpawnAmount:99,
         class:GunClasses.Assault,
@@ -543,7 +534,6 @@ Guns.insert(
         switchDelay:0.7,
         spread:9,
         lenght:0.68,
-        size:4,
         ammoType:"9mm",
         ammoSpawnAmount:96,
         class:GunClasses.Assault,
@@ -583,7 +573,6 @@ Guns.insert(
         fireDelay:1.1,
         spread:0.4,
         lenght:1.26,
-        size:4.5,
         ammoType:"762mm",
         ammoSpawnAmount:20,
         fireMode:FireMode.Single,
@@ -632,7 +621,6 @@ Guns.insert(
         fireDelay:1.1,
         spread:0.5,
         lenght:0.9,
-        size:6,
         ammoType:"762mm",
         fireMode:FireMode.Single,
         class:GunClasses.Sniper,
@@ -679,7 +667,6 @@ Guns.insert(
         fireDelay:1.4,
         spread:0.7,
         lenght:1,
-        size:6,
         ammoType:"308sub",
         fireMode:FireMode.Single,
         class:GunClasses.Sniper,
@@ -729,7 +716,6 @@ Guns.insert(
         ammoType:"12g",
         ammoSpawnAmount:10,
         jitterRadius:0.45,
-        size:4.3,
         fireMode:FireMode.Single,
         class:GunClasses.Shotgun,
         quality:ItemQuality.Rare,
@@ -779,7 +765,6 @@ Guns.insert(
         jitterRadius:0.14,
         class:GunClasses.Shotgun,
         quality:ItemQuality.Epic,
-        size:4.5,
         fireMode:FireMode.Single,
         bullet:{
             def:{
@@ -828,7 +813,6 @@ Guns.insert(
         jitterRadius:0.2,
         class:GunClasses.Shotgun,
         quality:ItemQuality.Uncommon,
-        size:3.8,
         fireMode:FireMode.Auto,
         bullet:{
             def:{
@@ -871,14 +855,13 @@ Guns.insert(
         switchDelay:0.6,
         spread:6,
         lenght:1.5,
-        size:4,
         ammoType:"762mm",
         ammoSpawnAmount:200,
-        class:GunClasses.Assault,
-        quality:ItemQuality.Rare,
+        class:GunClasses.LMG,
+        quality:ItemQuality.Legendary,
         bullet:{
             def:{
-                damage:10,
+                damage:10.5,
                 obstacleMult:2,
                 radius:0.014,
                 range:170,
@@ -892,7 +875,7 @@ Guns.insert(
         },
         recoil:{
             duration:0.12,
-            speed:0.35
+            speed:0.4
         },
         speed_mod:0.8,
         gasParticles:GasParticles.automatic,
@@ -909,7 +892,6 @@ Guns.insert(
         fireDelay:1,
         spread:0.2,
         lenght:1,
-        size:6,
         ammoType:"explosive_ammo",
         fireMode:FireMode.Single,
         class:GunClasses.Miscellaneous,
@@ -967,7 +949,6 @@ Guns.insert(
         fireDelay:0.07,
         spread:3,
         lenght:1,
-        size:6,
         ammoType:"gasoline",
         fireMode:FireMode.Auto,
         class:GunClasses.Miscellaneous,

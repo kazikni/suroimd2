@@ -23,6 +23,7 @@ export interface PrivateUpdate{
         current_weapon:boolean
         action:boolean
         oitems:boolean
+        scopes:boolean
     }
 
     health:number
@@ -48,6 +49,8 @@ export interface PrivateUpdate{
     }
 
     oitems:Record<number,number>
+    current_scope:number
+    scopes:number[]
 
     damages:DamageSplash[]
 }
@@ -57,15 +60,16 @@ function encode_gui_packet(priv:PrivateUpdate,stream:NetStream){
     stream.writeUint8(priv.boost)
     stream.writeUint8(priv.max_boost)
     stream.writeUint8(priv.boost_type)
-    stream.writeBooleanGroup(
+    stream.writeBooleanGroup2(
         priv.dirty.inventory,
         priv.dirty.weapons,
         priv.dirty.current_weapon,
         priv.dirty.action,
         priv.dirty.oitems,
+        priv.dirty.scopes,
         priv.action!==undefined,
         priv.damages!==undefined,
-        priv.current_weapon?.liquid
+        priv.current_weapon?.liquid,
     )
     if(priv.dirty.inventory){
         stream.writeArray<InventoryItemData>(priv.inventory!,(i)=>{
@@ -111,6 +115,13 @@ function encode_gui_packet(priv:PrivateUpdate,stream:NetStream){
             }
         },1)
     }
+    stream.writeUint8(priv.current_scope)
+    if(priv.dirty.scopes){
+        stream.writeUint8(priv.scopes.length)
+        for(let i=0;i<priv.scopes.length;i++){
+            stream.writeUint8(priv.scopes[i])
+        }
+    }
 }
 function decode_gui_packet(priv:PrivateUpdate,stream:NetStream){
     priv.health=stream.readUint8()
@@ -124,16 +135,18 @@ function decode_gui_packet(priv:PrivateUpdate,stream:NetStream){
         dirtyCurrentWeapon,
         dirtyAction,
         dirtyAmmos,
+        dirtyScopes,
         hasAction,
         hasDamages,
         liquid,
-    ]=stream.readBooleanGroup()
+    ]=stream.readBooleanGroup2()
     priv.dirty={
         inventory:dirtyInventory,
         weapons:dirtyWeapons,
         current_weapon:dirtyCurrentWeapon,
         action:dirtyAction,
         oitems:dirtyAmmos,
+        scopes:dirtyScopes
     }
     if(dirtyInventory){
         priv.dirty.inventory=true
@@ -198,6 +211,14 @@ function decode_gui_packet(priv:PrivateUpdate,stream:NetStream){
             }
         }
     }
+    priv.current_scope=stream.readUint8()
+    if(dirtyScopes){
+        const len=stream.readUint8()
+        priv.scopes=[]
+        for(let i=0;i<len;i++){
+            priv.scopes.push(stream.readUint8())
+        }
+    }
 }
 export class UpdatePacket extends Packet{
     ID=2
@@ -212,8 +233,10 @@ export class UpdatePacket extends Packet{
             inventory:false,
             weapons:false,
             oitems:false,
+            scopes:false
         },
         oitems:{},
+        scopes:[],
         health:0,
         max_boost:0,
         max_health:0,
@@ -223,6 +246,7 @@ export class UpdatePacket extends Packet{
             melee:undefined
         },
         action:undefined,
+        current_scope:0,
         current_weapon:{
             ammo:0,
             slot:0,

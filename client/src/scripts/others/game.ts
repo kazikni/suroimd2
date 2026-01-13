@@ -42,6 +42,7 @@ import { Building } from "../gameObjects/building.ts";
 import { MessageTabApp } from "../apps/message.ts";
 import { TeamManager } from "../managers/teamManager.ts";
 import { InventoryManager } from "../managers/inventoryManager.ts";
+import { ScopeDef } from "common/scripts/definitions/items/scopes.ts";
 export const gridSize=5
 export class Game extends ClientGame2D<GameObject>{
   client?:Client
@@ -330,6 +331,9 @@ export class Game extends ClientGame2D<GameObject>{
 
     //FPS Show
     this.frame_calc++
+  }
+  set_scope(scope:ScopeDef){
+    this.scope_zoom=scope.scope_view
   }
   update_grid(grid_gfx:Graphics2D,gridSize:number,camera_position:Vec2,camera_size:Vec2,line_size:number){
     this.grid_gfx.position=v2.new(0,0)

@@ -124,6 +124,21 @@ export const NormalMap:MapDef={
             {item:"gasoline",count:10,weight:0.2},
             {item:"explosive_ammo",count:4,weight:0.2},
         ],
+        //Scopes
+        "scopes":[
+            {item:"scope_2",count:1,weight:100},
+            {item:"scope_3",count:1,weight:50},
+            {item:"scope_4",count:1,weight:10},
+            {item:"scope_5",count:1,weight:1},
+            {item:"scope_6",count:1,weight:0.25},
+        ],
+        "special_scopes":[
+            {item:"scope_2",count:1,weight:100},
+            {item:"scope_3",count:1,weight:60},
+            {item:"scope_4",count:1,weight:15},
+            {item:"scope_5",count:1,weight:2},
+            {item:"scope_6",count:1,weight:0.5},
+        ],
         //Armors And Backpacks
         "armors":[
             {item:"basic_vest",weight:10},
@@ -171,25 +186,30 @@ export const NormalMap:MapDef={
             {item:"tactical_pack",weight:1},
         ],
         //Loot Tables
-        "ground_loot":[
+        "normal_loot":[
             {weight:1.5,table:"ammos"},
+            {weight:1,table:"scopes"},
             {weight:1,table:"equipments"},
             {weight:0.5,table:"guns"},
             {weight:0.01,table:"melees"},
         ],
+        "special_loot":[
+            {weight:1.5,table:"special_ammos"},
+            {weight:1,table:"special_scopes"},
+            {weight:1,table:"special_equipments"},
+            {weight:0.7,table:"special_guns"},
+            {weight:0.01,table:"melees"},
+        ],
         "wood_crate":[
-            [{weight:10,table:"ammos"},{weight:1,table:""}],
-            [{weight:10,table:"consumibles"},{weight:1,table:""}],
-            [{weight:9.5,table:"equipments"},{weight:1,table:""}],
-            [{weight:1,table:"guns"}],
-            [{weight:60,table:""},{weight:1,table:"melees"}],
+            {weight:2,count:1,table:"normal_loot"},
+            {weight:1,count:2,table:"normal_loot"},
+            {weight:0.5,count:3,table:"normal_loot"},
         ],
         "copper_crate":[
-            [{weight:10,table:"special_ammos"},{weight:1,table:""}],
-            [{weight:10,table:"consumibles"},{weight:1,table:""}],
-            [{weight:9.5,table:"special_equipments"},{weight:1,table:""}],
-            [{weight:1,table:"special_guns"}],
-            [{weight:40,table:""},{weight:1,table:"melees"}],
+            {weight:2,count:1,table:"special_loot"},
+            {weight:1,count:2,table:"special_loot"},
+            {weight:0.5,count:3,table:"special_loot"},
+            {weight:0.25,count:4,table:"special_loot"},
         ],
         "iron_crate":[
             [{weight:10,table:"special_ammos",count:2},{weight:1,table:""}],
@@ -229,7 +249,7 @@ export const NormalMap:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:630}, //90% of 700
-                    {id:"ground_loot",count:80}
+                    {id:"normal_loot",count:80}
                 ]
             ],
             terrain:{
@@ -289,7 +309,7 @@ export const NormalLobby:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:20},
-                    {id:"ground_loot",count:40}
+                    {id:"normal_loot",count:40}
 
                     //{id:"pig",count:10},
                     //{id:"chicken",count:10}
@@ -382,7 +402,7 @@ export const SnowMap:MapDef={
                     {id:"iron_crate",count:1},
                     {id:"gold_crate",count:1},
                     {id:"barrel",count:630}, //90% of 700
-                    {id:"ground_loot",count:80}
+                    {id:"normal_loot",count:80}
                 ]
             ],
             terrain:{

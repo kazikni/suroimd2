@@ -199,6 +199,69 @@
         }
     }
 }
+#gui-scopes{
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    gap:2px;
+    width: fit-content;
+    height: fit-content;
+    top:10px;
+    left:50%;
+    transform: translateX(-50%);
+    .scope-slot{
+        display: flex;
+        border-radius: 100%;
+        background-color: #0003;
+        width: fit-content;
+        height: fit-content;
+        .icon{
+            padding: 10px;
+            width: 30px;
+            height: 30px;
+        }
+    }
+    .scope-slot-selected{
+        border: 1px solid #fff3;
+        .icon{
+            padding: 13px;
+            width: 45px;
+            height: 45px;
+        }
+    }
+    @media screen and (max-width: palette.$screen_large){
+        .scope-slot{
+            .icon{
+                padding: 7px;
+                width: 20px;
+                height: 20px;
+            }
+        }
+        .scope-slot-selected{
+            .icon{
+                padding: 8px;
+                width: 30px;
+                height: 30px;
+            }
+        }
+    }
+    @media screen and (max-width: palette.$screen_medium){
+        .scope-slot{
+            .icon{
+                padding: 5px;
+                width: 15px;
+                height: 15px;
+            }
+        }
+        .scope-slot-selected{
+            .icon{
+                padding: 7px;
+                width: 22px;
+                height: 22px;
+            }
+        }
+    }
+}
 #gui-oitems{
     display: grid;
     grid-template-columns: repeat(auto, 5);
@@ -258,4 +321,8 @@
         }
         left: 3px;
     }
+}
+#inventory-container{
+    width: 100%;
+    height: 100%;
 }

@@ -514,6 +514,10 @@ export class GuiManager{
             }
             this.game.inventoryManager.update_oitems()
         }
+        if(priv.dirty.scopes){
+            this.game.inventoryManager.update_scopes(priv.scopes)
+        }
+        this.game.inventoryManager.update_current_scope(priv.current_scope)
         if (this.emote_wheel.active) {
             const angle = Angle.rad2deg(
                 v2.lookTo(this.emote_wheel.positon, this.game.input_manager.mouse.position)

@@ -2,6 +2,7 @@
 ## News
 __                                                                                                      __
 ### Mains
+* **Scopes!!!**
 * Campaign LEVELS!!!
 * Bullet Whiz Sounds
 __                                                                                                      __
@@ -18,7 +19,7 @@ __                                                                              
 ## Changes
 __                                                                                                      __
 ### Items
-
+* Change Loot Tables
 __                                                                                                      __
 ### Others
 * Explosions Physics
