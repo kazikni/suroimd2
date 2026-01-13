@@ -25,7 +25,6 @@ import { Skins } from "common/scripts/definitions/loadout/skins.ts";
 import { Badges } from "common/scripts/definitions/loadout/badges.ts";
 import { Creature } from "../gameObjects/creature.ts";
 import { CreatureDef } from "common/scripts/definitions/objects/creatures.ts";
-import { FloorType } from "common/scripts/others/terrain.ts";
 import { Obstacles } from "common/scripts/definitions/objects/obstacles.ts";
 import { ConfigType, GameConfig, GameDebugOptions } from "common/scripts/config/config.ts";
 import { GamemodeManager, SoloGamemodeManager } from "../mode/modeManager.ts";

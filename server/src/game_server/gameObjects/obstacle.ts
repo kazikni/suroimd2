@@ -14,6 +14,7 @@ export class Obstacle extends ServerGameObject{
 
     def!:ObstacleDef
     spawn_hitbox!:Hitbox2D
+    positioned_spawn_hitbox!:Hitbox2D
     skin:number=0
 
     health:number=0
@@ -77,6 +78,7 @@ export class Obstacle extends ServerGameObject{
         if(this.def.hitbox)this.base_hitbox=this.def.hitbox.clone()
         if(this.def.spawnHitbox)this.spawn_hitbox=this.def.spawnHitbox.clone()
         else this.spawn_hitbox=this.base_hitbox.clone()
+    
         if(args.variation){
             this.variation=args.variation
         }else if(this.def.variations){
@@ -130,6 +132,8 @@ export class Obstacle extends ServerGameObject{
         this.position = position
         this.side = side as Orientation
         this.manager.cells.updateObject(this)
+
+        this.positioned_spawn_hitbox=this.spawn_hitbox.transform(this.position)
     }
     override encode(stream: NetStream, full: boolean): void {
         stream.writeBooleanGroup(this.dead,this.door!==undefined)
