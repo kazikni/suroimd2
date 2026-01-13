@@ -110,7 +110,6 @@ export class BattleRoyaleBot extends UtilityStatedBotAi<
             to,
             isBlockedForPath.bind(this)
         )
-        console.log(this.path.length)
         this.pathIndex=0
     }
 

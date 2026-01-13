@@ -95,6 +95,11 @@
                 "308sub":40,
                 "gasoline":20
             },
+            "scopes":[
+                "scope_2",
+                "scope_3",
+                "scope_4"
+            ],
             "boosts":[
                 {"weight":10,"boost_type":1,"boost":1},
                 {"weight":10,"boost_type":2,"boost":1},

@@ -87,9 +87,11 @@ export class Loot extends GameObject{
                     ||(player.current_weapon&&player.current_weapon.item_type===InventoryItemType.melee)
                 ))return
                 break
+            case InventoryItemType.scope:
+                if(player.game.inventoryManager.inventory.scopes.includes(this.item.idNumber!))return
+                break
             case InventoryItemType.accessorie:
             case InventoryItemType.skin:
-            case InventoryItemType.scope:
         }
         if(this.pickup_sound)this.game.sounds.play(this.pickup_sound,undefined,"players")
     }
@@ -111,6 +113,8 @@ export class Loot extends GameObject{
                 return !player.vest||player.vest.level<(this.item as VestDef).level
             case InventoryItemType.backpack:
                 return !player.backpack||player.backpack.level<(this.item as BackpackDef).level
+            case InventoryItemType.scope:
+                if(!player.game.inventoryManager.inventory.scopes.includes(this.item.idNumber!))return true
         }
         return false
     }

@@ -647,6 +647,12 @@ export class GInventory extends GInventoryBase<LItem>{
                 this.owner.boost=this.owner.maxBoost*choose.boost
             }
         }
+        if(preset.scopes){
+            for(const s of preset.scopes){
+                const scope=Scopes.getFromString(s)
+                this.give_item(scope,1)
+            }
+        }
         for(const slot of preset.items??[]){
             const choose=random.weight2(slot)
             if(choose&&GameItems.valueString[choose.item]){

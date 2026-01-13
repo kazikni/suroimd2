@@ -140,13 +140,21 @@ export const ConfigDefaultActions={
         buttons:[],
         keys:[Key.Number_0]
     },
-    "previour_weapon":{
+    "previous_weapon":{
         buttons:[GamepadButtonID.L1],
         keys:[]
     },
     "next_weapon":{
         buttons:[GamepadButtonID.R1],
         keys:[]
+    },
+    "previous_scope":{
+        buttons:[],
+        keys:[Key.Mouse_Wheel_Up]
+    },
+    "next_scope":{
+        buttons:[],
+        keys:[Key.Mouse_Wheel_Down]
     },
     "debug_menu":{
         buttons:[GamepadButtonID.R3],

@@ -132,6 +132,7 @@ export interface InventoryPreset{
 
     items?:InventoryPresetItem[][]
     oitems?:Record<string,number>
+    scopes?:string[]
 
     hand?:number
     infinity_ammo?:boolean

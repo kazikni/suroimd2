@@ -572,6 +572,11 @@ export class Player extends ServerGameObject{
                         if(!this.inventory.weapons[a.hand])break
                         this.inventory.set_weapon_index(a.hand)
                         break
+                    case InputActionType.set_scope:
+                        if(this.inventory.scopes.includes(a.scope_id)){
+                            this.scope=Scopes.getFromNumber(a.scope_id)
+                        }
+                        break
                     case InputActionType.emote:
                         this.input.emote=a.emote
                         break

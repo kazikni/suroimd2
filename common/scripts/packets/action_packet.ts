@@ -5,6 +5,7 @@ export enum InputActionType{
   use_item,
   set_hand,
   debug_give,
+  set_scope,
   emote,
   debug_spawn
 }
@@ -21,6 +22,9 @@ export type InputAction=({
 }|{
   type:InputActionType.use_item,
   slot:number
+}|{
+  type:InputActionType.set_scope,
+  scope_id:number
 }|{
   type:InputActionType.emote,
   emote:GameObjectDef
@@ -67,6 +71,9 @@ export class ActionPacket extends Packet{
           case InputActionType.set_hand:
             stream.writeUint8(i.hand)
             break
+          case InputActionType.set_scope:
+            stream.writeUint8(i.scope_id)
+            break
           case InputActionType.emote:
             stream.writeUint16(GameObjectsDefs.keysString[i.emote.idString])
             break
@@ -104,6 +111,9 @@ export class ActionPacket extends Packet{
             break
           case InputActionType.set_hand:
             ret["hand"]=stream.readUint8()
+            break
+          case InputActionType.set_scope:
+            ret["scope_id"]=stream.readUint8()
             break
           case InputActionType.emote:
             ret["emote"]=GameObjectsDefs.valueNumber[stream.readUint16()]

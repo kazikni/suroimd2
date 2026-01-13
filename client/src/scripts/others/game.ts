@@ -184,12 +184,28 @@ export class Game extends ClientGame2D<GameObject>{
         case "use_item7":
           this.action.actions.push({type:InputActionType.use_item,slot:6})
           break
-        case "previour_weapon":
+        case "previous_weapon":
           this.action.actions.push({type:InputActionType.set_hand,hand:this.inventoryManager.current_weapon-1})
           break
         case "next_weapon":
           this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.inventoryManager.current_weapon+1,-1,3)})
           break
+        case "previous_scope":{
+          const oid=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
+          this.action.actions.push({
+            type:InputActionType.set_scope,
+            scope_id:Math.max(0,this.inventoryManager.inventory.scopes[oid]-1)
+          })
+          break
+        }
+        case "next_scope":{
+          const oid=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
+          this.action.actions.push({
+            type:InputActionType.set_scope,
+            scope_id:Math.min(this.inventoryManager.inventory.scopes.length-1,this.inventoryManager.inventory.scopes[oid]+1)
+          })
+          break
+        }
         case "debug_menu":
           if((!this.menuManager.api_settings.debug.debug_menu)&&!this.offline)break
           ToggleElement(this.guiManager.content.debug_menu)
@@ -447,6 +463,8 @@ export class Game extends ClientGame2D<GameObject>{
 
     this.guiManager.players_name={}
     this.renderer.fullCanvas()
+    this.input_manager.clear()
+    this.action.actions.length=0
   }
   init_gui(gui:GuiManager){
     this.guiManager=gui

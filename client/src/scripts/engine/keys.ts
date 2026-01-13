@@ -60,6 +60,8 @@ export enum Key{
     Mouse_Middle,
     Mouse_Right,
 
+    Mouse_Wheel_Up,
+    Mouse_Wheel_Down,
     Mouse_Option1,
     Mouse_Option2
 }
@@ -126,8 +128,11 @@ export const JSKeys:Record<Key,number>={
   [Key.Mouse_Left]: 1000,
   [Key.Mouse_Middle]: 1001,
   [Key.Mouse_Right]: 1002,
-  [Key.Mouse_Option1]: 1003,
-  [Key.Mouse_Option2]: 1004
+  [Key.Mouse_Option1]: 1004,
+  [Key.Mouse_Option2]: 1005,
+
+  [Key.Mouse_Wheel_Up]:1101,
+  [Key.Mouse_Wheel_Down]:1102,
 }
 export const KeyNames: Record<number, Key> = {
     65: Key.A,
@@ -187,7 +192,10 @@ export const KeyNames: Record<number, Key> = {
     1001: Key.Mouse_Middle,
     1002: Key.Mouse_Right,
     1003: Key.Mouse_Option1,
-    1004: Key.Mouse_Option2
+    1004: Key.Mouse_Option2,
+
+    1101: Key.Mouse_Wheel_Up,
+    1102: Key.Mouse_Wheel_Down,
 }
 
 export enum KeyEvents{
@@ -248,6 +256,21 @@ export class KeyListener{
                 this.listener.emit(KeyEvents.KeyUp,b)
             }
         })
+        elem.addEventListener("wheel", (e: WheelEvent) => {
+            if (!this.focus) return
+
+            let k=Key.Mouse_Wheel_Up
+            if (e.deltaY < 0) {
+                k=Key.Mouse_Wheel_Up
+            } else if (e.deltaY > 0) {
+                k = Key.Mouse_Wheel_Down
+            }
+            this.keys.push(k)
+            this.keysdown.push(k)
+            this.listener.emit(KeyEvents.KeyDown, k)
+            this.keysup.push(k)
+            this.listener.emit(KeyEvents.KeyUp, k)
+        }, { passive: false })
     }
     tick(){
         this.keysdown.length=0
@@ -275,7 +298,12 @@ export class KeyListener{
         return this.keysdown.includes(key)||this.mouse_b_down.includes(key)
     }
     keyUp(key:Key):boolean{
-        return this.keysup.includes(key)||this.mouse_b_down.includes(key)
+        return this.keysup.includes(key)||this.mouse_b_up.includes(key)
+    }
+    clear(){
+        this.keys.length=0
+        this.keysdown.length=0
+        this.keysup.length=0
     }
 }
 
@@ -428,6 +456,9 @@ export class GamepadManager {
             this.animationFrameId = null;
         }
     }
+    clear(){
+        
+    }
 }
 export interface InputAction {
     keys: number[]    // Keyboard / mouse
@@ -509,8 +540,6 @@ export class InputManager {
     }
 
     tick() {
-        this.keys.tick();
-
         for(const axis of this.axis.values()){
             const mov=v2.new(
                 this.action_pressed(axis.left)?-1:(this.action_pressed(axis.right)?1:0),
@@ -521,7 +550,6 @@ export class InputManager {
                 axis.old_mov=mov
             }
         }
-
         for (const [action, { keys, buttons }] of this.actions.entries()) {
             const keyPressed = keys.some(k => this.keys.keyPress(k))
             const buttonPressed = buttons.some(b => this.pressedButtons.has(b))
@@ -537,8 +565,8 @@ export class InputManager {
                 this.emit("actionup", {action});
             }
         }
+        this.keys.tick();
     }
-
     emit(type: "actiondown" | "actionup" | "axis", event:ActionEvent|AxisActionEvent) {
         for (const callback of this.callbacks[type]) {
             // deno-lint-ignore ban-ts-comment
@@ -546,7 +574,10 @@ export class InputManager {
             callback(event);
         }
     }
-
+    clear(){
+        this.keys.clear()
+        this.gamepad.clear()
+    }
     saveConfig(): Record<string, InputAction> {
         return Object.fromEntries(this.actions);
     }

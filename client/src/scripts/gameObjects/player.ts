@@ -635,7 +635,7 @@ export class Player extends GameObject{
                         }
                     }
                 }
-                for(const delay of def.damage_delays){
+                for(const delay of def.damage_delays??[]){
                     this.game.addTimeout(att,delay)
                 }
                 break
