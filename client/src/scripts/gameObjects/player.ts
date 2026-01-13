@@ -2,12 +2,12 @@ import { CircleHitbox2D, KeyFrameSpriteDef, model2d, NetStream, random, v2, v2m,
 import { GameConstants, PlayerAnimation, PlayerAnimationType, zIndexes } from "common/scripts/others/constants.ts";
 import { GameItem, GameObjectDef, GameObjectsDefs, WeaponDef,Weapons } from "common/scripts/definitions/alldefs.ts";
 import { GameObject } from "../others/gameObject.ts";
-import { AnimatedContainer2D, type Camera2D, Light2D, type Renderer, Sprite2D, type Tween } from "../engine/mod.ts";
+import { AnimatedContainer2D, Light2D, Sprite2D, type Tween } from "../engine/mod.ts";
 import { GraphicsDConfig } from "../others/config.ts";
 import { Decal } from "./decal.ts";
 import { InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { DualAdditional, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
-import { ClientGame2D } from "../engine/game.ts";
+import { ClientGame2D, ClientGameObject2D } from "../engine/game.ts";
 import { ColorM } from "../engine/renderer.ts";
 import { SoundInstance, SoundOptions } from "../engine/sounds.ts";
 import { BackpackDef, Backpacks } from "common/scripts/definitions/items/backpacks.ts";
@@ -24,6 +24,7 @@ import { HelmetDef, Helmets, VestDef, Vests } from "common/scripts/definitions/i
 import { type Sound } from "../engine/resources.ts";
 import { FloorKind, Floors, FloorType } from "common/scripts/others/terrain.ts";
 import { CenterHotspot } from "../engine/utils.ts";
+import { type Obstacle } from "./obstacle.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -92,7 +93,7 @@ export class Player extends GameObject{
     default_melee=Melees.getFromString("survival_knife")
     current_floor?:FloorType
 
-    on_hitted(position:Vec2,critical:boolean=false){
+    on_hitted(position:Vec2,critical:boolean=false,sound?:string){
         if(Math.random()<=0.1){
             const d=new Decal()
             d.sprite.frame=this.game.resources.get_sprite(`blood_decal_${random.int(1,2)}`)
@@ -101,7 +102,6 @@ export class Player extends GameObject{
             d.sprite.position=v2.duplicate(position)
             this.game.scene.objects.add_object(d,this.layer)
         }
-
         if(!this.shield){
             this.game.particles.add_particle(new ABParticle2D({
                 scale:0.1,
@@ -122,7 +122,7 @@ export class Player extends GameObject{
             }))
         }
         
-        this.play_sound(this.game.resources.get_audio(
+        this.play_sound(this.game.resources.get_audio(sound??(
             (this.vest&&this.vest.reflect_bullets)?
                 (
                     "player_metal_hit"
@@ -131,6 +131,7 @@ export class Player extends GameObject{
                     "player_headshot":
                     `player_hit_${random.int(1,2)}`
                 )
+            )
         ))
     }
 
@@ -610,6 +611,32 @@ export class Player extends GameObject{
                     this.container.play_animation(def.animation,()=>{
                         this.current_animation=undefined
                     })
+                }
+                const att=()=>{
+                    if(def.assets?.use_sound){
+                        this.play_sound(this.game.resources.get_audio(def.assets.use_sound))
+                    }
+                    const position=v2.add(
+                        this.position,
+                        v2.mult(v2.from_RadAngle(this.rotation),v2.new(def.offset,def.offset))
+                    )
+                    const hb=new CircleHitbox2D(position,def.radius)
+                    const collidibles:ClientGameObject2D[]=this.manager.cells.get_objects(hb,this.layer)
+                    for(const c of collidibles){
+                        if(!hb.collidingWith(c.hitbox))continue
+                        switch(c.stringType){
+                            case "obstacle":
+                                if((c as Obstacle).dead)continue
+                                (c as Obstacle).on_hitted(position,true)
+                                break
+                            case "player":
+                                if((c as Player).dead||c.id===this.id)continue
+                                (c as Player).on_hitted(position,false,def.assets?.hit_sound)
+                        }
+                    }
+                }
+                for(const delay of def.damage_delays){
+                    this.game.addTimeout(att,delay)
                 }
                 break
             }

@@ -1,5 +1,5 @@
-import { type Camera2D, ColorM, Container2D, type Renderer, Sprite2D } from "../engine/mod.ts";
-import { Materials, ObstacleBehaviorDoor, ObstacleDef, ObstacleDoorStatus, Obstacles } from "common/scripts/definitions/objects/obstacles.ts";
+import { ColorM, Container2D, Sprite2D } from "../engine/mod.ts";
+import { Materials, ObstacleDef, ObstacleDoorStatus, Obstacles } from "common/scripts/definitions/objects/obstacles.ts";
 import { random } from "common/scripts/engine/random.ts";
 import { NetStream, ParticlesEmitter2D, RectHitbox2D, Vec2 } from "common/scripts/engine/mod.ts";
 import { Sound } from "../engine/resources.ts";
@@ -122,7 +122,7 @@ export class Obstacle extends GameObject{
     update(_dt:number): void {
         
     }
-    on_hitted(position:Vec2){
+    on_hitted(position:Vec2,light:boolean=false){
         if(this.game.save.get_variable("cv_graphics_particles")>=GraphicsDConfig.Normal)this._add_own_particle(position,undefined,true)
         if(this.sounds&&this.sounds.hit&&this.sounds.hit.length>0){
             this.play_sound(this.sounds.hit[random.int(0,this.sounds.hit.length)])

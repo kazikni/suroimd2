@@ -20,7 +20,9 @@ export interface MeleeDef extends Definition{
     arms?:FistRig
     image?:WeaponRig
     animation?:AKeyFrame[]
-    assets?:WeaponAssets
+    assets?:WeaponAssets&{
+        hit_sound?:string
+    }
 
     resistence_damage?:number
 }
@@ -139,7 +141,7 @@ Melees.insert(
         quality:ItemQuality.Common,
         radius:0.5,
         size:0,
-        attack_delay:0.4,
+        attack_delay:0.25,
         switchDelay:0.5,
         damage_delays:[0.11],
         arms:{
@@ -167,7 +169,7 @@ Melees.insert(
                 ]
             },
             {
-                time:0.1,
+                time:0.06,
                 actions:[
                     {
                         fuser:"weapon",
@@ -189,7 +191,11 @@ Melees.insert(
                     }
                 ]
             }
-        ]
+        ],
+        assets:{
+            use_sound:"light_swing",
+            hit_sound:"knife_hit",
+        }
     },
     {
         idString:"axe",
@@ -220,7 +226,11 @@ Melees.insert(
             zIndex:1,
             hotspot:v2.new(0.2,0.4)
         },
-        animation:AnimationSwing(0.6)
+        animation:AnimationSwing(0.6),
+        assets:{
+            use_sound:"heavy_swing",
+            hit_sound:"axe_hit",
+        }
     },
     {
         idString:"sledgehammer",
@@ -251,6 +261,10 @@ Melees.insert(
             zIndex:1,
             hotspot:v2.new(0.2,0.3)
         },
-        animation:AnimationSwing(0.9)
+        animation:AnimationSwing(0.9),
+        assets:{
+            use_sound:"heavy_swing",
+            hit_sound:"sledgehammer_hit",
+        }
     },
 )

@@ -11,7 +11,7 @@ __                                                                              
 * Initial Screen
 __                                                                                                      __
 ### Items
-
+* Hit Sounds
 __                                                                                                      __
 ### Others
 

@@ -312,27 +312,27 @@ export class MeleeItem extends MeleeItemBase implements LItem{
         user.current_animation=undefined
         for(const c of collidibles){
             if(!hb.collidingWith(c.hitbox))continue
-                if(c instanceof Obstacle){
-                    if((this.def.resistence_damage??0)>=(c.def.resistence??0)&&!c.def.imortal){
-                        c.damage({
-                            amount:this.def.damage,
-                            critical:false,
-                            position:hb.position,
-                            reason:DamageReason.Player,
-                            owner:user,
-                            source:this.def
-                        })
-                    }
-                }else if(c.stringType==="player"&&c.id!==user.id){
-                    (c as Player).damage({
+            if(c instanceof Obstacle){
+                if((this.def.resistence_damage??0)>=(c.def.resistence??0)&&!c.def.imortal){
+                    c.damage({
+                        amount:this.def.damage,
+                        critical:false,
+                        position:hb.position,
+                        reason:DamageReason.Player,
+                        owner:user,
+                        source:this.def
+                    })
+                }
+            }else if(c.stringType==="player"&&c.id!==user.id){
+                (c as Player).damage({
                     amount:this.def.damage,
                     critical:false,
                     position:hb.position,
                     reason:DamageReason.Player,
                     owner:user,
                     source:this.def
-                    })
-                }
+                })
+            }
         }
     }
     update(user: Player): void {

@@ -1,5 +1,5 @@
 import { ID, KDate, NetStream, Numeric, ReplayRecorder2D, ValidString, Vec2, cloneDeep, random, v2 } from "common/scripts/engine/mod.ts"
-import { GameConstants, Layers, LayersL, SpawnModeType } from "common/scripts/others/constants.ts"
+import { GameConstants, Layers, LayersL} from "common/scripts/others/constants.ts"
 import { Player } from "../gameObjects/player.ts"
 import { Loot } from "../gameObjects/loot.ts"
 import { JoinPacket } from "common/scripts/packets/join_packet.ts"

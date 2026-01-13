@@ -132,7 +132,6 @@ export class Obstacle extends ServerGameObject{
         this.position = position
         this.side = side as Orientation
         this.manager.cells.updateObject(this)
-
         this.positioned_spawn_hitbox=this.spawn_hitbox.transform(this.position)
     }
     override encode(stream: NetStream, full: boolean): void {
