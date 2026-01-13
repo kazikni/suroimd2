@@ -188,15 +188,15 @@ export const NormalMap:MapDef={
         //Loot Tables
         "normal_loot":[
             {weight:1.5,table:"ammos"},
-            {weight:1,table:"scopes"},
             {weight:1,table:"equipments"},
+            {weight:0.5,table:"scopes"},
             {weight:0.5,table:"guns"},
             {weight:0.01,table:"melees"},
         ],
         "special_loot":[
             {weight:1.5,table:"special_ammos"},
-            {weight:1,table:"special_scopes"},
             {weight:1,table:"special_equipments"},
+            {weight:0.7,table:"special_scopes"},
             {weight:0.7,table:"special_guns"},
             {weight:0.01,table:"melees"},
         ],

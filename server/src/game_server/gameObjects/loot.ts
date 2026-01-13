@@ -60,37 +60,28 @@ export class Loot extends ServerGameObject{
             }
             case InventoryItemType.vest:{
                 const d=this.item as VestDef
-                if(!user.vest){
-                    user.vest=d
-                    user.dirty=true
-                    this.reduce_count(1)
-                }else if(user.vest.level<d.level){
+                if(user.vest&&user.vest.level<d.level){
                     user.game.add_loot(user.position,user.vest as GameItem,1)
-                    user.vest=d
-                    user.dirty=true
-                    this.reduce_count(1)
                 }
+                user.vest=d
+                user.dirty=true
+                this.reduce_count(1)
                 break
             }
             case InventoryItemType.helmet:{
                 const d=this.item as HelmetDef
-                if(!user.helmet){
-                    user.helmet=d
-                    user.dirty=true
-                    this.reduce_count(1)
-                }else if(user.helmet.level<d.level){
-                    user.game.add_loot(user.position,user.helmet,1)
-                    user.helmet=d
-                    user.dirty=true
-                    this.reduce_count(1)
-                }
+                if(user.helmet&&user.helmet.level<d.level)user.game.add_loot(user.position,user.helmet,1)
+
+                user.helmet=d
+                user.dirty=true
+                this.reduce_count(1)
                 break
             }
             case InventoryItemType.backpack:{
                 const d=this.item as BackpackDef
                 if(user.inventory.backpack.level<d.level){
                     user.dirty=true
-                    user.inventory.set_backpack(d)
+                    user.inventory.set_backpack(d,true)
                     this.reduce_count(1)
                 }
                 break

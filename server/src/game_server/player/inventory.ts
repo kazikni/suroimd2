@@ -368,6 +368,12 @@ export class GInventory extends GInventoryBase<LItem>{
         this.set_backpack()
         this.clear_weapons()
     }
+    override set_backpack(backpack?: BackpackDef,drop=false): void {
+        if(drop&&this.backpack.level>=1){
+            this.owner.game.add_loot(this.owner.position,this.backpack,1,this.owner.layer)
+        }
+        super.set_backpack(backpack)
+    }
     override set_weapon_index(idx:number){
         super.set_weapon_index(idx)
 

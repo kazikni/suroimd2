@@ -62,7 +62,8 @@ export class Game extends ClientGame2D<GameObject>{
   
   terrain_gfx=new Graphics2D()
   grid_gfx=new Graphics2D()
-  scope_zoom:number=0.53
+  scope_zoom:number=0.01
+  dest_zoom:number=1
 
   //0.14=l6 32x
   //0.27=l5 16x
@@ -191,18 +192,18 @@ export class Game extends ClientGame2D<GameObject>{
           this.action.actions.push({type:InputActionType.set_hand,hand:Numeric.loop(this.inventoryManager.current_weapon+1,-1,3)})
           break
         case "previous_scope":{
-          const oid=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
+          const oidx=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
           this.action.actions.push({
             type:InputActionType.set_scope,
-            scope_id:Math.max(0,this.inventoryManager.inventory.scopes[oid]-1)
+            scope_id:Math.max(0,this.inventoryManager.inventory.scopes[oidx-1])
           })
           break
         }
         case "next_scope":{
-          const oid=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
+          const oidx=this.inventoryManager.inventory.scopes.indexOf(this.inventoryManager.scope?.idNumber??0)
           this.action.actions.push({
             type:InputActionType.set_scope,
-            scope_id:Math.min(this.inventoryManager.inventory.scopes.length-1,this.inventoryManager.inventory.scopes[oid]+1)
+            scope_id:Math.min(this.inventoryManager.inventory.scopes.length-1,this.inventoryManager.inventory.scopes[oidx+1])
           })
           break
         }
@@ -341,7 +342,10 @@ export class Game extends ClientGame2D<GameObject>{
       p.update(dt)
     }
     this.renderer.fullCanvas()
-    this.camera.zoom=(this.scope_zoom*Numeric.clamp(1-(0.5*this.flying_position),0.5,1))
+    if(this.scope_zoom!=this.dest_zoom){
+      this.scope_zoom=Numeric.lerp(this.scope_zoom,this.dest_zoom,1/(1+dt*200))
+      this.camera.zoom=(this.scope_zoom*Numeric.clamp(1-(0.5*this.flying_position),0.5,1))
+    }
 
     this.ambient.update(dt)
 
@@ -349,7 +353,7 @@ export class Game extends ClientGame2D<GameObject>{
     this.frame_calc++
   }
   set_scope(scope:ScopeDef){
-    this.scope_zoom=scope.scope_view
+    this.dest_zoom=scope.scope_view
   }
   update_grid(grid_gfx:Graphics2D,gridSize:number,camera_position:Vec2,camera_size:Vec2,line_size:number){
     this.grid_gfx.position=v2.new(0,0)
