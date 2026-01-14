@@ -33,7 +33,7 @@ export class Projectile extends GameObject{
     set_definition(def:ProjectileDef){
         if(this.def)return
         this.def=def
-        this.hb=new CircleHitbox2D(this.position,this.def.radius)
+        this.base_hitbox=new CircleHitbox2D(v2.new(0,0),this.def.radius)
         this.sprite.set_frame({
             image:this.def.frames.world,
             hotspot:CenterHotspot,

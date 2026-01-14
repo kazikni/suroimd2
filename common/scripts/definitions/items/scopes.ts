@@ -44,7 +44,7 @@ Scopes.insert(
     },
     {
         idString:"scope_6",
-        scope_view:0.25,
+        scope_view:0.30,
         droppable:true,
         quality:ItemQuality.Mythic
     },

@@ -1,11 +1,11 @@
 import { CircleHitbox2D, Client, NetStream, NullVec2, Numeric, RectHitbox2D, v2, v2m, Vec2 } from "common/scripts/engine/mod.ts"
 import { ActionPacket, InputAction, InputActionType } from "common/scripts/packets/action_packet.ts"
 import { ActionsType, GameConstants, PlayerAnimation, PlayerAnimationType } from "common/scripts/others/constants.ts"
-import { GInventory,GunItem} from "../player/inventory.ts"
+import { GInventory,GunItem, LItem} from "../player/inventory.ts"
 import { DamageSplash, UpdatePacket } from "common/scripts/packets/update_packet.ts"
 import { DamageParams } from "../others/utils.ts"
 import { type Obstacle } from "./obstacle.ts"
-import { ActionsManager } from "common/scripts/engine/inventory.ts"
+import { ActionsManager, type Slot } from "common/scripts/engine/inventory.ts"
 import { DamageReason, InventoryItemType } from "common/scripts/definitions/utils.ts"
 import { DamageSourceDef, DamageSources, GameItems, GameObjectDef, GameObjectsDefs, WeaponDef, Weapons } from "common/scripts/definitions/alldefs.ts"
 import { type PlayerModifiers } from "common/scripts/others/constants.ts"
@@ -136,6 +136,7 @@ export class Player extends ServerGameObject{
     projectile_holding?:{
         def:ProjectileDef
         time:number
+        slot?:Slot<LItem>
     }
 
     ai?:BotAi
@@ -317,10 +318,25 @@ export class Player extends ServerGameObject{
     }
 
     throw_using_projectile(){
-        if(!this.projectile_holding)return
+        if(!this.projectile_holding||(this.projectile_holding.slot&&this.projectile_holding.slot.quantity<=0)){
+            this.projectile_holding=undefined
+            return
+        }
         const proj=this.game.add_projectile(this.position,this.projectile_holding!.def,this,this.layer)
         proj.throw_projectile(this.rotation,(this.projectile_holding!.def.throw_max_speed??5)*this.input.aim_speed)
         proj.fuse_delay=this.projectile_holding.time
+        if(this.projectile_holding.slot){
+            this.projectile_holding.slot.remove(1)
+            this.inventory.dirty("items")
+            if(this.projectile_holding.slot.quantity<=0){
+                let idx=this.inventory.weapon_idx
+                if(!this.inventory.weapons[this.inventory.weapon_idx]){
+                    idx=0
+                }
+                this.inventory.weapon_idx=0
+                this.inventory.set_weapon_index(idx)
+            }
+        }
         this.projectile_holding=undefined
     }
     update(dt:number): void {
@@ -448,6 +464,12 @@ export class Player extends ServerGameObject{
                 this.input.attacking=this.inventory.hand_item.attacking()
             }
 
+            //Update Inventory
+            for(const s of this.inventory.slots){
+                if(!s.item)continue
+                s.item.update(this)
+            }
+
             if(this.projectile_holding){
                 this.projectile_holding.time-=dt
                 if(this.projectile_holding.time<=0){
@@ -457,12 +479,6 @@ export class Player extends ServerGameObject{
                 if(!this.input.using_item){
                     this.throw_using_projectile()
                 }
-            }
-            
-            //Update Inventory
-            for(const s of this.inventory.slots){
-                if(!s.item)continue
-                s.item.update(this)
             }
             //Collision
             const objs=this.manager.cells.get_objects(this.hitbox,this.layer)

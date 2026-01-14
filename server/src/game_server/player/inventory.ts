@@ -251,16 +251,20 @@ export class ConsumibleItem extends ConsumibleItemBase implements LItem{
 }
 export class ProjectileItem extends ProjectileItemBase implements LItem{
     declare inventory:GInventory
+    slot?:Slot<LItem>
     constructor(def:ProjectileDef){
         super(def)
     }
-    on_use(user: Player,_slot?: Slot<LItem>): void {
+    on_use(user: Player,slot?: Slot<LItem>): void {
         user.inventory.set_hand_item(this)
+        this.slot=slot
     }
     on_fire(user: Player): void {
+        if(!this.slot||this.slot?.quantity<=0)return
         user.projectile_holding={
             def:this.def,
-            time:this.def.cook?.fuse_time??10000
+            time:this.def.cook?.fuse_time??10,
+            slot:this.slot
         }
     }
     attacking():boolean{
@@ -490,11 +494,11 @@ export class GInventory extends GInventoryBase<LItem>{
                 //TODO: PUT A BETTER THING THAN INFINIY
                 if(count==Infinity){
                     this.add(item,item.limit_per_slot)
-                    this.owner.game.add_loot(this.owner.position,def,Infinity)
+                    this.owner.game.add_loot(this.owner.position,def,Infinity,this.owner.layer)
                 }else{
                     const ov=this.add(item,count)
                     if(ov){
-                        this.owner.game.add_loot(this.owner.position,def,ov)
+                        this.owner.game.add_loot(this.owner.position,def,ov,this.owner.layer)
                     }
                 }
                 this.owner.privateDirtys.inventory=true
@@ -504,9 +508,15 @@ export class GInventory extends GInventoryBase<LItem>{
                 const item=new ProjectileItem(def as unknown as ProjectileDef)
                 item.inventory=this
                 item.limit_per_slot=this.backpack.max[item.def.idString]??this.default_backpack.max[item.def.idString]??5
-                const ov=this.add(item,count)
-                if(ov){
-                  this.owner.game.add_loot(this.owner.position,def,ov)
+                //TODO: PUT A BETTER THING THAN INFINIY
+                if(count==Infinity){
+                    const ov=this.add(item,count)
+                    this.owner.game.add_loot(this.owner.position,def,ov,this.owner.layer)
+                }else{
+                    const ov=this.add(item,count)
+                    if(ov){
+                    this.owner.game.add_loot(this.owner.position,def,ov,this.owner.layer)
+                    }
                 }
                 this.owner.privateDirtys.inventory=true
                 break

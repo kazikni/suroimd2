@@ -58,7 +58,8 @@ export class Projectile extends ServerGameObject{
     }
     create(args: {defs:ProjectileDef,position:Vec2,owner?:Player}): void {
         this.defs=args.defs
-        this.hb=new CircleHitbox2D(args.position,this.defs.radius)
+        this.base_hitbox=new CircleHitbox2D(v2.new(0,0),this.defs.radius)
+        this.position=args.position
         if(this.defs.cook){
             this.fuse_delay=this.defs.cook.fuse_time
         }

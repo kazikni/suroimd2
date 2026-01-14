@@ -124,6 +124,11 @@ export const NormalMap:MapDef={
             {item:"gasoline",count:10,weight:0.2},
             {item:"explosive_ammo",count:4,weight:0.2},
         ],
+        //Throwables
+        "throwables":[
+            {item:"frag_grenade",count:1,weight:10},
+            {item:"mirv_grenade",count:1,weight:5},
+        ],
         //Scopes
         "scopes":[
             {item:"scope_2",count:1,weight:100},
@@ -187,18 +192,22 @@ export const NormalMap:MapDef={
         ],
         //Loot Tables
         "normal_loot":[
-            {weight:1.5,table:"ammos"},
-            {weight:1,table:"equipments"},
+            {weight:1,table:"ammos"},
+            {weight:1,table:"consumibles"},
+            {weight:0.75,table:"guns"},
+            {weight:0.75,table:"equipments"},
             {weight:0.5,table:"scopes"},
-            {weight:0.5,table:"guns"},
+            {weight:0.5,table:"throwables"},
             {weight:0.01,table:"melees"},
         ],
         "special_loot":[
-            {weight:1.5,table:"special_ammos"},
-            {weight:1,table:"special_equipments"},
+            {weight:1,table:"special_ammos"},
+            {weight:1,table:"special_consumibles"},
+            {weight:0.75,table:"special_equipments"},
+            {weight:0.75,table:"special_guns"},
             {weight:0.7,table:"special_scopes"},
-            {weight:0.7,table:"special_guns"},
-            {weight:0.01,table:"melees"},
+            {weight:0.7,table:"throwables"},
+            {weight:0.025,table:"melees"},
         ],
         "wood_crate":[
             {weight:2,count:1,table:"normal_loot"},
@@ -206,7 +215,6 @@ export const NormalMap:MapDef={
             {weight:0.5,count:3,table:"normal_loot"},
         ],
         "copper_crate":[
-            {weight:2,count:1,table:"special_loot"},
             {weight:1,count:2,table:"special_loot"},
             {weight:0.5,count:3,table:"special_loot"},
             {weight:0.25,count:4,table:"special_loot"},
