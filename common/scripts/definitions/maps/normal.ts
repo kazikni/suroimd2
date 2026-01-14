@@ -197,7 +197,7 @@ export const NormalMap:MapDef={
             {weight:0.75,table:"guns"},
             {weight:0.75,table:"equipments"},
             {weight:0.5,table:"scopes"},
-            {weight:0.5,table:"throwables"},
+            {weight:0.25,table:"throwables"},
             {weight:0.01,table:"melees"},
         ],
         "special_loot":[
@@ -206,7 +206,7 @@ export const NormalMap:MapDef={
             {weight:0.75,table:"special_equipments"},
             {weight:0.75,table:"special_guns"},
             {weight:0.7,table:"special_scopes"},
-            {weight:0.7,table:"throwables"},
+            {weight:0.4,table:"throwables"},
             {weight:0.025,table:"melees"},
         ],
         "wood_crate":[

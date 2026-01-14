@@ -35,6 +35,7 @@ __                                                                              
 __                                                                                                      __
 ## Fixes
 * Fix Backpacks Pickup(Now The You Can Take A Backpack Without DESTROY de previous)
+* Fix Vest And Helmet Pickup
 __                                                                                                      __
 # Play The Game
 [Web Version](https://suroimd.io)
