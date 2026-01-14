@@ -7,7 +7,8 @@ import { Random1 } from "../../engine/random.ts";
 import { Vec2 } from "../../engine/geometry.ts";
 import { SpawnMode, type Layers } from "../../others/constants.ts";
 import { NormalLobby, NormalMap, SnowMap } from "./normal.ts";
-
+import {type GameMap} from "../../../../server/src/game_server/others/map.ts"
+import { DebugMap } from "./debug.ts";
 export interface Aditional{
     withammo:boolean
 }
@@ -81,11 +82,12 @@ export interface MapDef{
     generation:{
         island?:IslandDef
     }
+    gen_callback?:(map:GameMap)=>void
 }
-//export const LootTables=new LootTablesManager<GameItem,Aditional>(get_item)
-
 export const Maps:Record<string,MapDef>={
     normal:NormalMap,
     lobby:NormalLobby,
-    snow:SnowMap
+    snow:SnowMap,
+
+    debug:DebugMap
 }

@@ -7,6 +7,8 @@ import { HelmetDef, VestDef } from "common/scripts/definitions/items/equipaments
 import { GameItem } from "common/scripts/definitions/alldefs.ts";
 import { mergeDeep } from "common/scripts/engine/utils.ts";
 import { KDate } from "common/scripts/engine/definitions.ts";
+import { SpawnMode, SpawnModeType } from "common/scripts/others/constants.ts";
+import { FloorType } from "common/scripts/others/terrain.ts";
 
 export interface InventorySetupItem{
     item:GameItem,
@@ -58,6 +60,7 @@ export interface Gamemode{
             insert_inventory?:InventorySetup
         }
         max:number
+        spawn_mode:SpawnMode
     }
     game:{
         no_battle_plane?:boolean
@@ -103,6 +106,10 @@ export const DefaultGamemode:Gamemode={
                 },
             }
         }*/
+        spawn_mode:{
+            type:SpawnModeType.whitelist,
+            list:[FloorType.Grass,FloorType.Snow,FloorType.Sand],
+        },
         max:100
     },
     game:{

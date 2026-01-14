@@ -189,6 +189,7 @@ export class GameMap{
 
         if(definition.generation.island)generation.island(definition.generation.island)(this,random)
 
+        if(definition.gen_callback)definition.gen_callback(this)
         this.game.clients.packets_manager.encode(this.encode(seed),this.map_packet_stream)
     }
     generate_with_algorithm(algorithm:map_gen_algorithm,seed:number=random.float(0,231412)){

@@ -486,9 +486,16 @@ export class GInventory extends GInventoryBase<LItem>{
                 const item=new ConsumibleItem(def as unknown as ConsumibleDef)
                 item.inventory=this
                 item.limit_per_slot=this.item_limit(item.def)
-                const ov=this.add(item,count)
-                if(ov){
-                  this.owner.game.add_loot(this.owner.position,def,ov)
+
+                //TODO: PUT A BETTER THING THAN INFINIY
+                if(count==Infinity){
+                    this.add(item,item.limit_per_slot)
+                    this.owner.game.add_loot(this.owner.position,def,Infinity)
+                }else{
+                    const ov=this.add(item,count)
+                    if(ov){
+                        this.owner.game.add_loot(this.owner.position,def,ov)
+                    }
                 }
                 this.owner.privateDirtys.inventory=true
                 break
