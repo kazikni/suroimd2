@@ -1,8 +1,9 @@
+import { FrameDef } from "../../engine/definitions.ts";
 import { v2, Vec2 } from "../../engine/geometry.ts";
 import { Hitbox2D, RectHitbox2D } from "../../engine/hitbox.ts";
 import { Definitions,Definition } from "../../engine/mod.ts"
 import { mergeDeep } from "../../engine/utils.ts";
-import { Spawn, SpawnMode, zIndexes } from "../../others/constants.ts";
+import { Spawn, SpawnMode } from "../../others/constants.ts";
 
 export type BuildingObstacles={
     id:string
@@ -19,16 +20,6 @@ export type BuildingSubBuilding={
     position:Vec2
     rotation?:0|1|2|3
 }
-export interface BuildingImageDefinition {
-    image: string
-    position: Vec2
-    rotation?: number
-    hotspot?:Vec2
-    scale?: number
-    tint?: number
-    zIndex?: zIndexes
-    alpha?: number
-}
 export interface BuildingDef extends Definition{
     no_collisions?: boolean
     no_bullet_collision?: boolean
@@ -38,7 +29,8 @@ export interface BuildingDef extends Definition{
     spawnHitbox?:Hitbox2D
     spawnMode:SpawnMode
     hitbox?:Hitbox2D
-    floor_image?:BuildingImageDefinition[]
+    floor_image?:FrameDef[]
+    ceiling?:{frame:FrameDef,hitbox:Hitbox2D,visible_opacity?:number}[]
     material?:string
     assets?:{
         particles?:string
@@ -71,6 +63,7 @@ const Templates={
             right:false,
             top:true
         },0.5),
+        spawnHitbox:new RectHitbox2D(v2.new(-2.85,1.42),v2.new(2.85,1.42)),
         material:"iron",
         assets:{
             particles:"metal_particle",
@@ -83,6 +76,18 @@ const Templates={
                 hotspot:v2.new(.5,.5),
                 scale:2,
                 tint:0x00359f
+            }
+        ],
+        ceiling:[
+            {
+                frame:{
+                    image:"container_ceiling_1",
+                    position:v2.new(0,0),
+                    hotspot:v2.new(.5,.5),
+                    scale:2,
+                    tint:0x00359f
+                },
+                hitbox:new RectHitbox2D(v2.new(-2.85,1.42),v2.new(2.85,1.42)),
             }
         ]
     } satisfies BuildingDef,
@@ -115,6 +120,18 @@ const Templates={
                 hotspot:v2.new(.5,.5),
                 scale:2,
                 tint:0x00359f
+            }
+        ],
+        ceiling:[
+            {
+                frame:{
+                    image:"container_ceiling_2",
+                    position:v2.new(0,0),
+                    hotspot:v2.new(.5,.5),
+                    scale:2,
+                    tint:0x00359f
+                },
+                hitbox:new RectHitbox2D(v2.new(-2.85,1.42),v2.new(2.85,1.42)),
             }
         ]
     } satisfies BuildingDef,

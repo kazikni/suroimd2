@@ -244,6 +244,7 @@ export interface FrameTransform{
     position?:Vec2
     visible?:boolean
     zIndex?:number
+    tint?:number
 }
 export type FrameDef={image?:string}&FrameTransform
 export type KeyFrameSpriteDef={

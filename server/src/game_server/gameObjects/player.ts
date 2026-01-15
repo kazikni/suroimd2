@@ -499,15 +499,14 @@ export class Player extends ServerGameObject{
                             }
                         }
                         break
-                    case "building":
+                    case "building":{
                         if((obj as Building).def.no_collisions)break
-                        if(obj.hb){
-                            const ov=this.hitbox.overlapCollision(obj.hb)
-                            for(const c of ov){
-                                this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
-                            }
+                        const ov=this.hitbox.overlapCollision(obj.hitbox)
+                        for(const c of ov){
+                            this.position=v2.sub(this.position,v2.scale(c.dir,c.pen))
                         }
                         break
+                    }
                     case "loot":
                         if(can_interact&&this.input.interaction&&obj.can_interact(this)){
                             (obj as Loot).interact(this)
@@ -853,7 +852,6 @@ export class Player extends ServerGameObject{
 
         if(this.ai)this.ai.on_hitted(params)
     }
-
     down(params:DamageParams){
         if(this.downed)return
         this.downed=true

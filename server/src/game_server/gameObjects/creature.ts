@@ -65,8 +65,8 @@ export class Creature extends ServerGameObject{
             switch(obj.stringType){
                 case "obstacle":
                     if((obj as Obstacle).def.no_collision)break
-                    if((obj as Obstacle).hb&&!(obj as Obstacle).dead){
-                        const ov=this.hb.overlapCollision((obj as Obstacle).hb)
+                    if((obj as Obstacle).hitbox&&!(obj as Obstacle).dead){
+                        const ov=this.hitbox.overlapCollision((obj as Obstacle).hitbox)
                         for(const o of ov){
                             this.position=v2.sub(this.position,v2.scale(o.dir,o.pen))
                         }
@@ -74,12 +74,12 @@ export class Creature extends ServerGameObject{
                     break
             }
         }
-        this.game.map.clamp_hitbox(this.hb)
+        this.game.map.clamp_hitbox(this.hitbox)
     }
     override interact(_user: Player): void {
     }
     create(args: {position:Vec2,def:CreatureDef}): void {
-        this.hb=args.def.hitbox.transform(args.position)
+        this.hitbox=args.def.hitbox.transform(args.position)
         this.def=args.def
         this.update_func=this.def.server_side.update?CreaturesUpdates[this.def.server_side.update](this.def.server_side.update_parameters,this):undefined
         this.health=this.def.health

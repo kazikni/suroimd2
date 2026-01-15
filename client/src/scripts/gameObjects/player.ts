@@ -7,7 +7,7 @@ import { GraphicsDConfig } from "../others/config.ts";
 import { Decal } from "./decal.ts";
 import { InventoryItemType } from "common/scripts/definitions/utils.ts";
 import { DualAdditional, GunDef, Guns } from "common/scripts/definitions/items/guns.ts";
-import { ClientGame2D, ClientGameObject2D } from "../engine/game.ts";
+import { ClientGame2D, type ClientGameObject2D } from "../engine/game.ts";
 import { ColorM } from "../engine/renderer.ts";
 import { SoundInstance, SoundOptions } from "../engine/sounds.ts";
 import { BackpackDef, Backpacks } from "common/scripts/definitions/items/backpacks.ts";
@@ -25,6 +25,7 @@ import { type Sound } from "../engine/resources.ts";
 import { FloorKind, Floors, FloorType } from "common/scripts/others/terrain.ts";
 import { CenterHotspot } from "../engine/utils.ts";
 import { type Obstacle } from "./obstacle.ts";
+import { type Building } from "./building.ts";
 export class Player extends GameObject{
     stringType:string="player"
     numberType: number=1
@@ -509,6 +510,21 @@ export class Player extends GameObject{
                 })
             }
         }
+        /*const objects:ClientGameObject2D[]=this.manager.cells.get_objects(this.hitbox,this.layer)
+        for(const obj of objects){
+            if(obj.id===this.id)continue
+            switch(obj.stringType){
+                case "building":{
+                    const o:Building=obj as Building
+                    for(const ceiling of o.ceilings){
+                        if(ceiling.hitbox.collidingWith(this.hitbox)){
+                            ceiling.container.tint.a=Numeric.lerp(ceiling.container.tint.a,ceiling.opacity,1/(1+dt*1000))
+                            ceiling.collided=true
+                        }
+                    }
+                }
+            }
+        }*/
     }
     override on_destroy(): void {
         this.anims.consumible_particles!.destroyed=true

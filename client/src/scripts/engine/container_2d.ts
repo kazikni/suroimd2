@@ -350,6 +350,7 @@ export class Sprite2D extends Container2DObject{
         if(frame.zIndex)this.zIndex=frame.zIndex
         if(frame.position)this.position=v2.duplicate(frame.position)
         if(frame.image)this.frame=resources.get_sprite(frame.image)
+        if(frame.tint)this.tint=ColorM.number(frame.tint)
         this.update_real()
     }
     

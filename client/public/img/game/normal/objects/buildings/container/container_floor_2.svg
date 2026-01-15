@@ -7,7 +7,7 @@
    viewBox="0 0 162.75696 80.400001"
    version="1.1"
    id="svg5"
-   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
    sodipodi:docname="container_floor_2.svg"
    xml:space="preserve"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -24,7 +24,7 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="0.94384298"
-     inkscape:cx="239.97636"
+     inkscape:cx="240.50611"
      inkscape:cy="261.16632"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
@@ -170,12 +170,12 @@
        id="g4"
        style="display:inline"><path
          id="rect2"
-         style="fill:#ffffff;stroke:#62646e;stroke-width:2.99984"
+         style="fill:#ffffff;stroke:#000000;stroke-width:2.99984;stroke-opacity:1"
          transform="rotate(90)"
          d="M 0,-180 H 11.997011 V 0 H 0 Z"
          sodipodi:nodetypes="ccccc" /><path
          id="rect3"
-         style="fill:#ffffff;stroke:#62646e;stroke-width:2.99984"
+         style="fill:#ffffff;stroke:#000000;stroke-width:2.99984;stroke-opacity:1"
          transform="rotate(90)"
          d="M 75.402828,-180 H 87.400002 V 0 H 75.402828 Z"
          sodipodi:nodetypes="ccccc" /></g></g></svg>

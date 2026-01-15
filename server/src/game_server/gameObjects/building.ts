@@ -64,10 +64,9 @@ export class Building extends ServerGameObject {
 
     override encode(stream: NetStream, full: boolean): void {
         if (full) {
-            stream
-                .writePosition(this.position)
-                .writeUint8(this.side)
-                .writeID(this.def.idNumber!)
+            stream.writePosition(this.position)
+            .writeUint8(this.side)
+            .writeID(this.def.idNumber!)
         }
     }
 }

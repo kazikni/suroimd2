@@ -1,5 +1,5 @@
 import { ABParticle2D, type Camera2D, type Renderer } from "../engine/mod.ts";
-import { NetStream, random, Vec2 } from "common/scripts/engine/mod.ts";
+import { Hitbox2D, NetStream, Numeric, random, Vec2 } from "common/scripts/engine/mod.ts";
 import { Sound } from "../engine/resources.ts";
 import { Angle, Orientation, v2 } from "common/scripts/engine/geometry.ts";
 import { GameObject } from "../others/gameObject.ts";
@@ -13,10 +13,16 @@ export class Building extends GameObject{
     numberType: number=11
     def!:BuildingDef
 
-    m_position:Vec2=v2.new(0,0)
     side:Orientation=0
 
     objects:Container2DObject[]=[]
+
+    ceilings:{
+        collided:boolean
+        opacity:number
+        hitbox:Hitbox2D
+        container:Container2DObject
+    }[]=[]
     assets={
         particle:"",
         particle_tint:ColorM.number(0xffffff),
@@ -58,8 +64,13 @@ export class Building extends GameObject{
             o.destroy()
         }
     }
-    update(_dt:number): void {
-        
+    update(dt:number): void {
+        for(const c of this.ceilings){
+            if(!c.collided){
+                c.container.tint.a=Numeric.lerp(c.container.tint.a,1,1/(1+dt*1000))
+            }
+            c.collided=false
+        }
     }
     override render(camera: Camera2D, renderer: Renderer, _dt: number): void {
         
@@ -79,28 +90,44 @@ export class Building extends GameObject{
     }
     set_definition(def:BuildingDef){
         if(this.def)return
+        if(def.hitbox)this.base_hitbox=def.hitbox
         this.def=def
         const rot=Angle.side_rad(this.side)
         for(const f of def.floor_image??[]){
             const sprite=new Sprite2D()
             sprite.set_frame({
                 image:f.image,
-                position:v2.add_with_orientation(this.m_position,f.position,this.side),
+                position:f.position?v2.add(this.position,f.position):undefined,
                 hotspot:f.hotspot,
                 rotation:rot+(f.rotation??0),
                 scale:f.scale,
                 zIndex:f.zIndex??zIndexes.BuildingsFloor,
+                tint:f.tint
             },this.game.resources)
-            if(f.tint!==undefined)sprite.tint=ColorM.number(f.tint)
             this.game.camera.addObject(sprite)
             this.objects.push(sprite)
         }
-        if(def.hitbox){
-            this.hb=def.hitbox.transform(this.m_position,undefined,this.side)
-        }else{
-            this.hb.translate(this.m_position)
-        }
+        for(const c of def.ceiling??[]){
+            const sprite=new Sprite2D()
+            sprite.set_frame({
+                image:c.frame.image,
+                position:c.frame.position?v2.add(this.position,c.frame.position):undefined,
+                hotspot:c.frame.hotspot,
+                rotation:rot+(c.frame.rotation??0),
+                scale:c.frame.scale,
+                zIndex:c.frame.zIndex??zIndexes.BuildingsCeiling,
+                tint:c.frame.tint
+            },this.game.resources)
+            this.game.camera.addObject(sprite)
+            this.objects.push(sprite)
 
+            this.ceilings.push({
+                container:sprite,
+                hitbox:c.hitbox.transform(this.position),
+                opacity:c.visible_opacity??0.5,
+                collided:false
+            })
+        }
         if(def.assets){
             if(def.assets.particles){
                 this.assets.particle=def.assets.particles
@@ -109,11 +136,12 @@ export class Building extends GameObject{
                 this.assets.particle_tint=ColorM.number(def.assets.particles_tint)
             }
         }
+        this.manager.cells.updateObject(this)
     }
     scale=0
     override decode(stream: NetStream, full: boolean): void {
         if(full){
-            this.m_position=stream.readPosition()
+            this.position=stream.readPosition()
             this.side=stream.readUint8() as Orientation
             this.set_definition(Buildings.getFromNumber(stream.readID()))
             this.manager.cells.updateObject(this)

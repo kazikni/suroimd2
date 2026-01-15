@@ -65,6 +65,7 @@ export enum zIndexes{
     Obstacles3,
     Obstacles4,
     Explosions,
+    BuildingsCeiling,
     ParachutePlayers,
     Rain1,
     Planes,
