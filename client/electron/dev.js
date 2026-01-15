@@ -5,7 +5,7 @@ app.once("ready", () => {
         autoHideMenuBar: false,
     })
     window.setIcon("public/favicon.ico")
-    window.setTitle("Suroimd.io 2")
+    window.setTitle("Surgemd.io")
     window.loadURL(`http://localhost:${port}`,{
     })
 });

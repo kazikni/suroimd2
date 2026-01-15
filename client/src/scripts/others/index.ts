@@ -49,7 +49,7 @@ import { isMobile } from "../engine/game.ts";
     GameSave.default_actions=ConfigDefaultActions
     GameSave.casters=ConfigCasters
     GameSave.default_values=ConfigDefaultValues
-    GameSave.init("suroimd2-config")
+    GameSave.init("surgemd-config")
 
     const sounds=new SoundManager()
     const tm=await NewMDLanguageManager("english","/languages")

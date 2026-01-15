@@ -13,7 +13,7 @@ function createWindow() {
       devTools: true,
     },
   });
-  win.setTitle("Suroimd.io 2");
+  win.setTitle("Surgemd.io");
   win.loadURL("app://main/");
   Menu.setApplicationMenu(null)
 }

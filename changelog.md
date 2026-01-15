@@ -1,4 +1,3 @@
-# Suroimd.io 2 Pre-Beta-4
 ## News
 __                                                                                                      __
 ### Mains
@@ -38,8 +37,8 @@ __                                                                              
 * Fix Vest And Helmet Pickup
 __                                                                                                      __
 # Play The Game
-[Web Version](https://suroimd.io)
-[Windows Version](https://suroimd.io/files/windows-build-lasted.zip)
-[Linux Version](https://suroimd.io/files/linux-build-lasted.zip)
-[Android Version](https://suroimd.io/files/android-build-lasted.apk)
+[Web Version](https://surgemd.io)
+[Windows Version](https://surgemd.io/files/windows-build-lasted.zip)
+[Linux Version](https://surgemd.io/files/linux-build-lasted.zip)
+[Android Version](https://surgemd.io/files/android-build-lasted.apk)
 If You Found A Bug, Glitch Or Issue Report To Me Or in #❌issues

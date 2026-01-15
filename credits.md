@@ -1,4 +1,4 @@
-# Suroimd.io 2
+# Surgemd.io
 ## Programmers
 * @kazikni
 * @viktor_hg
